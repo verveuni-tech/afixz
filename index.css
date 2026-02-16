@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1E3A8A;         /* Deep Navy */
+  --color-primary-hover: #172554;
+  --color-secondary: #475569;
+  --color-background: #F8FAFC;
+  --color-surface: #FFFFFF;
+
+  --color-accent: #2563EB;          /* THIS is for “Made Simple.” */
+
+  --gradient-accent: linear-gradient(135deg, #2563EB, #1D4ED8);
+
+  --font-sans: "Inter", sans-serif;
+}
+@layer utilities {
+  .text-accent {
+    color: var(--color-accent);
+  }
+
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+
+  .bg-accent-gradient {
+    background-image: var(--gradient-accent);
+  }
+}
