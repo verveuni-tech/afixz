@@ -4,7 +4,6 @@ import { Star } from "lucide-react";
 type Service = {
   id: number;
   title: string;
-  image: string;
   rating: number;
   price: string;
 };
@@ -13,31 +12,34 @@ const BEAUTY_SERVICES: Service[] = [
   {
     id: 1,
     title: "Haircut for Women",
-    image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e",
     rating: 4.9,
     price: "₹699",
   },
   {
     id: 2,
     title: "Facial & Cleanup",
-    image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883",
     rating: 4.8,
     price: "₹899",
   },
   {
     id: 3,
     title: "Manicure & Pedicure",
-    image: "https://images.unsplash.com/photo-1604654894610-df63bc536371",
     rating: 4.7,
     price: "₹599",
   },
   {
     id: 4,
     title: "Bridal Makeup",
-    image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
     rating: 4.9,
     price: "₹4,999",
   },
+];
+
+const gradients = [
+  "from-rose-100 to-rose-300",
+  "from-pink-100 to-pink-300",
+  "from-fuchsia-100 to-fuchsia-300",
+  "from-purple-100 to-purple-300",
 ];
 
 const BeautySection: React.FC = () => {
@@ -63,19 +65,15 @@ const BeautySection: React.FC = () => {
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {BEAUTY_SERVICES.map((service) => (
+          {BEAUTY_SERVICES.map((service, index) => (
             <div
               key={service.id}
               className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
             >
-              {/* Image */}
-              <div className="overflow-hidden">
-                <img
-                  src={service.image}
-                  alt={service.title}
-                  className="w-full h-52 object-cover group-hover:scale-105 transition duration-500"
-                />
-              </div>
+              {/* Soft Gradient Placeholder */}
+              <div
+                className={`w-full h-52 bg-gradient-to-br ${gradients[index % gradients.length]} group-hover:scale-105 transition duration-500`}
+              />
 
               {/* Content */}
               <div className="p-6">

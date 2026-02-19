@@ -4,7 +4,6 @@ import { Star } from "lucide-react";
 type Service = {
   id: number;
   title: string;
-  image: string;
   rating: number;
   price: string;
 };
@@ -13,31 +12,34 @@ const CLEANING_SERVICES: Service[] = [
   {
     id: 1,
     title: "Deep Home Cleaning",
-    image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952",
     rating: 4.8,
     price: "₹799",
   },
   {
     id: 2,
     title: "Bathroom Cleaning",
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
     rating: 4.7,
     price: "₹399",
   },
   {
     id: 3,
     title: "Kitchen Cleaning",
-    image: "https://images.unsplash.com/photo-1588854337221-4cf9fa96059c",
     rating: 4.6,
     price: "₹499",
   },
   {
     id: 4,
     title: "Sofa & Upholstery Cleaning",
-    image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f",
     rating: 4.9,
     price: "₹699",
   },
+];
+
+const gradients = [
+  "from-blue-100 to-blue-300",
+  "from-cyan-100 to-cyan-300",
+  "from-sky-100 to-sky-300",
+  "from-teal-100 to-teal-300",
 ];
 
 const CleaningSection: React.FC = () => {
@@ -63,19 +65,15 @@ const CleaningSection: React.FC = () => {
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {CLEANING_SERVICES.map((service) => (
+          {CLEANING_SERVICES.map((service, index) => (
             <div
               key={service.id}
               className="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-lg transition-all duration-300 cursor-pointer"
             >
-              {/* Image */}
-              <div className="overflow-hidden">
-                <img
-                  src={service.image}
-                  alt={service.title}
-                  className="w-full h-48 object-cover group-hover:scale-105 transition duration-500"
-                />
-              </div>
+              {/* Gradient Placeholder */}
+              <div
+                className={`w-full h-48 bg-gradient-to-br ${gradients[index % gradients.length]} group-hover:scale-105 transition duration-500`}
+              />
 
               {/* Content */}
               <div className="p-5">

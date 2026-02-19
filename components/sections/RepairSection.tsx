@@ -4,7 +4,6 @@ import { Star } from "lucide-react";
 type Service = {
   id: number;
   title: string;
-  image: string;
   rating: number;
   price: string;
 };
@@ -13,31 +12,34 @@ const REPAIR_SERVICES: Service[] = [
   {
     id: 1,
     title: "AC Service & Repair",
-    image: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4",
     rating: 4.7,
     price: "₹499",
   },
   {
     id: 2,
     title: "Plumbing Repair",
-    image: "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0",
     rating: 4.6,
     price: "₹299",
   },
   {
     id: 3,
     title: "Electrical Fixing",
-    image: "https://images.unsplash.com/photo-1581092160607-ee22731d9c52",
     rating: 4.8,
     price: "₹349",
   },
   {
     id: 4,
     title: "Geyser Installation & Repair",
-    image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952",
     rating: 4.5,
     price: "₹399",
   },
+];
+
+const gradients = [
+  "from-slate-700 to-slate-900",
+  "from-blue-900 to-slate-800",
+  "from-indigo-900 to-slate-800",
+  "from-slate-800 to-slate-950",
 ];
 
 const RepairSection: React.FC = () => {
@@ -63,17 +65,15 @@ const RepairSection: React.FC = () => {
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {REPAIR_SERVICES.map((service) => (
+          {REPAIR_SERVICES.map((service, index) => (
             <div
               key={service.id}
               className="bg-slate-800 rounded-2xl overflow-hidden border border-slate-700 hover:border-blue-500 transition-all duration-300"
             >
-              {/* Image */}
+              {/* Gradient Placeholder Instead of Image */}
               <div className="relative">
-                <img
-                  src={service.image}
-                  alt={service.title}
-                  className="w-full h-44 object-cover"
+                <div
+                  className={`w-full h-44 bg-gradient-to-br ${gradients[index % gradients.length]}`}
                 />
 
                 <div className="absolute top-4 left-4 bg-blue-600 text-xs px-3 py-1 rounded-full font-medium">
