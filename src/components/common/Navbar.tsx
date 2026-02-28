@@ -13,18 +13,13 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const categories = [
-    { name: "Cleaning", href: "#cleaning" },
-    { name: "Repair", href: "#repair" },
-    { name: "Beauty", href: "#beauty" },
-  ];
 
   return (
     <nav
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-white/90 backdrop-blur-md shadow-sm"
-          : "bg-gray-50"
+          ? "bg-gray/90 backdrop-blur-md shadow-sm"
+          : "bg-white"
       }`}
     >
       <div className="max-w-7xl mx-auto px-6">
@@ -46,18 +41,7 @@ const Navbar: React.FC = () => {
               />
             </a>
 
-            {/* Desktop Categories */}
-            <div className="hidden md:flex items-center gap-8">
-              {categories.map((cat) => (
-                <a
-                  key={cat.name}
-                  href={cat.href}
-                  className="text-slate-600 hover:text-blue-600 font-medium transition"
-                >
-                  {cat.name}
-                </a>
-              ))}
-            </div>
+           
           </div>
 
           {/* Desktop Search */}
@@ -117,17 +101,7 @@ const Navbar: React.FC = () => {
         <div className="md:hidden bg-white border-t border-slate-200 shadow-lg">
           <div className="px-6 py-6 flex flex-col gap-5">
 
-            {categories.map((cat) => (
-              <a
-                key={cat.name}
-                href={cat.href}
-                onClick={() => setIsOpen(false)}
-                className="text-lg font-medium text-slate-700 hover:text-blue-600 transition"
-              >
-                {cat.name}
-              </a>
-            ))}
-
+          
             <div className="pt-4 border-t border-slate-100">
               <button className="flex items-center gap-3 text-slate-700 hover:text-blue-600 transition">
                 <User size={18} />

@@ -4,13 +4,13 @@ import PlantSection from '../components/sections/PlantSection'
 import BeautySection from '../components/sections/BeautySection'
 import RepairSection from '../components/sections/RepairSection'
 import CleaningSection from '../components/sections/CleaningSection'
-import MostBookedSection from '../components/sections/MostBookedSection'
+import RecommendedServicesSection from '../components/sections/RecommendedServices'
 
 const Home = () => {
   return (
     <div>
          <Hero />
-               <MostBookedSection/>
+              <RecommendedServicesSection/>
             <CleaningSection/>
             <RepairSection/>
             <BeautySection/>

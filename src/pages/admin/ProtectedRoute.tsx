@@ -1,39 +1,23 @@
-import { useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../../firebase";
+import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
-const ProtectedRoute = ({ children }: any) => {
-  const [status, setStatus] = useState<"loading" | "allowed" | "denied">("loading");
+interface Props {
+  children: ReactNode;
+}
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        setStatus("denied");
-        return;
-      }
+const ProtectedRoute = ({ children }: Props) => {
+  const { user, isAdmin, loading } = useAuth();
 
-      const token = await user.getIdTokenResult(true); // force refresh
-
-      if (token.claims.admin === true) {
-        setStatus("allowed");
-      } else {
-        setStatus("denied");
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (status === "loading") {
+  if (loading) {
     return <div className="p-10">Checking access...</div>;
   }
 
-  if (status === "denied") {
-    return <Navigate to="/admin/login" />;
+  if (!user || !isAdmin) {
+    return <Navigate to="/admin/login" replace />;
   }
 
-  return children;
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

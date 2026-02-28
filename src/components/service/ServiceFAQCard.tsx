@@ -4,36 +4,29 @@ import { ChevronDown } from "lucide-react";
 const faqs = [
   {
     question: "How long does the service take?",
-    answer:
-      "Typically between 60–90 minutes depending on unit condition.",
+    answer: "Typically between 60–90 minutes depending on unit condition.",
   },
   {
     question: "Is gas refill included?",
-    answer:
-      "Gas refill is charged separately if required after inspection.",
+    answer: "Gas refill is charged separately if required.",
   },
   {
     question: "Can I reschedule my booking?",
-    answer:
-      "Yes, you can reschedule up to 2 hours before the scheduled time.",
+    answer: "Yes, you can reschedule up to 2 hours before the scheduled time.",
   },
   {
     question: "What if I am not satisfied?",
-    answer:
-      "We offer a 30-day service warranty for eligible issues.",
+    answer: "We offer a service warranty for eligible issues.",
   },
 ];
 
 const ServiceFAQCard: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  const toggle = (index: number) => {
-    setActiveIndex(activeIndex === index ? null : index);
-  };
-
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-      <h3 className="text-2xl font-semibold mb-6">
+    <div className="bg-white rounded-3xl shadow-lg shadow-slate-200/40 p-10">
+
+      <h3 className="text-2xl font-semibold tracking-tight mb-8">
         Frequently Asked Questions
       </h3>
 
@@ -41,32 +34,33 @@ const ServiceFAQCard: React.FC = () => {
         {faqs.map((faq, index) => (
           <div
             key={index}
-            className="border border-slate-200 rounded-xl overflow-hidden"
+            className="bg-slate-50 rounded-2xl transition-all duration-200"
           >
             <button
-              onClick={() => toggle(index)}
-              className="w-full flex items-center justify-between px-5 py-4 text-left"
+              onClick={() =>
+                setActiveIndex(activeIndex === index ? null : index)
+              }
+              className="w-full flex items-center justify-between px-6 py-5 text-left font-medium text-slate-800 hover:bg-slate-100 rounded-2xl transition"
             >
-              <span className="font-medium text-slate-900">
-                {faq.question}
-              </span>
+              {faq.question}
 
               <ChevronDown
                 size={18}
-                className={`transition-transform ${
+                className={`transition-transform duration-200 ${
                   activeIndex === index ? "rotate-180" : ""
                 }`}
               />
             </button>
 
             {activeIndex === index && (
-              <div className="px-5 pb-4 text-slate-600 text-sm">
+              <div className="px-6 pb-6 text-slate-600 text-sm">
                 {faq.answer}
               </div>
             )}
           </div>
         ))}
       </div>
+
     </div>
   );
 };

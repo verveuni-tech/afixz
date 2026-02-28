@@ -2,7 +2,7 @@ import React from "react";
 
 const ServiceReviewsCard: React.FC = () => {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+    <div className="bg-white/90 backdrop-blur-sm shadow-lg shadow-slate-200/40 rounded-3xl transition-all duration-300 hover:shadow-xl">
 
       <h3 className="text-2xl font-semibold mb-6">Customer Reviews</h3>
 
