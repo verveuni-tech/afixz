@@ -17,6 +17,7 @@ import ProtectedRoute from "./src/pages/admin/ProtectedRoute";
 import UserProtectedRoute from "./src/hooks/UserProtectedRoute";
 import Checkout from "./src/pages/Checkout";
 import BookingSuccess from "./src/pages/BookingSuccess";
+import ServicesPage from "./src/pages/ServicesPage";
 
 /* ---------------- Layout ---------------- */
 
@@ -44,6 +45,7 @@ function App() {
         <Route path="/services/:slug" element={<ServiceDetail />} />
         <Route path="/category/:categorySlug" element={<CategoryServices />} />
         <Route path="/profile" element={<Profile />} />
+      
 
         {/* 🔐 USER PROTECTED ROUTE */}
         <Route
@@ -62,22 +64,8 @@ function App() {
           </UserProtectedRoute>
         }
       />
-<Route
-        path="/checkout"
-        element={
-          <UserProtectedRoute>
-            <Checkout />
-          </UserProtectedRoute>
-        }
-      />
-<Route
-        path="/checkout"
-        element={
-          <UserProtectedRoute>
-            <Checkout />
-          </UserProtectedRoute>
-        }
-      />
+
+
       <Route
         path="/booking-success/:id"
         element={

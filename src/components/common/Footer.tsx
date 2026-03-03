@@ -50,9 +50,7 @@ const Footer: React.FC = () => {
 
         <div className="flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
           <p>&copy; {new Date().getFullYear()} AfixZ. All rights reserved.</p>
-          <p className="flex items-center gap-1 mt-4 md:mt-0">
-            Made with <Heart size={14} className="text-red-500 fill-red-500" /> for reliable service.
-          </p>
+          
         </div>
       </div>
     </footer>

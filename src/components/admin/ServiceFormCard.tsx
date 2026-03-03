@@ -1,17 +1,55 @@
 import { useState, useEffect } from "react";
+import type { ChangeEvent } from "react";
 import {
   collection,
   addDoc,
   getDocs,
+  query,
+  where,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { Plus, Trash2, CheckCircle } from "lucide-react";
+import ImageUploader from "../ui/ImageUploader";
+
+/* ============================
+   TYPES
+============================ */
+
+interface UploadedImage {
+  url: string;
+  publicId: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface ServiceFormState {
+  title: string;
+  price: string;
+  duration: string;
+  warranty: string;
+  professionals: string;
+  overview: string;
+  categoryId: string;
+  images: UploadedImage[];
+}
+
+/* ============================
+   UTIL
+============================ */
 
 const slugify = (text: string) =>
   text.toLowerCase().trim().replace(/\s+/g, "-");
 
-const initialFormState = {
+/* ============================
+   INITIAL STATE
+============================ */
+
+const initialFormState: ServiceFormState = {
   title: "",
   price: "",
   duration: "",
@@ -19,17 +57,41 @@ const initialFormState = {
   professionals: "Verified",
   overview: "",
   categoryId: "",
-  images: ["", "", "", ""],
+  images: [],
 };
 
+/* ============================
+   COMPONENT
+============================ */
+
 const ServiceFormCard = () => {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const [form, setForm] = useState(initialFormState);
+  const [form, setForm] = useState<ServiceFormState>(initialFormState);
+
   const [included, setIncluded] = useState<string[]>([]);
   const [includeInput, setIncludeInput] = useState("");
+
+  /* ============================
+     FETCH CATEGORIES
+  ============================ */
+
+  const generateSearchKeywords = (title: string) => {
+  const words = title.toLowerCase().split(" ");
+  const keywords: string[] = [];
+
+  words.forEach((word) => {
+    let current = "";
+    for (const char of word) {
+      current += char;
+      keywords.push(current);
+    }
+  });
+
+  return keywords;
+};
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -37,71 +99,106 @@ const ServiceFormCard = () => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      }));
+      })) as Category[];
+
       setCategories(data);
     };
+
     fetchCategories();
   }, []);
 
-  const handleChange = (e: any) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  /* ============================
+     HANDLERS
+  ============================ */
 
-  const handleImageChange = (index: number, value: string) => {
-    const updated = [...form.images];
-    updated[index] = value;
-    setForm({ ...form, images: updated });
+  const handleChange = (
+    e: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const addInclude = () => {
     if (!includeInput.trim()) return;
-    setIncluded([...included, includeInput.trim()]);
+
+    setIncluded((prev) => [...prev, includeInput.trim()]);
     setIncludeInput("");
   };
 
   const removeInclude = (index: number) => {
-    setIncluded(included.filter((_, i) => i !== index));
+    setIncluded((prev) => prev.filter((_, i) => i !== index));
   };
 
+  /* ============================
+     SUBMIT
+  ============================ */
+
   const handleSubmit = async () => {
-    if (!form.title || !form.categoryId) {
+    if (!form.title.trim() || !form.categoryId) {
+      alert("Title and category are required");
       return;
     }
 
     try {
       setLoading(true);
 
+      const slug = slugify(form.title);
+
+      // Check duplicate slug
+      const existingQuery = query(
+        collection(db, "services"),
+        where("slug", "==", slug)
+      );
+
+      const existingSnapshot = await getDocs(existingQuery);
+
+      if (!existingSnapshot.empty) {
+        alert("A service with this title already exists.");
+        return;
+      }
+
       const selectedCategory = categories.find(
         (c) => c.id === form.categoryId
       );
 
-      await addDoc(collection(db, "services"), {
-        title: form.title.trim(),
-        slug: slugify(form.title),
-        price: Number(form.price),
-        duration: form.duration,
-        warranty: form.warranty,
-        professionals: form.professionals,
-        overview: form.overview,
-        included,
-        images: form.images.filter(Boolean),
-        categoryId: form.categoryId,
-        categorySlug: selectedCategory?.slug,
-        rating: 0,
-        reviewCount: 0,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      });
+    await addDoc(collection(db, "services"), {
+  title: form.title.trim(),
+  slug,
+  price: Number(form.price) || 0,
+  duration: form.duration,
+  warranty: form.warranty,
+  professionals: form.professionals,
+  overview: form.overview,
+  included,
 
-      // ✅ Proper Reset
+  // FIX: Save image URLs properly
+  images: form.images.map((img) => img.url),
+
+  categoryId: form.categoryId,
+  categorySlug: selectedCategory?.slug || "",
+
+  // PRODUCTION SEARCH FIELD
+  searchKeywords: generateSearchKeywords(form.title),
+
+  rating: 0,
+  reviewCount: 0,
+  createdAt: Timestamp.now(),
+  updatedAt: Timestamp.now(),
+});
+
+      // Reset
       setForm(initialFormState);
       setIncluded([]);
       setIncludeInput("");
 
-      // ✅ Show success popup
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-
     } catch (error) {
       console.error("Error adding service:", error);
     } finally {
@@ -109,14 +206,17 @@ const ServiceFormCard = () => {
     }
   };
 
+  /* ============================
+     RENDER
+  ============================ */
+
   return (
     <>
-      {/* Success Toast */}
       {showSuccess && (
-        <div className="fixed top-6 right-6 bg-white shadow-lg border border-emerald-200 rounded-xl px-6 py-4 flex items-center gap-3 animate-slideIn z-50">
+        <div className="fixed top-6 right-6 bg-white shadow-lg border border-emerald-200 rounded-xl px-6 py-4 flex items-center gap-3 z-50">
           <CheckCircle className="text-emerald-500" size={20} />
           <span className="text-sm font-medium text-slate-700">
-            Service added successfully 🎉
+            Service added successfully
           </span>
         </div>
       )}
@@ -169,22 +269,19 @@ const ServiceFormCard = () => {
           />
         </div>
 
-        {/* Images */}
+        {/* Image Uploader */}
         <div>
           <h3 className="text-sm font-medium text-slate-700 mb-4">
-            Service Images (Max 4)
+            Service Images
           </h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            {form.images.map((img, index) => (
-              <input
-                key={index}
-                placeholder={`Image URL ${index + 1}`}
-                value={img}
-                onChange={(e) => handleImageChange(index, e.target.value)}
-                className="border border-slate-200 rounded-xl px-4 py-3"
-              />
-            ))}
-          </div>
+
+          <ImageUploader
+            value={form.images}
+            onChange={(images) =>
+              setForm((prev) => ({ ...prev, images }))
+            }
+            maxImages={4}
+          />
         </div>
 
         {/* What's Included */}
@@ -243,7 +340,20 @@ const ServiceFormCard = () => {
 
 export default ServiceFormCard;
 
-function Input({ label, ...props }: any) {
+/* ============================
+   INPUT COMPONENT
+============================ */
+
+interface InputProps {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => void;
+}
+
+function Input({ label, ...props }: InputProps) {
   return (
     <div>
       <label className="block text-sm text-slate-600 mb-2">
