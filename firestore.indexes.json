@@ -61,6 +61,20 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "isRecommended",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "services",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "searchKeywords",
           "arrayConfig": "CONTAINS"
         },

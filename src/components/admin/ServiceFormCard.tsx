@@ -35,6 +35,7 @@ interface ServiceFormState {
   professionals: string;
   overview: string;
   categoryId: string;
+  isRecommended: boolean;
   images: UploadedImage[];
 }
 
@@ -57,6 +58,7 @@ const initialFormState: ServiceFormState = {
   professionals: "Verified",
   overview: "",
   categoryId: "",
+  isRecommended: false,
   images: [],
 };
 
@@ -117,10 +119,14 @@ const ServiceFormCard = () => {
     >
   ) => {
     const { name, value } = e.target;
+    const nextValue =
+      "checked" in e.target && e.target.type === "checkbox"
+        ? e.target.checked
+        : value;
 
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: nextValue,
     }));
   };
 
@@ -188,6 +194,7 @@ const ServiceFormCard = () => {
 
   rating: 0,
   reviewCount: 0,
+  isRecommended: form.isRecommended,
   createdAt: Timestamp.now(),
   updatedAt: Timestamp.now(),
 });
@@ -234,6 +241,24 @@ const ServiceFormCard = () => {
           <Input name="duration" label="Duration" value={form.duration} onChange={handleChange} />
           <Input name="warranty" label="Warranty" value={form.warranty} onChange={handleChange} />
         </div>
+
+        <label className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+          <input
+            type="checkbox"
+            name="isRecommended"
+            checked={form.isRecommended}
+            onChange={handleChange}
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+          />
+          <div>
+            <p className="text-sm font-semibold text-slate-800">
+              Feature in recommended services
+            </p>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Recommended services appear in the home page showcase when available.
+            </p>
+          </div>
+        </label>
 
         {/* Category */}
         <div>

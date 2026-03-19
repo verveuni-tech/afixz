@@ -5,6 +5,7 @@ import BeautySection from '../components/sections/BeautySection'
 import RepairSection from '../components/sections/RepairSection'
 import CleaningSection from '../components/sections/CleaningSection'
 import RecommendedServicesSection from '../components/sections/RecommendedServices'
+import TopCategoriesSection from '../components/sections/TopCategoriesSection'
 import useSeo from '../hooks/useSeo'
 
 const Home = () => {
@@ -21,6 +22,7 @@ const Home = () => {
   return (
     <div>
          <Hero />
+            <TopCategoriesSection />
               <RecommendedServicesSection/>
             <CleaningSection/>
             <RepairSection/>
