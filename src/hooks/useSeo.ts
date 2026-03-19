@@ -37,14 +37,21 @@ export default function useSeo({
     if (image) {
       upsertMeta("property", "og:image", image);
       upsertMeta("name", "twitter:image", image);
+    } else {
+      removeMeta("property", "og:image");
+      removeMeta("name", "twitter:image");
     }
 
     if (type === "article" && publishedTime) {
       upsertMeta("property", "article:published_time", publishedTime);
+    } else {
+      removeMeta("property", "article:published_time");
     }
 
     if (type === "article" && author) {
       upsertMeta("property", "article:author", author);
+    } else {
+      removeMeta("property", "article:author");
     }
 
     upsertCanonical(canonicalUrl || window.location.href);
@@ -71,6 +78,12 @@ function upsertMeta(attribute: "name" | "property", key: string, content: string
   }
 
   tag.setAttribute("content", content);
+}
+
+function removeMeta(attribute: "name" | "property", key: string) {
+  document.head
+    .querySelector<HTMLMetaElement>(`meta[${attribute}="${key}"]`)
+    ?.remove();
 }
 
 function upsertCanonical(href: string) {
