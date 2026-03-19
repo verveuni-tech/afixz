@@ -1,11 +1,13 @@
+export type AdminTab = "services" | "categories" | "blogs";
+
 interface Props {
-  activeTab: "services" | "categories";
-  setActiveTab: (tab: "services" | "categories") => void;
+  activeTab: AdminTab;
+  setActiveTab: (tab: AdminTab) => void;
 }
 
 const AdminTabs = ({ activeTab, setActiveTab }: Props) => {
   return (
-    <div className="bg-white p-2 rounded-2xl shadow-sm inline-flex space-x-2">
+    <div className="inline-flex flex-wrap gap-2 rounded-2xl bg-white p-2 shadow-sm">
 
       <button
         onClick={() => setActiveTab("services")}
@@ -27,6 +29,17 @@ const AdminTabs = ({ activeTab, setActiveTab }: Props) => {
         }`}
       >
         Categories
+      </button>
+
+      <button
+        onClick={() => setActiveTab("blogs")}
+        className={`px-6 py-2 rounded-xl text-sm font-medium transition ${
+          activeTab === "blogs"
+            ? "bg-blue-600 text-white"
+            : "text-slate-600 hover:bg-slate-100"
+        }`}
+      >
+        Blogs
       </button>
 
     </div>

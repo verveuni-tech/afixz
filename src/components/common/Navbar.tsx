@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Search, ShoppingCart, User, Menu, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import {
   collection,
@@ -27,6 +27,7 @@ const Navbar: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { cart } = useCart();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -38,43 +39,73 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
+
   /* ========================
      DEBOUNCED SEARCH
   ======================== */
 
   useEffect(() => {
+    let cancelled = false;
+
     const delay = setTimeout(async () => {
       if (term.trim().length < 2) {
         setResults([]);
+        setLoading(false);
         return;
       }
 
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      const q = query(
-        collection(db, "services"),
-        where("searchKeywords", "array-contains", term.toLowerCase()),
-        limit(6)
-      );
+        const q = query(
+          collection(db, "services"),
+          where("searchKeywords", "array-contains", term.toLowerCase()),
+          limit(6)
+        );
 
-      const snapshot = await getDocs(q);
+        const snapshot = await getDocs(q);
 
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Service[];
+        if (cancelled) {
+          return;
+        }
 
-      setResults(data);
-      setLoading(false);
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Service[];
+
+        setResults(data);
+      } catch (searchError) {
+        console.error("Search failed:", searchError);
+        if (!cancelled) {
+          setResults([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     }, 300);
 
-    return () => clearTimeout(delay);
+    return () => {
+      cancelled = true;
+      clearTimeout(delay);
+    };
   }, [term]);
 
   const handleNavigate = (slug: string) => {
     setTerm("");
     setResults([]);
-   navigate(`/services/${slug}`);
+    setIsOpen(false);
+    navigate(`/services/${slug}`);
+  };
+
+  const goTo = (path: string) => {
+    setIsOpen(false);
+    navigate(path);
   };
 
   return (
@@ -89,7 +120,7 @@ const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-20">
 
           {/* Logo */}
-          <button onClick={() => navigate("/")}>
+          <button onClick={() => goTo("/")}>
             <img
               src="https://res.cloudinary.com/du4ner2ab/image/upload/f_auto,q_auto,w_140/v1771519338/Untitled_design_13_1_dd7vux.png"
               alt="Logo"
@@ -160,8 +191,27 @@ const Navbar: React.FC = () => {
 
           {/* RIGHT */}
           <div className="flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-600">
+              <Link
+                to="/"
+                className={`transition-colors hover:text-blue-600 ${
+                  location.pathname === "/" ? "text-blue-600" : ""
+                }`}
+              >
+                Home
+              </Link>
+              <Link
+                to="/blogs"
+                className={`transition-colors hover:text-blue-600 ${
+                  location.pathname.startsWith("/blogs") ? "text-blue-600" : ""
+                }`}
+              >
+                Blogs
+              </Link>
+            </div>
+
             <button
-              onClick={() => navigate("/cart")}
+              onClick={() => goTo("/cart")}
               className="relative p-2 rounded-full hover:bg-slate-100"
             >
               <ShoppingCart size={20} />
@@ -173,7 +223,7 @@ const Navbar: React.FC = () => {
             </button>
 
             <button
-              onClick={() => navigate("/profile")}
+              onClick={() => goTo("/profile")}
               className="hidden md:flex w-9 h-9 bg-slate-200 rounded-full items-center justify-center"
             >
               <User size={18} />
@@ -188,6 +238,48 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {isOpen && (
+        <div className="border-t border-slate-200 bg-white px-6 py-5 md:hidden">
+          <div className="space-y-3">
+            <button
+              onClick={() => goTo("/")}
+              className={`block w-full rounded-2xl px-4 py-3 text-left text-sm font-medium ${
+                location.pathname === "/"
+                  ? "bg-blue-50 text-blue-700"
+                  : "bg-slate-50 text-slate-700"
+              }`}
+            >
+              Home
+            </button>
+
+            <button
+              onClick={() => goTo("/blogs")}
+              className={`block w-full rounded-2xl px-4 py-3 text-left text-sm font-medium ${
+                location.pathname.startsWith("/blogs")
+                  ? "bg-blue-50 text-blue-700"
+                  : "bg-slate-50 text-slate-700"
+              }`}
+            >
+              Blogs
+            </button>
+
+            <button
+              onClick={() => goTo("/profile")}
+              className="block w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700"
+            >
+              Profile
+            </button>
+
+            <button
+              onClick={() => goTo("/cart")}
+              className="block w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700"
+            >
+              Cart
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

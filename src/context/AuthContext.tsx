@@ -7,9 +7,7 @@ import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
   serverTimestamp,
-  DocumentData,
 } from "firebase/firestore";
 import React, {
   createContext,
@@ -114,11 +112,6 @@ export const AuthProvider = ({
           } else {
             const existingProfile =
               snap.data() as UserProfile;
-
-            // Update updatedAt timestamp
-            await updateDoc(userRef, {
-              updatedAt: serverTimestamp(),
-            });
 
             setProfile(existingProfile);
           }

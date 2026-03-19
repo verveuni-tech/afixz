@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  collection,
-  query,
-  orderBy,
-  limit,
-  getDocs,
-} from "firebase/firestore";
+import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { Link } from "react-router-dom";
 import { db } from "../../firebase";
 
 export default function ServicesTable() {
@@ -13,83 +8,104 @@ export default function ServicesTable() {
 
   useEffect(() => {
     async function load() {
-      const q = query(
-        collection(db, "services"),
-        orderBy("createdAt", "desc"),
-        limit(10)
+      const snapshot = await getDocs(
+        query(collection(db, "services"), orderBy("createdAt", "desc"), limit(10))
       );
 
-      const snapshot = await getDocs(q);
-
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setServices(data);
+      setServices(
+        snapshot.docs.map((entry) => ({
+          id: entry.id,
+          ...entry.data(),
+        }))
+      );
     }
 
     load();
   }, []);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-800">Recent Services</h2>
+          <p className="mt-1 text-xs text-slate-500">Showing latest 10</p>
+        </div>
 
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-slate-800">
-          Recent Services
-        </h2>
-        <span className="text-xs text-slate-500">
-          Showing latest 10
-        </span>
+        <Link
+          to="/admin/services?tab=services"
+          className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        >
+          New Service
+        </Link>
       </div>
 
       {services.length === 0 ? (
-        <div className="py-16 text-center text-slate-500 text-sm">
-          No services found.
-        </div>
+        <div className="py-16 text-center text-sm text-slate-500">No services found.</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-slate-500 border-b border-slate-200">
-              <tr>
-                <th className="py-3 font-medium">Title</th>
-                <th className="font-medium">Price</th>
-                <th className="font-medium">Duration</th>
-                <th className="font-medium">Slug</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {services.map((service) => (
-                <tr
-                  key={service.id}
-                  className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
-                >
-                  <td className="py-4 font-medium text-slate-700">
-                    {service.title}
-                  </td>
-
-                  <td className="text-blue-600 font-semibold">
-                    ₹{service.price}
-                  </td>
-
-                  <td>
-                    <span className="px-3 py-1 rounded-full text-xs bg-emerald-50 text-emerald-600 font-medium">
-                      {service.duration}
-                    </span>
-                  </td>
-
-                  <td>
-                    <span className="px-2 py-1 text-xs rounded-md bg-slate-100 text-slate-600">
-                      {service.slug}
-                    </span>
-                  </td>
+        <>
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 text-slate-500">
+                <tr>
+                  <th className="py-3 font-medium">Title</th>
+                  <th className="font-medium">Price</th>
+                  <th className="font-medium">Duration</th>
+                  <th className="font-medium">Slug</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {services.map((service) => (
+                  <tr
+                    key={service.id}
+                    className="border-b border-slate-100 transition-colors hover:bg-slate-50"
+                  >
+                    <td className="py-4 font-medium text-slate-700">{service.title}</td>
+                    <td className="font-semibold text-blue-600">Rs {service.price}</td>
+                    <td>
+                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
+                        {service.duration}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                        {service.slug}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="space-y-4 md:hidden">
+            {services.map((service) => (
+              <div
+                key={service.id}
+                className="rounded-2xl border border-slate-200 p-4"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-medium text-slate-800">{service.title}</p>
+                    <p className="mt-1 text-sm font-semibold text-blue-600">
+                      Rs {service.price}
+                    </p>
+                  </div>
+
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
+                    {service.duration}
+                  </span>
+                </div>
+
+                <div className="mt-3">
+                  <span className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                    {service.slug}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

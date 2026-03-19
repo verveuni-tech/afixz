@@ -38,7 +38,7 @@ const AdminHeader = () => {
 
             <NavItem
               to="/admin/services"
-              label="Manage Services"
+              label="Manage Content"
               active={isActive("/admin/services")}
             />
 
@@ -92,7 +92,7 @@ const AdminHeader = () => {
                 : "text-slate-600"
             }`}
           >
-            Manage Services
+            Manage Content
           </Link>
 
           <button
