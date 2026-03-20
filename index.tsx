@@ -6,6 +6,7 @@ import "@fontsource-variable/inter";
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './src/context/AuthContext';
 import { CartProvider } from './src/context/CartContext';
+import { ToastProvider } from './src/components/ui/Toast';
 
 
 const rootElement = document.getElementById('root');
@@ -17,11 +18,13 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-    <AuthProvider> 
-      <CartProvider> 
+    <ToastProvider>
+    <AuthProvider>
+      <CartProvider>
       <App />
       </CartProvider>
       </AuthProvider>
+    </ToastProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

@@ -45,8 +45,7 @@ const AdminLogin = () => {
       }
 
       navigate("/admin/dashboard", { replace: true });
-    } catch (authError) {
-      console.error(authError);
+    } catch {
       setError("We could not complete sign-in right now. Please try again.");
     } finally {
       setLoading(false);

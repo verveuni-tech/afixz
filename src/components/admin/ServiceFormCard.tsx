@@ -9,8 +9,9 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "../../firebase";
-import { Plus, Trash2, CheckCircle } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import ImageUploader from "../ui/ImageUploader";
+import { useToast } from "../ui/Toast";
 
 /* ============================
    TYPES
@@ -69,7 +70,7 @@ const initialFormState: ServiceFormState = {
 const ServiceFormCard = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const { showToast } = useToast();
 
   const [form, setForm] = useState<ServiceFormState>(initialFormState);
 
@@ -147,7 +148,7 @@ const ServiceFormCard = () => {
 
   const handleSubmit = async () => {
     if (!form.title.trim() || !form.categoryId) {
-      alert("Title and category are required");
+      showToast("Title and category are required.", "error");
       return;
     }
 
@@ -165,7 +166,7 @@ const ServiceFormCard = () => {
       const existingSnapshot = await getDocs(existingQuery);
 
       if (!existingSnapshot.empty) {
-        alert("A service with this title already exists.");
+        showToast("A service with this title already exists.", "error");
         return;
       }
 
@@ -204,10 +205,9 @@ const ServiceFormCard = () => {
       setIncluded([]);
       setIncludeInput("");
 
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      showToast("Service added successfully.", "success");
     } catch (error) {
-      console.error("Error adding service:", error);
+      showToast("Failed to add service. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -219,15 +219,6 @@ const ServiceFormCard = () => {
 
   return (
     <>
-      {showSuccess && (
-        <div className="fixed top-6 right-6 bg-white shadow-lg border border-emerald-200 rounded-xl px-6 py-4 flex items-center gap-3 z-50">
-          <CheckCircle className="text-emerald-500" size={20} />
-          <span className="text-sm font-medium text-slate-700">
-            Service added successfully
-          </span>
-        </div>
-      )}
-
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 space-y-10">
 
         <h2 className="text-xl font-semibold text-slate-800">

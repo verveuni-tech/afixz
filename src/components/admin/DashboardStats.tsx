@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import { Grid, Layers, Newspaper, Sparkles } from "lucide-react";
 import { db } from "../../firebase";
+import { useToast } from "../ui/Toast";
 
 export default function DashboardStats() {
   const [services, setServices] = useState(0);
@@ -16,28 +17,33 @@ export default function DashboardStats() {
   const [blogs, setBlogs] = useState(0);
   const [latestService, setLatestService] = useState("No services yet");
   const [latestBlog, setLatestBlog] = useState("No blogs yet");
+  const { showToast } = useToast();
 
   useEffect(() => {
     async function load() {
-      const [servicesCount, categoriesCount, blogsCount, latestServiceSnapshot, latestBlogSnapshot] =
-        await Promise.all([
-          getCountFromServer(collection(db, "services")),
-          getCountFromServer(collection(db, "categories")),
-          getCountFromServer(collection(db, "blogs")),
-          getDocs(query(collection(db, "services"), orderBy("createdAt", "desc"), limit(1))),
-          getDocs(query(collection(db, "blogs"), orderBy("createdAt", "desc"), limit(1))),
-        ]);
+      try {
+        const [servicesCount, categoriesCount, blogsCount, latestServiceSnapshot, latestBlogSnapshot] =
+          await Promise.all([
+            getCountFromServer(collection(db, "services")),
+            getCountFromServer(collection(db, "categories")),
+            getCountFromServer(collection(db, "blogs")),
+            getDocs(query(collection(db, "services"), orderBy("createdAt", "desc"), limit(1))),
+            getDocs(query(collection(db, "blogs"), orderBy("createdAt", "desc"), limit(1))),
+          ]);
 
-      setServices(servicesCount.data().count);
-      setCategories(categoriesCount.data().count);
-      setBlogs(blogsCount.data().count);
+        setServices(servicesCount.data().count);
+        setCategories(categoriesCount.data().count);
+        setBlogs(blogsCount.data().count);
 
-      if (!latestServiceSnapshot.empty) {
-        setLatestService(String(latestServiceSnapshot.docs[0].data().title || "Untitled"));
-      }
+        if (!latestServiceSnapshot.empty) {
+          setLatestService(String(latestServiceSnapshot.docs[0].data().title || "Untitled"));
+        }
 
-      if (!latestBlogSnapshot.empty) {
-        setLatestBlog(String(latestBlogSnapshot.docs[0].data().title || "Untitled"));
+        if (!latestBlogSnapshot.empty) {
+          setLatestBlog(String(latestBlogSnapshot.docs[0].data().title || "Untitled"));
+        }
+      } catch {
+        showToast("Failed to load dashboard stats.", "error");
       }
     }
 

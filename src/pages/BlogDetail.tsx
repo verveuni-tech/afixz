@@ -55,8 +55,7 @@ const BlogDetail: React.FC = () => {
 
         setBlog(matchedBlog);
         setError("");
-      } catch (fetchError) {
-        console.error(fetchError);
+      } catch {
         setError("We couldn't load this article right now. Please try again shortly.");
       } finally {
         setLoading(false);

@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import { uploadImageWithProgress } from "../../lib/cloudinary";
 import { Trash2, UploadCloud } from "lucide-react";
+import { useToast } from "./Toast";
 
 interface UploadedImage {
   url: string;
@@ -20,6 +21,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 }) => {
   const [uploading, setUploading] = useState(false);
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
+  const { showToast } = useToast();
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFiles = useCallback(
@@ -29,7 +31,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       const fileArray = Array.from(files);
 
       if (value.length + fileArray.length > maxImages) {
-        alert(`Maximum ${maxImages} images allowed`);
+        showToast(`Maximum ${maxImages} image${maxImages === 1 ? "" : "s"} allowed.`, "error");
         return;
       }
 
@@ -60,8 +62,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             return updated;
           });
         }
-      } catch (error) {
-        console.error(error);
+      } catch {
+        showToast("Image upload failed. Please try again.", "error");
       } finally {
         setUploading(false);
       }

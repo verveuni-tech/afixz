@@ -78,8 +78,7 @@ const Navbar: React.FC = () => {
         })) as Service[];
 
         setResults(data);
-      } catch (searchError) {
-        console.error("Search failed:", searchError);
+      } catch {
         if (!cancelled) {
           setResults([]);
         }

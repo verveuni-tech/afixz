@@ -55,8 +55,8 @@ const ServiceDetail: React.FC = () => {
         } else {
           setNotFound(true);
         }
-      } catch (error) {
-        console.error("Error fetching service:", error);
+      } catch {
+        setNotFound(true);
       } finally {
         setLoading(false);
       }

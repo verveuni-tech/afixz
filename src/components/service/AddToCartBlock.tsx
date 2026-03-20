@@ -3,6 +3,7 @@ import { useCart } from "../../context/CartContext";
 import { useRequireAuth } from "../../hooks/useRequireAuth";
 import { useAuth } from "../../context/AuthContext";
 import PhoneLogin from "../auth/PhoneLogin";
+import { useToast } from "../ui/Toast";
 
 interface Props {
   serviceId: string;
@@ -19,6 +20,7 @@ const AddToCartBlock: React.FC<Props> = ({
 }) => {
   const { cart, addToCart, removeFromCart } = useCart();
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const {
     requireAuth,
@@ -47,8 +49,9 @@ const AddToCartBlock: React.FC<Props> = ({
           slug,
         });
 
+        showToast("Added to cart.", "success");
       } catch (err) {
-        console.error("Add to cart failed:", err);
+        showToast("Failed to add to cart. Please try again.", "error");
       } finally {
         setLoading(false);
       }

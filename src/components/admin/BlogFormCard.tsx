@@ -10,7 +10,8 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { CheckCircle, RefreshCcw } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
+import { useToast } from "../ui/Toast";
 import { db } from "../../firebase";
 import ImageUploader from "../ui/ImageUploader";
 import {
@@ -89,8 +90,8 @@ const BlogFormCard = ({
 }: BlogFormCardProps) => {
   const [form, setForm] = useState<BlogFormState>(initialFormState);
   const [loading, setLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!blogToEdit) {
@@ -164,7 +165,7 @@ const BlogFormCard = ({
     const slug = form.slug || slugifyText(form.title);
 
     if (!form.title.trim() || !slug) {
-      alert("Title and slug are required.");
+      showToast("Title and slug are required.", "error");
       return;
     }
 
@@ -182,7 +183,7 @@ const BlogFormCard = ({
       );
 
       if (hasDuplicate) {
-        alert("A blog with this slug already exists.");
+        showToast("A blog with this slug already exists.", "error");
         return;
       }
 
@@ -232,14 +233,12 @@ const BlogFormCard = ({
         });
       }
 
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      showToast(blogToEdit ? "Blog updated successfully." : "Blog published successfully.", "success");
       setForm(initialFormState);
       setSlugManuallyEdited(false);
       onSaved();
     } catch (error) {
-      console.error("Error saving blog:", error);
-      alert("We couldn't save the blog. Please try again.");
+      showToast("Failed to save the blog. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -255,15 +254,6 @@ const BlogFormCard = ({
 
   return (
     <>
-      {showSuccess && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 rounded-xl border border-emerald-200 bg-white px-6 py-4 shadow-lg">
-          <CheckCircle className="text-emerald-500" size={20} />
-          <span className="text-sm font-medium text-slate-700">
-            {blogToEdit ? "Blog updated successfully" : "Blog added successfully"}
-          </span>
-        </div>
-      )}
-
       <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>

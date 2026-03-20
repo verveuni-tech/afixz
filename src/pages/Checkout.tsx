@@ -6,11 +6,13 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
+import { useToast } from "../components/ui/Toast";
 
 const Checkout: React.FC = () => {
   const { cart, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -55,7 +57,7 @@ const Checkout: React.FC = () => {
 
     for (let field of required) {
       if (!form[field as keyof typeof form]) {
-        alert("Please complete all required fields.");
+        showToast("Please complete all required fields.", "error");
         return false;
       }
     }
@@ -87,8 +89,7 @@ const Checkout: React.FC = () => {
 
       navigate(`/booking-success/${docRef.id}`);
     } catch (err) {
-      console.error(err);
-      alert("Something went wrong.");
+      showToast("Something went wrong. Please try again.", "error");
     } finally {
       setLoading(false);
     }

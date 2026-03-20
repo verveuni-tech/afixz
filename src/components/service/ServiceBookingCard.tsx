@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useRequireAuth } from "../../hooks/useRequireAuth";
 import { useAuth } from "../../context/AuthContext";
 import PhoneLogin from "../auth/PhoneLogin";
+import { useToast } from "../ui/Toast";
 
 import {
   collection,
@@ -32,6 +33,7 @@ const ServiceBookingCard: React.FC<Props> = ({
   price,
 }) => {
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const {
     requireAuth,
@@ -72,12 +74,12 @@ const ServiceBookingCard: React.FC<Props> = ({
       !form.date ||
       !form.time
     ) {
-      alert("Please fill all fields.");
+      showToast("Please fill all fields.", "error");
       return false;
     }
 
     if (!/^[6-9]\d{9}$/.test(form.phone)) {
-      alert("Enter valid 10-digit phone number.");
+      showToast("Enter a valid 10-digit phone number.", "error");
       return false;
     }
 
@@ -112,9 +114,9 @@ const ServiceBookingCard: React.FC<Props> = ({
         });
 
         setSuccess(true);
+        showToast("Booking confirmed! Our team will contact you shortly.", "success");
       } catch (error) {
-        console.error("Booking failed:", error);
-        alert("Something went wrong. Try again.");
+        showToast("Booking failed. Please try again.", "error");
       } finally {
         setLoading(false);
       }

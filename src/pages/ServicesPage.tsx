@@ -55,8 +55,8 @@ const ServicesPage: React.FC = () => {
 
       const snapshot = await getCountFromServer(countQuery);
       setTotalCount(snapshot.data().count);
-    } catch (countError) {
-      console.error(countError);
+    } catch {
+      // count is non-critical, pagination still works without it
     }
   }
 
@@ -82,8 +82,7 @@ const ServicesPage: React.FC = () => {
       setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
       setHasMore(snapshot.docs.length === PAGE_SIZE);
       setError("");
-    } catch (fetchError) {
-      console.error(fetchError);
+    } catch {
       setError("We couldn't load services right now. Please try again shortly.");
     } finally {
       setLoading(false);

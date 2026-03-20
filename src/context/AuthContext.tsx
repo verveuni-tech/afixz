@@ -17,6 +17,7 @@ import React, {
   ReactNode,
 } from "react";
 import { auth, db } from "../firebase";
+import { useToast } from "../components/ui/Toast";
 
 /* ---------------- Types ---------------- */
 
@@ -49,6 +50,8 @@ export const AuthProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  const { showToast } = useToast();
+
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(
     null
@@ -115,11 +118,8 @@ export const AuthProvider = ({
 
             setProfile(existingProfile);
           }
-        } catch (err) {
-          console.error(
-            "Auth initialization error:",
-            err
-          );
+        } catch {
+          showToast("Failed to load your account. Please refresh.", "error");
         }
 
         setLoading(false);

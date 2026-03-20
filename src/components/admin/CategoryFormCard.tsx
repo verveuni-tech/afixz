@@ -8,6 +8,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "../../firebase";
+import { useToast } from "../ui/Toast";
 
 const slugify = (text: string) =>
   text
@@ -19,36 +20,41 @@ const slugify = (text: string) =>
 const CategoryFormCard = () => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
 
   const handleSubmit = async () => {
     if (!name.trim()) return;
 
     setLoading(true);
 
-    const slug = slugify(name);
+    try {
+      const slug = slugify(name);
 
-    // Prevent duplicate slug
-    const q = query(
-      collection(db, "categories"),
-      where("slug", "==", slug)
-    );
+      const q = query(
+        collection(db, "categories"),
+        where("slug", "==", slug)
+      );
 
-    const snapshot = await getDocs(q);
+      const snapshot = await getDocs(q);
 
-    if (!snapshot.empty) {
-      alert("Category already exists.");
+      if (!snapshot.empty) {
+        showToast("A category with this name already exists.", "error");
+        return;
+      }
+
+      await addDoc(collection(db, "categories"), {
+        name: name.trim(),
+        slug,
+        createdAt: Timestamp.now(),
+      });
+
+      setName("");
+      showToast("Category added successfully.", "success");
+    } catch {
+      showToast("Failed to add category. Please try again.", "error");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    await addDoc(collection(db, "categories"), {
-      name: name.trim(),
-      slug,
-      createdAt: Timestamp.now(),
-    });
-
-    setName("");
-    setLoading(false);
   };
 
   return (

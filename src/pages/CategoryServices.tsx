@@ -18,6 +18,7 @@ type Service = {
   title: string;
   slug: string;
   price: number;
+  rating?: number;
   images?: string[];
 };
 
@@ -87,8 +88,8 @@ const CategoryServices: React.FC = () => {
       setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
       setHasMore(snapshot.docs.length === PAGE_SIZE);
 
-    } catch (err) {
-      console.error(err);
+    } catch {
+      // services will remain empty — user sees empty state
     }
 
     setLoading(false);
@@ -195,10 +196,14 @@ const CategoryServices: React.FC = () => {
                         </h3>
 
                         <div className="flex justify-between text-sm">
-                          <div className="flex items-center gap-1 text-slate-600">
-                            <Star size={14} fill="currentColor" />
-                            4.7
-                          </div>
+                          {service.rating && service.rating > 0 ? (
+                            <div className="flex items-center gap-1 text-slate-600">
+                              <Star size={14} fill="currentColor" />
+                              {service.rating.toFixed(1)}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 text-xs">No ratings yet</span>
+                          )}
 
                           <span className="font-semibold">
                             ₹{service.price}

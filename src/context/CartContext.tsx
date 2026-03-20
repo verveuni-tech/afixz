@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "./AuthContext";
+import { useToast } from "../components/ui/Toast";
 
 interface CartItem {
   serviceId: string;
@@ -40,6 +41,7 @@ export const CartProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,8 +75,8 @@ export const CartProvider: React.FC<{
         );
 
         setCart(items);
-      } catch (error) {
-        console.error("Error loading cart:", error);
+      } catch {
+        showToast("Failed to load your cart.", "error");
       } finally {
         setLoading(false);
       }
@@ -114,8 +116,8 @@ export const CartProvider: React.FC<{
         ...item,
         addedAt: serverTimestamp(),
       });
-    } catch (error) {
-      console.error("Add to cart failed:", error);
+    } catch {
+      showToast("Failed to add item to cart.", "error");
 
       // Rollback
       setCart((prev) =>
@@ -154,8 +156,8 @@ export const CartProvider: React.FC<{
       );
 
       await deleteDoc(itemRef);
-    } catch (error) {
-      console.error("Remove failed:", error);
+    } catch {
+      showToast("Failed to remove item from cart.", "error");
 
       // Rollback
       setCart(previousCart);
@@ -188,8 +190,8 @@ export const CartProvider: React.FC<{
       );
 
       await Promise.all(deletes);
-    } catch (error) {
-      console.error("Clear failed:", error);
+    } catch {
+      showToast("Failed to clear cart.", "error");
       setCart(previousCart);
     }
   };

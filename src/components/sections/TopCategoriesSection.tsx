@@ -61,8 +61,7 @@ const TopCategoriesSection = () => {
         if (isMounted) {
           setCategories(data);
         }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
+      } catch {
       } finally {
         if (isMounted) {
           setLoading(false);

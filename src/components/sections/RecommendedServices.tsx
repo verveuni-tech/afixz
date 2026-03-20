@@ -75,8 +75,7 @@ const RecommendedServicesSection = () => {
           setServices(latestData);
           setSource("latest");
         }
-      } catch (error) {
-        console.error("Error fetching recommended services:", error);
+      } catch {
       } finally {
         if (isMounted) {
           setLoading(false);
