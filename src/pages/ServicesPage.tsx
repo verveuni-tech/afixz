@@ -3,7 +3,6 @@ import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 import { useSearchParams, Link } from "react-router-dom";
 import {
   collection,
-  getCountFromServer,
   getDocs,
   limit,
   orderBy,
@@ -12,55 +11,39 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../firebase";
-
-type Service = {
-  id: string;
-  title: string;
-  slug: string;
-  price: number;
-  images?: string[];
-};
+import { useLocationContext } from "../context/LocationContext";
+import { getLocationLabel } from "../lib/locations";
+import {
+  isServiceAvailableInLocation,
+  normalizeService,
+  resolveServiceForLocation,
+  ServiceEntry,
+} from "../lib/services";
 
 const PAGE_SIZE = 12;
+const BATCH_SIZE = 24;
 
 const ServicesPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const search = (searchParams.get("search") || "").trim().toLowerCase();
+  const { selectedLocation } = useLocationContext();
 
-  const [services, setServices] = useState<Service[]>([]);
+  const [services, setServices] = useState<ServiceEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
   const [lastDoc, setLastDoc] =
     useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     setServices([]);
     setLastDoc(null);
     setHasMore(false);
-    void loadCount(search);
-    void fetchServices(search, false);
-  }, [search]);
+    void fetchServices(false);
+  }, [search, selectedLocation]);
 
-  async function loadCount(searchTerm: string) {
-    try {
-      const countQuery = searchTerm
-        ? query(
-            collection(db, "services"),
-            where("searchKeywords", "array-contains", searchTerm)
-          )
-        : collection(db, "services");
-
-      const snapshot = await getCountFromServer(countQuery);
-      setTotalCount(snapshot.data().count);
-    } catch (countError) {
-      console.error(countError);
-    }
-  }
-
-  async function fetchServices(searchTerm: string, loadMore: boolean) {
+  async function fetchServices(loadMore: boolean) {
     try {
       if (loadMore) {
         setLoadingMore(true);
@@ -68,19 +51,29 @@ const ServicesPage: React.FC = () => {
         setLoading(true);
       }
 
-      const baseQuery = searchTerm
-        ? buildSearchQuery(searchTerm, loadMore ? lastDoc : null)
-        : buildBrowseQuery(loadMore ? lastDoc : null);
+      const results: ServiceEntry[] = [];
+      let cursor = loadMore ? lastDoc : null;
+      let keepLoading = true;
 
-      const snapshot = await getDocs(baseQuery);
-      const data = snapshot.docs.map((entry) => ({
-        id: entry.id,
-        ...entry.data(),
-      })) as Service[];
+      while (keepLoading && results.length < PAGE_SIZE) {
+        const baseQuery = search
+          ? buildSearchQuery(search, cursor)
+          : buildBrowseQuery(cursor);
 
-      setServices((prev) => (loadMore ? [...prev, ...data] : data));
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
-      setHasMore(snapshot.docs.length === PAGE_SIZE);
+        const snapshot = await getDocs(baseQuery);
+        const batch = snapshot.docs
+          .map((entry) => normalizeService(entry.id, entry.data() as Record<string, any>))
+          .filter((service) => isServiceAvailableInLocation(service, selectedLocation))
+          .map((service) => resolveServiceForLocation(service, selectedLocation));
+
+        results.push(...batch.slice(0, PAGE_SIZE - results.length));
+        cursor = snapshot.docs[snapshot.docs.length - 1] || cursor;
+        keepLoading = snapshot.docs.length === BATCH_SIZE;
+      }
+
+      setServices((prev) => (loadMore ? [...prev, ...results] : results));
+      setLastDoc(cursor);
+      setHasMore(keepLoading);
       setError("");
     } catch (fetchError) {
       console.error(fetchError);
@@ -100,14 +93,14 @@ const ServicesPage: React.FC = () => {
               {search ? `Results for "${search}"` : "All Services"}
             </h1>
             <p className="mt-2 text-slate-600">
-              {search
-                ? "Matched using optimized search keywords."
-                : "Browse the latest services without loading the whole catalog at once."}
+              {selectedLocation
+                ? `Showing services available in ${getLocationLabel(selectedLocation)}.`
+                : "Browse services across all currently supported locations."}
             </p>
           </div>
 
           <div className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm">
-            Showing {services.length} of {totalCount || services.length}
+            Showing {services.length} service{services.length === 1 ? "" : "s"}
           </div>
         </div>
 
@@ -129,7 +122,7 @@ const ServicesPage: React.FC = () => {
           </div>
         ) : services.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-8 py-16 text-center text-slate-500 shadow-sm">
-            No services found.
+            No services found for this search and location combination.
           </div>
         ) : (
           <>
@@ -154,6 +147,9 @@ const ServicesPage: React.FC = () => {
                       {service.title}
                     </h3>
 
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {service.shortDescription}
+                    </p>
                     <p className="mt-3 text-lg font-semibold">Rs {service.price}</p>
                   </div>
                 </Link>
@@ -164,7 +160,7 @@ const ServicesPage: React.FC = () => {
               <div className="mt-10 flex justify-center">
                 <button
                   type="button"
-                  onClick={() => void fetchServices(search, true)}
+                  onClick={() => void fetchServices(true)}
                   disabled={loadingMore}
                   className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
                 >
@@ -187,9 +183,9 @@ function buildBrowseQuery(lastDoc: QueryDocumentSnapshot<DocumentData> | null) {
         collection(db, "services"),
         orderBy("createdAt", "desc"),
         startAfter(lastDoc),
-        limit(PAGE_SIZE)
+        limit(BATCH_SIZE)
       )
-    : query(collection(db, "services"), orderBy("createdAt", "desc"), limit(PAGE_SIZE));
+    : query(collection(db, "services"), orderBy("createdAt", "desc"), limit(BATCH_SIZE));
 }
 
 function buildSearchQuery(
@@ -202,12 +198,12 @@ function buildSearchQuery(
         where("searchKeywords", "array-contains", searchTerm),
         orderBy("createdAt", "desc"),
         startAfter(lastDoc),
-        limit(PAGE_SIZE)
+        limit(BATCH_SIZE)
       )
     : query(
         collection(db, "services"),
         where("searchKeywords", "array-contains", searchTerm),
         orderBy("createdAt", "desc"),
-        limit(PAGE_SIZE)
+        limit(BATCH_SIZE)
       );
 }

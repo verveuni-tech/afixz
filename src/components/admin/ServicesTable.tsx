@@ -20,7 +20,7 @@ export default function ServicesTable() {
       );
     }
 
-    load();
+    void load();
   }, []);
 
   return (
@@ -51,6 +51,7 @@ export default function ServicesTable() {
                   <th className="font-medium">Price</th>
                   <th className="font-medium">Duration</th>
                   <th className="font-medium">Slug</th>
+                  <th className="font-medium text-right">Action</th>
                 </tr>
               </thead>
 
@@ -71,6 +72,14 @@ export default function ServicesTable() {
                       <span className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">
                         {service.slug}
                       </span>
+                    </td>
+                    <td className="text-right">
+                      <Link
+                        to={`/admin/services?tab=services&editService=${service.id}`}
+                        className="text-sm font-medium text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -97,10 +106,17 @@ export default function ServicesTable() {
                   </span>
                 </div>
 
-                <div className="mt-3">
+                <div className="mt-3 flex items-center justify-between">
                   <span className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">
                     {service.slug}
                   </span>
+
+                  <Link
+                    to={`/admin/services?tab=services&editService=${service.id}`}
+                    className="text-sm font-medium text-blue-600 hover:underline"
+                  >
+                    Edit
+                  </Link>
                 </div>
               </div>
             ))}

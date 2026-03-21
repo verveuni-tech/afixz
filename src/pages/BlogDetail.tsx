@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { ArrowLeft, CalendarDays, Clock3 } from "lucide-react";
@@ -7,12 +7,16 @@ import useSeo from "../hooks/useSeo";
 import {
   BlogEntry,
   formatBlogDate,
+  isBlogAvailableInLocation,
   isBlogPublished,
   normalizeBlog,
+  resolveBlogForLocation,
 } from "../lib/blogs";
+import { useLocationContext } from "../context/LocationContext";
 
 const BlogDetail: React.FC = () => {
   const { blogId } = useParams();
+  const { selectedLocation } = useLocationContext();
 
   const [blog, setBlog] = useState<BlogEntry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,31 +70,43 @@ const BlogDetail: React.FC = () => {
     void fetchBlog();
   }, [blogId]);
 
+  const resolvedBlog = useMemo(() => {
+    if (!blog) {
+      return null;
+    }
+
+    return resolveBlogForLocation(blog, selectedLocation);
+  }, [blog, selectedLocation]);
+
+  const unavailableForLocation = resolvedBlog
+    ? !isBlogAvailableInLocation(resolvedBlog, selectedLocation)
+    : false;
+
   const fallbackTitle = loading
     ? "Loading Blog | AfixZ Blog"
     : error
     ? "Blog Unavailable | AfixZ Blog"
     : "AfixZ Blog";
-  const seoPageTitle = blog
-    ? /afixz/i.test(blog.seoTitle)
-      ? blog.seoTitle
-      : `${blog.seoTitle} | AfixZ Blog`
+  const seoPageTitle = resolvedBlog
+    ? /afixz/i.test(resolvedBlog.seoTitle)
+      ? resolvedBlog.seoTitle
+      : `${resolvedBlog.seoTitle} | AfixZ Blog`
     : fallbackTitle;
   const seoDescription =
-    blog?.seoDescription || blog?.excerpt || "Read the latest updates from the AfixZ blog.";
-  const seoCanonicalUrl = blog
-    ? blog.canonicalUrl || `${window.location.origin}/blogs/${blog.slug || blog.id}`
+    resolvedBlog?.seoDescription || resolvedBlog?.excerpt || "Read the latest updates from the AfixZ blog.";
+  const seoCanonicalUrl = resolvedBlog
+    ? resolvedBlog.canonicalUrl || `${window.location.origin}/blogs/${resolvedBlog.slug || resolvedBlog.id}`
     : `${window.location.origin}${blogId ? `/blogs/${blogId}` : "/blogs"}`;
 
   useSeo({
     title: seoPageTitle,
     description: seoDescription,
     canonicalUrl: seoCanonicalUrl,
-    image: blog?.ogImage || blog?.coverImage,
+    image: resolvedBlog?.ogImage || resolvedBlog?.coverImage,
     type: "article",
-    keywords: blog?.tags || ["afixz blog", "home services"],
-    publishedTime: blog?.publishedAt?.toISOString(),
-    author: blog?.author,
+    keywords: resolvedBlog?.tags || ["afixz blog", "home services"],
+    publishedTime: resolvedBlog?.publishedAt?.toISOString(),
+    author: resolvedBlog?.author,
   });
 
   if (!blogId) {
@@ -134,11 +150,11 @@ const BlogDetail: React.FC = () => {
     );
   }
 
-  if (!blog) {
+  if (!resolvedBlog) {
     return <Navigate to="/blogs" replace />;
   }
 
-  const paragraphs = blog.content
+  const paragraphs = resolvedBlog.content
     .split(/\n+/)
     .map((part) => part.trim())
     .filter(Boolean);
@@ -154,20 +170,26 @@ const BlogDetail: React.FC = () => {
           Back to blogs
         </Link>
 
+        {unavailableForLocation && (
+          <div className="mt-8 rounded-3xl border border-amber-200 bg-amber-50 px-6 py-5 text-amber-800">
+            This article is not available for the currently selected location.
+          </div>
+        )}
+
         <article className="mt-8 overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-sm">
           <div className="relative aspect-[16/8] overflow-hidden bg-slate-100">
             <img
-              src={blog.coverImage}
-              alt={blog.title}
+              src={resolvedBlog.coverImage}
+              alt={resolvedBlog.title}
               className="h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-900/10 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10">
               <div className="flex flex-wrap items-center gap-3 text-xs font-medium uppercase tracking-[0.18em] text-blue-100">
                 <span className="rounded-full bg-white/12 px-3 py-1">
-                  {blog.category}
+                  {resolvedBlog.category}
                 </span>
-                {blog.tags.slice(0, 2).map((tag) => (
+                {resolvedBlog.tags.slice(0, 2).map((tag) => (
                   <span key={tag} className="rounded-full bg-white/12 px-3 py-1">
                     {tag}
                   </span>
@@ -175,33 +197,33 @@ const BlogDetail: React.FC = () => {
               </div>
 
               <h1 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight text-white sm:text-5xl">
-                {blog.title}
+                {resolvedBlog.title}
               </h1>
             </div>
           </div>
 
           <div className="border-b border-slate-100 px-6 py-5 sm:px-10">
             <div className="flex flex-wrap items-center gap-5 text-sm text-slate-500">
-              <span className="font-medium text-slate-800">{blog.author}</span>
+              <span className="font-medium text-slate-800">{resolvedBlog.author}</span>
               <span className="inline-flex items-center gap-2">
                 <CalendarDays size={16} />
-                {formatBlogDate(blog.publishedAt)}
+                {formatBlogDate(resolvedBlog.publishedAt)}
               </span>
               <span className="inline-flex items-center gap-2">
                 <Clock3 size={16} />
-                {blog.readTime}
+                {resolvedBlog.readTime}
               </span>
             </div>
           </div>
 
           <div className="px-6 py-8 sm:px-10 sm:py-10">
-            <p className="text-lg leading-8 text-slate-600">{blog.excerpt}</p>
+            <p className="text-lg leading-8 text-slate-600">{resolvedBlog.excerpt}</p>
 
             <div className="mt-8">
               {paragraphs.length > 0 ? (
                 paragraphs.map((paragraph, index) => (
                   <p
-                    key={`${blog.id}-${index}`}
+                    key={`${resolvedBlog.id}-${index}`}
                     className="mb-6 mt-0 text-base leading-8 text-slate-700"
                   >
                     {paragraph}

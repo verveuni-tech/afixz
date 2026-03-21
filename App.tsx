@@ -3,6 +3,7 @@ import { Routes, Route, Outlet } from "react-router-dom";
 
 import Navbar from "./src/components/common/Navbar";
 import Footer from "./src/components/common/Footer";
+import LocationPickerModal from "./src/components/common/LocationPickerModal";
 
 import ProtectedRoute from "./src/pages/admin/ProtectedRoute";
 import UserProtectedRoute from "./src/hooks/UserProtectedRoute";
@@ -29,6 +30,7 @@ const AppLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      <LocationPickerModal />
     </div>
   );
 };

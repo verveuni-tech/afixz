@@ -3,7 +3,6 @@ import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import {
   collection,
-  getCountFromServer,
   getDocs,
   limit,
   orderBy,
@@ -18,39 +17,33 @@ import {
   BlogEntry,
   formatBlogDate,
   getBlogPath,
+  isBlogAvailableInLocation,
   normalizeBlog,
+  resolveBlogForLocation,
 } from "../lib/blogs";
+import { useLocationContext } from "../context/LocationContext";
 
 const PAGE_SIZE = 9;
+const BATCH_SIZE = 18;
 
 const BlogsPage: React.FC = () => {
+  const { selectedLocation } = useLocationContext();
   const [blogs, setBlogs] = useState<BlogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
   const [hasMore, setHasMore] = useState(false);
-  const [totalBlogs, setTotalBlogs] = useState(0);
   const [lastDoc, setLastDoc] =
     useState<QueryDocumentSnapshot<DocumentData> | null>(null);
 
   useEffect(() => {
-    void loadBlogCount();
-    void loadBlogs();
-  }, []);
+    setBlogs([]);
+    setLastDoc(null);
+    setHasMore(false);
+    void loadBlogs(false);
+  }, [selectedLocation]);
 
-  async function loadBlogCount() {
-    try {
-      const snapshot = await getCountFromServer(
-        query(collection(db, "blogs"), where("published", "==", true))
-      );
-
-      setTotalBlogs(snapshot.data().count);
-    } catch (countError) {
-      console.error(countError);
-    }
-  }
-
-  async function loadBlogs(loadMore = false) {
+  async function loadBlogs(loadMore: boolean) {
     try {
       if (loadMore) {
         setLoadingMore(true);
@@ -58,29 +51,40 @@ const BlogsPage: React.FC = () => {
         setLoading(true);
       }
 
-      const baseQuery = loadMore && lastDoc
-        ? query(
-            collection(db, "blogs"),
-            where("published", "==", true),
-            orderBy("publishedAt", "desc"),
-            startAfter(lastDoc),
-            limit(PAGE_SIZE)
-          )
-        : query(
-            collection(db, "blogs"),
-            where("published", "==", true),
-            orderBy("publishedAt", "desc"),
-            limit(PAGE_SIZE)
-          );
+      const collected: BlogEntry[] = [];
+      let cursor = loadMore ? lastDoc : null;
+      let keepLoading = true;
 
-      const snapshot = await getDocs(baseQuery);
-      const data = snapshot.docs.map((entry) =>
-        normalizeBlog(entry.id, entry.data() as Record<string, any>)
-      );
+      while (keepLoading && collected.length < PAGE_SIZE) {
+        const baseQuery = cursor
+          ? query(
+              collection(db, "blogs"),
+              where("published", "==", true),
+              orderBy("publishedAt", "desc"),
+              startAfter(cursor),
+              limit(BATCH_SIZE)
+            )
+          : query(
+              collection(db, "blogs"),
+              where("published", "==", true),
+              orderBy("publishedAt", "desc"),
+              limit(BATCH_SIZE)
+            );
 
-      setBlogs((prev) => (loadMore ? [...prev, ...data] : data));
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
-      setHasMore(snapshot.docs.length === PAGE_SIZE);
+        const snapshot = await getDocs(baseQuery);
+        const batch = snapshot.docs
+          .map((entry) => normalizeBlog(entry.id, entry.data() as Record<string, any>))
+          .filter((blog) => isBlogAvailableInLocation(blog, selectedLocation))
+          .map((blog) => resolveBlogForLocation(blog, selectedLocation));
+
+        collected.push(...batch.slice(0, PAGE_SIZE - collected.length));
+        cursor = snapshot.docs[snapshot.docs.length - 1] || cursor;
+        keepLoading = snapshot.docs.length === BATCH_SIZE;
+      }
+
+      setBlogs((prev) => (loadMore ? [...prev, ...collected] : collected));
+      setLastDoc(cursor);
+      setHasMore(keepLoading);
       setError("");
     } catch (fetchError) {
       console.error(fetchError);
@@ -118,8 +122,8 @@ const BlogsPage: React.FC = () => {
               Helpful reads for smarter home services.
             </h1>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">
-              Publish articles from the admin side and they will appear here for
-              customers to explore, learn, and stay updated.
+              Published articles appear here automatically and can optionally be tailored by
+              service location too.
             </p>
           </div>
         </div>
@@ -244,7 +248,7 @@ const BlogsPage: React.FC = () => {
                     </p>
                   </div>
                   <div className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm">
-                    Showing {blogs.length} of {totalBlogs || blogs.length} articles
+                    Showing {blogs.length} article{blogs.length === 1 ? "" : "s"}
                   </div>
                 </div>
 

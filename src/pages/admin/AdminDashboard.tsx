@@ -33,10 +33,10 @@ export default function AdminDashboard() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-800">
-                  Blog Publishing
+                  Content Publishing
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Create, edit, and publish SEO-ready blogs from the content manager.
+                  Create services, publish blogs, and manage homepage copy from the content manager.
                 </p>
               </div>
 

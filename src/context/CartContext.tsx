@@ -21,6 +21,7 @@ interface CartItem {
   title: string;
   price: number;
   slug: string;
+  locationId?: string | null;
 }
 
 interface CartContextType {

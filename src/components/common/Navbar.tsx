@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Search, ShoppingCart, User, Menu, X } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, X, MapPin } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import {
@@ -10,6 +10,9 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "../../firebase";
+import { useLocationContext } from "../../context/LocationContext";
+import { getLocationLabel } from "../../lib/locations";
+import { isServiceAvailableInLocation, normalizeService } from "../../lib/services";
 
 type Service = {
   id: string;
@@ -29,6 +32,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { cart } = useCart();
+  const { selectedLocation, openLocationPicker } = useLocationContext();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,10 +76,16 @@ const Navbar: React.FC = () => {
           return;
         }
 
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Service[];
+        const data = snapshot.docs
+          .map((entry) => normalizeService(entry.id, entry.data() as Record<string, any>))
+          .filter((service) => isServiceAvailableInLocation(service, selectedLocation))
+          .map((service) => ({
+            id: service.id,
+            title: service.title,
+            slug: service.slug,
+            price: service.price,
+            images: service.images,
+          })) as Service[];
 
         setResults(data);
       } catch (searchError) {
@@ -94,7 +104,7 @@ const Navbar: React.FC = () => {
       cancelled = true;
       clearTimeout(delay);
     };
-  }, [term]);
+  }, [selectedLocation, term]);
 
   const handleNavigate = (slug: string) => {
     setTerm("");
@@ -191,6 +201,15 @@ const Navbar: React.FC = () => {
 
           {/* RIGHT */}
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={openLocationPicker}
+              className="hidden items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-blue-200 hover:text-blue-700 md:inline-flex"
+            >
+              <MapPin size={16} />
+              {getLocationLabel(selectedLocation)}
+            </button>
+
             <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-600">
               <Link
                 to="/"
@@ -242,6 +261,14 @@ const Navbar: React.FC = () => {
       {isOpen && (
         <div className="border-t border-slate-200 bg-white px-6 py-5 md:hidden">
           <div className="space-y-3">
+            <button
+              onClick={openLocationPicker}
+              className="flex w-full items-center gap-2 rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700"
+            >
+              <MapPin size={16} />
+              {getLocationLabel(selectedLocation)}
+            </button>
+
             <button
               onClick={() => goTo("/")}
               className={`block w-full rounded-2xl px-4 py-3 text-left text-sm font-medium ${

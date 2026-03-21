@@ -1,15 +1,17 @@
-// src/pages/Checkout.tsx
-
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { collection, addDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useLocationContext } from "../context/LocationContext";
 import { db } from "../firebase";
+import { normalizeService, resolveServiceForLocation } from "../lib/services";
+import { getLocationLabel } from "../lib/locations";
 
 const Checkout: React.FC = () => {
-  const { cart, totalPrice, clearCart } = useCart();
+  const { cart, clearCart } = useCart();
   const { user } = useAuth();
+  const { selectedLocation, openLocationPicker } = useLocationContext();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -53,11 +55,26 @@ const Checkout: React.FC = () => {
       "time",
     ];
 
-    for (let field of required) {
+    for (const field of required) {
       if (!form[field as keyof typeof form]) {
         alert("Please complete all required fields.");
         return false;
       }
+    }
+
+    if (!selectedLocation) {
+      openLocationPicker();
+      alert("Please select a booking location before placing the order.");
+      return false;
+    }
+
+    const hasLocationMismatch = cart.some(
+      (item) => item.locationId && item.locationId !== selectedLocation
+    );
+
+    if (hasLocationMismatch) {
+      alert("Your cart contains services from a different location. Please review the cart first.");
+      return false;
     }
 
     return true;
@@ -65,42 +82,75 @@ const Checkout: React.FC = () => {
 
   const handlePlaceOrder = async () => {
     if (!validate()) return;
-    if (!user) return;
+    if (!user || !selectedLocation) return;
 
     try {
       setLoading(true);
 
-      const docRef = await addDoc(collection(db, "bookings"), {
-        userId: user.uid,
-        services: cart,
-        totalPrice,
-        address: form,
-        scheduledDate: form.date,
-        scheduledTime: form.time,
-        paymentMode: "cod",
-        status: "pending",
-        createdAt: serverTimestamp(),
-      });
+      const validatedBookings = await Promise.all(
+        cart.map(async (item) => {
+          const snapshot = await getDoc(doc(db, "services", item.serviceId));
+
+          if (!snapshot.exists()) {
+            throw new Error(`Service "${item.title}" is no longer available.`);
+          }
+
+          const service = resolveServiceForLocation(
+            normalizeService(snapshot.id, snapshot.data() as Record<string, any>),
+            selectedLocation
+          );
+
+          if (item.locationId && item.locationId !== selectedLocation) {
+            throw new Error(`"${item.title}" belongs to another location and must be removed first.`);
+          }
+
+          return {
+            serviceId: service.id,
+            serviceSlug: service.slug,
+            serviceTitle: service.title,
+            price: service.price,
+            locationId: selectedLocation,
+          };
+        })
+      );
+
+      const bookingIds: string[] = [];
+
+      for (const booking of validatedBookings) {
+        const bookingRef = await addDoc(collection(db, "bookings"), {
+          userId: user.uid,
+          ...booking,
+          address: form,
+          scheduledDate: form.date,
+          scheduledTime: form.time,
+          customerName: form.name,
+          customerPhone: form.phone,
+          paymentMode: "cod",
+          status: "pending",
+          createdAt: serverTimestamp(),
+        });
+
+        bookingIds.push(bookingRef.id);
+      }
 
       setOrderPlaced(true);
       await clearCart();
 
-      navigate(`/booking-success/${docRef.id}`);
-    } catch (err) {
+      navigate(`/booking-success/${bookingIds[0]}`);
+    } catch (err: any) {
       console.error(err);
-      alert("Something went wrong.");
+      alert(err?.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
   };
 
+  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
   const today = new Date().toISOString().split("T")[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-slate-100 pt-32 pb-28">
       <div className="max-w-7xl mx-auto px-6">
-
-        {/* Header */}
         <div className="mb-16">
           <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
             Checkout
@@ -110,11 +160,19 @@ const Checkout: React.FC = () => {
           </p>
         </div>
 
+        <div className="mb-8 rounded-3xl border border-slate-200 bg-white px-6 py-5 text-sm text-slate-600 shadow-sm">
+          Booking location:{" "}
+          <button
+            type="button"
+            onClick={openLocationPicker}
+            className="font-semibold text-blue-600 hover:underline"
+          >
+            {getLocationLabel(selectedLocation)}
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-
-          {/* LEFT FORM */}
           <div className="lg:col-span-2 space-y-14">
-
             <ModernSection title="Customer Details">
               <TwoCol>
                 <ModernInput label="Full Name" name="name" value={form.name} onChange={handleChange} />
@@ -158,29 +216,31 @@ const Checkout: React.FC = () => {
                 />
               </TwoCol>
             </ModernSection>
-
           </div>
 
-          {/* RIGHT SUMMARY */}
           <div className="lg:sticky lg:top-32 h-fit">
             <div className="bg-white/80 backdrop-blur-md border border-white/40 shadow-2xl rounded-3xl p-10 space-y-8">
-
               <h2 className="text-xl font-semibold text-slate-900">
                 Order Summary
               </h2>
 
               <div className="space-y-4 text-sm text-slate-600">
                 {cart.map((item) => (
-                  <div key={item.serviceId} className="flex justify-between">
-                    <span>{item.title}</span>
-                    <span>₹{item.price}</span>
+                  <div key={item.serviceId} className="flex justify-between gap-3">
+                    <div>
+                      <p>{item.title}</p>
+                      {item.locationId && (
+                        <p className="mt-1 text-xs text-slate-400">For {getLocationLabel(item.locationId)}</p>
+                      )}
+                    </div>
+                    <span>Rs {item.price}</span>
                   </div>
                 ))}
               </div>
 
               <div className="border-t pt-6 flex justify-between text-lg font-semibold text-slate-900">
                 <span>Total</span>
-                <span>₹{totalPrice}</span>
+                <span>Rs {totalPrice}</span>
               </div>
 
               <button
@@ -192,12 +252,10 @@ const Checkout: React.FC = () => {
               </button>
 
               <p className="text-xs text-center text-slate-400">
-                Secure booking • Pay after service
+                Secure booking for {getLocationLabel(selectedLocation)}.
               </p>
-
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -205,8 +263,6 @@ const Checkout: React.FC = () => {
 };
 
 export default Checkout;
-
-/* ---------- Modern UI Components ---------- */
 
 const ModernSection = ({ title, children }: any) => (
   <div className="bg-white rounded-3xl shadow-xl p-10 border border-slate-100">

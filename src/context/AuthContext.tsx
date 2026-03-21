@@ -17,6 +17,7 @@ import React, {
   ReactNode,
 } from "react";
 import { auth, db } from "../firebase";
+import type { LocationId } from "../lib/locations";
 
 /* ---------------- Types ---------------- */
 
@@ -26,6 +27,7 @@ export interface UserProfile {
   email: string | null;
   provider: string | null;
   role: "user" | "admin";
+  selectedLocation?: LocationId | null;
   createdAt?: any;
   updatedAt?: any;
 }

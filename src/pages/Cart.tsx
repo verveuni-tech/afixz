@@ -1,18 +1,15 @@
 import React from "react";
-import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
-import { useRequireAuth } from "../hooks/useRequireAuth";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PhoneLogin from "../components/auth/PhoneLogin";
-
-/* ================================
-   SKELETON
-================================ */
+import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
+import { useLocationContext } from "../context/LocationContext";
+import { useRequireAuth } from "../hooks/useRequireAuth";
+import { getLocationLabel } from "../lib/locations";
 
 const CartContentSkeleton = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 animate-pulse">
-
       <div className="lg:col-span-2 space-y-6">
         {[1, 2].map((i) => (
           <div
@@ -31,18 +28,14 @@ const CartContentSkeleton = () => {
         <div className="h-4 w-3/4 bg-slate-200 rounded" />
         <div className="h-12 w-full bg-slate-200 rounded-2xl" />
       </div>
-
     </div>
   );
 };
 
-/* ================================
-   MAIN
-================================ */
-
 const Cart: React.FC = () => {
   const { cart, removeFromCart, clearCart, totalPrice, loading } = useCart();
   const { user } = useAuth();
+  const { selectedLocation, openLocationPicker } = useLocationContext();
   const {
     requireAuth,
     showLogin,
@@ -55,6 +48,11 @@ const Cart: React.FC = () => {
   React.useEffect(() => {
     requireAuth(() => {});
   }, []);
+
+  const locationMismatch = Boolean(
+    selectedLocation &&
+      cart.some((item) => item.locationId && item.locationId !== selectedLocation)
+  );
 
   const renderContent = () => {
     if (loading) {
@@ -93,9 +91,14 @@ const Cart: React.FC = () => {
 
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 transition-opacity duration-300">
-
-        {/* Service List */}
         <div className="lg:col-span-2 space-y-6">
+          {locationMismatch && (
+            <div className="rounded-3xl border border-amber-200 bg-amber-50 px-6 py-5 text-sm leading-6 text-amber-800">
+              Some services in your cart belong to another location. Switch back or remove those
+              services before checkout.
+            </div>
+          )}
+
           {cart.map((item) => (
             <div
               key={item.serviceId}
@@ -106,8 +109,13 @@ const Cart: React.FC = () => {
                   {item.title}
                 </h3>
                 <p className="text-slate-600 mt-2">
-                  ₹{item.price}
+                  Rs {item.price}
                 </p>
+                {item.locationId && (
+                  <p className="mt-2 text-xs text-slate-400">
+                    Added for {getLocationLabel(item.locationId)}
+                  </p>
+                )}
               </div>
 
               <button
@@ -129,13 +137,18 @@ const Cart: React.FC = () => {
           </button>
         </div>
 
-        {/* Order Summary */}
         <div className="lg:sticky lg:top-32 h-fit">
           <div className="bg-white rounded-3xl shadow-xl p-8 space-y-6">
-
             <h2 className="text-xl font-semibold text-slate-900">
               Order Summary
             </h2>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Booking location:{" "}
+              <button type="button" onClick={openLocationPicker} className="font-semibold text-blue-600 hover:underline">
+                {getLocationLabel(selectedLocation)}
+              </button>
+            </div>
 
             <div className="space-y-3">
               {cart.map((item) => (
@@ -144,19 +157,20 @@ const Cart: React.FC = () => {
                   className="flex justify-between text-sm text-slate-600"
                 >
                   <span>{item.title}</span>
-                  <span>₹{item.price}</span>
+                  <span>Rs {item.price}</span>
                 </div>
               ))}
             </div>
 
             <div className="border-t pt-4 flex justify-between font-semibold text-slate-900">
               <span>Total</span>
-              <span>₹{totalPrice}</span>
+              <span>Rs {totalPrice}</span>
             </div>
 
             <button
               onClick={() => navigate("/checkout")}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
+              disabled={locationMismatch}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               Proceed to Checkout
             </button>
@@ -166,7 +180,6 @@ const Cart: React.FC = () => {
             </p>
           </div>
         </div>
-
       </div>
     );
   };
@@ -175,7 +188,6 @@ const Cart: React.FC = () => {
     <>
       <div className="min-h-screen pt-32 pb-24 bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-7xl mx-auto px-6">
-
           <div className="mb-12">
             <h1 className="text-4xl font-bold text-slate-900">
               Your Cart
@@ -186,7 +198,6 @@ const Cart: React.FC = () => {
           </div>
 
           {renderContent()}
-
         </div>
       </div>
 
@@ -197,7 +208,7 @@ const Cart: React.FC = () => {
               onClick={() => setShowLogin(false)}
               className="absolute top-3 right-3 text-sm"
             >
-              ✕
+              x
             </button>
             <PhoneLogin onSuccess={handleLoginSuccess} />
           </div>

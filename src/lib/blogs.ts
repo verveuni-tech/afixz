@@ -1,7 +1,21 @@
+import { mergeBaseWithLocationOverride } from "./locationContent";
+import { isLocationId, LocationId } from "./locations";
+
 type TimestampLike = {
   toDate?: () => Date;
   seconds?: number;
 };
+
+type BlogLocationOverride = Partial<{
+  title: string;
+  excerpt: string;
+  content: string;
+  seoTitle: string;
+  seoDescription: string;
+  canonicalUrl: string;
+  ogImage: string;
+  coverImage: string;
+}>;
 
 export type BlogEntry = {
   id: string;
@@ -20,6 +34,8 @@ export type BlogEntry = {
   canonicalUrl: string;
   ogImage: string;
   status: string;
+  availableLocations?: LocationId[];
+  contentByLocation?: Partial<Record<LocationId, BlogLocationOverride>>;
 };
 
 const PLACEHOLDER_COVER =
@@ -67,8 +83,39 @@ export function normalizeBlog(id: string, raw: Record<string, any>): BlogEntry {
     seoDescription,
     canonicalUrl: String(raw.canonicalUrl || "").trim(),
     ogImage: String(raw.ogImage || raw.ogImageUrl || coverImage).trim() || coverImage,
-    status: String(raw.status || (raw.published === false ? "draft" : "published")).trim() || "published",
+    status:
+      String(raw.status || (raw.published === false ? "draft" : "published")).trim() ||
+      "published",
+    availableLocations: Array.isArray(raw.availableLocations)
+      ? raw.availableLocations.filter((value: unknown): value is LocationId => isLocationId(value))
+      : undefined,
+    contentByLocation: isRecord(raw.contentByLocation)
+      ? (raw.contentByLocation as Partial<Record<LocationId, BlogLocationOverride>>)
+      : undefined,
   };
+}
+
+export function resolveBlogForLocation(blog: BlogEntry, selectedLocation: LocationId | null) {
+  return mergeBaseWithLocationOverride(
+    blog,
+    selectedLocation,
+    blog.contentByLocation || null
+  );
+}
+
+export function isBlogAvailableInLocation(
+  blog: Pick<BlogEntry, "availableLocations">,
+  selectedLocation: LocationId | null
+) {
+  if (!selectedLocation) {
+    return true;
+  }
+
+  if (!blog.availableLocations || blog.availableLocations.length === 0) {
+    return true;
+  }
+
+  return blog.availableLocations.includes(selectedLocation);
 }
 
 export function isBlogPublished(raw: Record<string, any>) {
@@ -193,4 +240,8 @@ function parseDate(value: unknown) {
   }
 
   return null;
+}
+
+function isRecord(value: unknown): value is Record<string, any> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

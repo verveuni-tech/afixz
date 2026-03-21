@@ -22,10 +22,7 @@ import {
   Phone,
   LogOut,
 } from "lucide-react";
-
-/* =====================================================
-   MAIN PROFILE
-===================================================== */
+import { getLocationLabel } from "../lib/locations";
 
 export default function Profile() {
   const { user, profile, loading } = useAuth();
@@ -37,10 +34,7 @@ export default function Profile() {
   return (
     <div className="bg-slate-50 py-24 px-6">
       <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl flex">
-
-        {/* SIDEBAR */}
         <div className="w-1/3 p-10">
-
           <div className="flex items-center gap-4 mb-12">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
               <User size={28} className="text-blue-600" />
@@ -92,9 +86,7 @@ export default function Profile() {
           </button>
         </div>
 
-        {/* CONTENT */}
         <div className="flex-1 p-14">
-
           {activeTab === "profile" && (
             <ProfilePanel profile={profile} />
           )}
@@ -110,16 +102,11 @@ export default function Profile() {
           {activeTab === "support" && (
             <EmptyState title="Support section coming soon" />
           )}
-
         </div>
       </div>
     </div>
   );
 }
-
-/* =====================================================
-   BOOKINGS PANEL (SMART PAGINATION)
-===================================================== */
 
 function BookingsPanel({ userId }: { userId: string }) {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -127,7 +114,7 @@ function BookingsPanel({ userId }: { userId: string }) {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const pageSize = 2;
+  const pageSize = 4;
 
   const fetchBookings = async (next = false) => {
     setLoading(true);
@@ -163,13 +150,13 @@ function BookingsPanel({ userId }: { userId: string }) {
       setHasMore(false);
     }
 
- const data = docs.map(doc => ({
-  id: doc.id,
-  ...(doc.data() as Record<string, any>)
-}));
+    const data = docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Record<string, any>)
+    }));
 
     if (next) {
-      setBookings(prev => [...prev, ...data]);
+      setBookings((prev) => [...prev, ...data]);
     } else {
       setBookings(data);
     }
@@ -182,7 +169,7 @@ function BookingsPanel({ userId }: { userId: string }) {
   };
 
   useEffect(() => {
-    fetchBookings();
+    void fetchBookings();
   }, [userId]);
 
   if (loading && bookings.length === 0)
@@ -193,55 +180,70 @@ function BookingsPanel({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-6">
-
       <h1 className="text-2xl font-semibold text-slate-900">
         Booking History
       </h1>
 
-      {bookings.map(b => (
-        <div
-          key={b.id}
-          className="bg-slate-50 p-6 rounded-2xl space-y-4"
-        >
-          <div className="flex justify-between">
-            <span className="font-medium">{b.id}</span>
-            <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
-              {b.status}
-            </span>
-          </div>
+      {bookings.map((booking) => {
+        const lineItems = Array.isArray(booking.services) && booking.services.length > 0
+          ? booking.services
+          : [
+              {
+                title: booking.serviceTitle || booking.serviceSlug || "Booked service",
+                price: booking.price || booking.totalPrice || 0,
+              },
+            ];
 
-          {b.services?.map((s: any, i: number) => (
-            <div key={i} className="flex justify-between text-sm">
-              <span>{s.title}</span>
-              <span>₹{s.price}</span>
+        const total = typeof booking.totalPrice === "number"
+          ? booking.totalPrice
+          : lineItems.reduce((sum: number, item: any) => sum + (Number(item.price) || 0), 0);
+
+        return (
+          <div
+            key={booking.id}
+            className="bg-slate-50 p-6 rounded-2xl space-y-4"
+          >
+            <div className="flex justify-between">
+              <span className="font-medium">{booking.id}</span>
+              <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+                {booking.status}
+              </span>
             </div>
-          ))}
 
-          <div className="border-t pt-3 flex justify-between font-semibold">
-            <span>Total</span>
-            <span>₹{b.totalPrice}</span>
+            {lineItems.map((service: any, index: number) => (
+              <div key={index} className="flex justify-between text-sm">
+                <span>{service.title}</span>
+                <span>Rs {service.price}</span>
+              </div>
+            ))}
+
+            {booking.locationId && (
+              <p className="text-xs text-slate-500">
+                Location: {getLocationLabel(booking.locationId)}
+              </p>
+            )}
+
+            <div className="border-t pt-3 flex justify-between font-semibold">
+              <span>Total</span>
+              <span>Rs {total}</span>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {hasMore && (
         <div className="flex justify-end">
           <button
-            onClick={() => fetchBookings(true)}
+            onClick={() => void fetchBookings(true)}
             className="text-sm text-blue-600"
           >
             Load More
           </button>
         </div>
       )}
-
     </div>
   );
 }
-
-/* =====================================================
-   ADDRESSES PANEL
-===================================================== */
 
 function AddressesPanel({ userId }: { userId: string }) {
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -263,7 +265,7 @@ function AddressesPanel({ userId }: { userId: string }) {
         collection(db, "users", userId, "addresses")
       );
 
-      setAddresses(snapshot.docs.map(doc => ({
+      setAddresses(snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data()
       })));
@@ -271,7 +273,7 @@ function AddressesPanel({ userId }: { userId: string }) {
       setLoading(false);
     };
 
-    fetchAddresses();
+    void fetchAddresses();
   }, [userId]);
 
   const saveAddress = async () => {
@@ -280,7 +282,7 @@ function AddressesPanel({ userId }: { userId: string }) {
       { ...form, createdAt: serverTimestamp() }
     );
 
-    setAddresses(prev => [...prev, { id: docRef.id, ...form }]);
+    setAddresses((prev) => [...prev, { id: docRef.id, ...form }]);
 
     setShowForm(false);
     setForm({
@@ -297,14 +299,13 @@ function AddressesPanel({ userId }: { userId: string }) {
     await deleteDoc(
       doc(db, "users", userId, "addresses", id)
     );
-    setAddresses(prev => prev.filter(a => a.id !== id));
+    setAddresses((prev) => prev.filter((address) => address.id !== id));
   };
 
   if (loading) return <SkeletonBlock />;
 
   return (
     <div className="space-y-6">
-
       <div className="flex justify-between">
         <h1 className="text-2xl font-semibold text-slate-900">
           Saved Addresses
@@ -323,12 +324,12 @@ function AddressesPanel({ userId }: { userId: string }) {
 
       {showForm && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.keys(form).map(key => (
+          {Object.keys(form).map((key) => (
             <input
               key={key}
               placeholder={key}
               value={(form as any)[key]}
-              onChange={e =>
+              onChange={(e) =>
                 setForm({ ...form, [key]: e.target.value })
               }
               className="border p-3 rounded-xl"
@@ -343,33 +344,28 @@ function AddressesPanel({ userId }: { userId: string }) {
         </div>
       )}
 
-      {addresses.map(addr => (
+      {addresses.map((address) => (
         <div
-          key={addr.id}
+          key={address.id}
           className="border p-6 rounded-2xl flex justify-between"
         >
           <div>
-            <p className="font-medium">{addr.fullName}</p>
+            <p className="font-medium">{address.fullName}</p>
             <p className="text-sm text-slate-600">
-              {addr.line1}, {addr.city}, {addr.state} - {addr.pincode}
+              {address.line1}, {address.city}, {address.state} - {address.pincode}
             </p>
           </div>
           <button
-            onClick={() => deleteAddress(addr.id)}
+            onClick={() => void deleteAddress(address.id)}
             className="text-red-500 text-sm"
           >
             Delete
           </button>
         </div>
       ))}
-
     </div>
   );
 }
-
-/* =====================================================
-   SHARED
-===================================================== */
 
 function SidebarItem({ icon, label, active, onClick }: any) {
   return (
@@ -393,6 +389,9 @@ function ProfilePanel({ profile }: any) {
       </h1>
       <p>Email: {profile?.email}</p>
       <p>Phone: {profile?.phone || "Not provided"}</p>
+      {profile?.selectedLocation && (
+        <p>Location: {getLocationLabel(profile.selectedLocation)}</p>
+      )}
     </div>
   );
 }

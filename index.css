@@ -30,6 +30,15 @@ body {
   .bg-accent-gradient {
     background-image: var(--gradient-accent);
   }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 h1, h2, h3, h4 {

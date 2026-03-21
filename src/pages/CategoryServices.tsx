@@ -11,96 +11,103 @@ import {
   QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "../firebase";
-import { Star, SlidersHorizontal, X } from "lucide-react";
-
-type Service = {
-  id: string;
-  title: string;
-  slug: string;
-  price: number;
-  images?: string[];
-};
+import { SlidersHorizontal, Star, X } from "lucide-react";
+import { useLocationContext } from "../context/LocationContext";
+import {
+  isServiceAvailableInLocation,
+  normalizeService,
+  resolveServiceForLocation,
+  ServiceEntry,
+} from "../lib/services";
 
 const PAGE_SIZE = 12;
+const BATCH_SIZE = 24;
 const MIN_LIMIT = 0;
 const MAX_LIMIT = 10000;
 
 const CategoryServices: React.FC = () => {
   const { categorySlug } = useParams();
+  const { selectedLocation } = useLocationContext();
 
-  const [services, setServices] = useState<Service[]>([]);
-  const [lastDoc, setLastDoc] =
-    useState<QueryDocumentSnapshot | null>(null);
+  const [services, setServices] = useState<ServiceEntry[]>([]);
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
   const [hasMore, setHasMore] = useState(true);
-
   const [loading, setLoading] = useState(true);
-
   const [minPrice, setMinPrice] = useState(MIN_LIMIT);
   const [maxPrice, setMaxPrice] = useState(MAX_LIMIT);
   const [sortOption, setSortOption] = useState("price-asc");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  const [showMobileFilters, setShowMobileFilters] =
-    useState(false);
+  const formattedCategory = categorySlug?.replace(/-/g, " ");
 
-  const formattedCategory =
-    categorySlug?.replace(/-/g, " ");
-
-  // 🔥 FETCH FUNCTION (SERVER-SIDE FILTER + PAGINATION)
   const fetchServices = async (loadMore = false) => {
     setLoading(true);
 
     try {
-      let baseQuery = query(
-        collection(db, "services"),
-        where("categorySlug", "==", categorySlug),
-        where("price", ">=", minPrice),
-        where("price", "<=", maxPrice),
-        orderBy("price", sortOption === "price-desc" ? "desc" : "asc"),
-        limit(PAGE_SIZE)
-      );
+      let cursor = loadMore ? lastDoc : null;
+      const collected: ServiceEntry[] = [];
+      let keepLoading = true;
 
-      if (loadMore && lastDoc) {
-        baseQuery = query(
-          collection(db, "services"),
-          where("categorySlug", "==", categorySlug),
-          where("price", ">=", minPrice),
-          where("price", "<=", maxPrice),
-          orderBy("price", sortOption === "price-desc" ? "desc" : "asc"),
-          startAfter(lastDoc),
-          limit(PAGE_SIZE)
+      while (keepLoading && collected.length < PAGE_SIZE) {
+        const snapshot = await getDocs(
+          cursor
+            ? query(
+                collection(db, "services"),
+                where("categorySlug", "==", categorySlug),
+                orderBy("createdAt", "desc"),
+                startAfter(cursor),
+                limit(BATCH_SIZE)
+              )
+            : query(
+                collection(db, "services"),
+                where("categorySlug", "==", categorySlug),
+                orderBy("createdAt", "desc"),
+                limit(BATCH_SIZE)
+              )
         );
+
+        const batch = snapshot.docs
+          .map((entry) => normalizeService(entry.id, entry.data() as Record<string, any>))
+          .filter((service) => isServiceAvailableInLocation(service, selectedLocation))
+          .map((service) => resolveServiceForLocation(service, selectedLocation))
+          .filter((service) => service.price >= minPrice && service.price <= maxPrice);
+
+        collected.push(...batch);
+        cursor = snapshot.docs[snapshot.docs.length - 1] || cursor;
+        keepLoading = snapshot.docs.length === BATCH_SIZE;
       }
 
-      const snapshot = await getDocs(baseQuery);
-
-      const newData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Service[];
+      const sorted = [...collected]
+        .sort((left, right) =>
+          sortOption === "price-desc" ? right.price - left.price : left.price - right.price
+        )
+        .slice(0, PAGE_SIZE);
 
       if (loadMore) {
-        setServices((prev) => [...prev, ...newData]);
+        setServices((prev) =>
+          [...prev, ...sorted].sort((left, right) =>
+            sortOption === "price-desc" ? right.price - left.price : left.price - right.price
+          )
+        );
       } else {
-        setServices(newData);
+        setServices(sorted);
       }
 
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
-      setHasMore(snapshot.docs.length === PAGE_SIZE);
-
-    } catch (err) {
-      console.error(err);
+      setLastDoc(cursor);
+      setHasMore(keepLoading);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
-  // 🔁 Re-fetch when filters change
   useEffect(() => {
     setServices([]);
     setLastDoc(null);
     setHasMore(true);
-    fetchServices(false);
-  }, [categorySlug, minPrice, maxPrice, sortOption]);
+    void fetchServices(false);
+  }, [categorySlug, minPrice, maxPrice, selectedLocation, sortOption]);
 
   if (loading && services.length === 0) {
     return (
@@ -113,8 +120,6 @@ const CategoryServices: React.FC = () => {
   return (
     <div className="bg-slate-50 min-h-screen pt-28 pb-24">
       <div className="max-w-7xl mx-auto px-6">
-
-        {/* BREADCRUMBS */}
         <div className="mb-6 text-sm text-slate-500">
           <Link to="/" className="hover:text-blue-600">
             Home
@@ -125,17 +130,15 @@ const CategoryServices: React.FC = () => {
           </span>
         </div>
 
-        {/* HEADER */}
         <div className="mb-12">
           <h1 className="text-4xl font-semibold capitalize">
             {formattedCategory} Services
           </h1>
           <p className="mt-2 text-slate-600">
-            Explore and compare available services.
+            Explore and compare services available in your selected location.
           </p>
         </div>
 
-        {/* MOBILE HEADER */}
         <div className="lg:hidden flex justify-between items-center mb-6">
           <p className="text-sm text-slate-600">
             {services.length} services
@@ -151,8 +154,6 @@ const CategoryServices: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-
-          {/* SIDEBAR DESKTOP */}
           <div className="hidden lg:block">
             <FilterSidebar
               minPrice={minPrice}
@@ -165,9 +166,7 @@ const CategoryServices: React.FC = () => {
             />
           </div>
 
-          {/* GRID */}
           <div className="lg:col-span-3">
-
             {services.length === 0 ? (
               <div className="text-center py-20 text-slate-500">
                 No services found.
@@ -193,15 +192,16 @@ const CategoryServices: React.FC = () => {
                         <h3 className="font-semibold text-lg">
                           {service.title}
                         </h3>
+                        <p className="text-sm leading-6 text-slate-600">{service.shortDescription}</p>
 
                         <div className="flex justify-between text-sm">
                           <div className="flex items-center gap-1 text-slate-600">
                             <Star size={14} fill="currentColor" />
-                            4.7
+                            {service.rating > 0 ? service.rating.toFixed(1) : "4.8"}
                           </div>
 
                           <span className="font-semibold">
-                            ₹{service.price}
+                            Rs {service.price}
                           </span>
                         </div>
                       </div>
@@ -209,11 +209,10 @@ const CategoryServices: React.FC = () => {
                   ))}
                 </div>
 
-                {/* LOAD MORE */}
                 {hasMore && (
                   <div className="mt-12 text-center">
                     <button
-                      onClick={() => fetchServices(true)}
+                      onClick={() => void fetchServices(true)}
                       className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-medium"
                     >
                       Load More
@@ -222,12 +221,10 @@ const CategoryServices: React.FC = () => {
                 )}
               </>
             )}
-
           </div>
         </div>
       </div>
 
-      {/* MOBILE FILTER MODAL */}
       {showMobileFilters && (
         <div className="fixed inset-0 bg-black/40 flex items-end z-50 lg:hidden">
           <div className="bg-white w-full rounded-t-3xl p-8 space-y-6">
@@ -263,9 +260,6 @@ const CategoryServices: React.FC = () => {
 
 export default CategoryServices;
 
-
-/* ================= SIDEBAR ================= */
-
 function FilterSidebar({
   minPrice,
   maxPrice,
@@ -275,10 +269,8 @@ function FilterSidebar({
   setSortOption,
   resultCount,
 }: any) {
-
   return (
     <div className="bg-white rounded-3xl shadow-lg p-8 space-y-8 sticky top-28 h-fit">
-
       <div>
         <h3 className="text-xl font-semibold">Filters</h3>
         <p className="text-sm text-slate-500 mt-1">
@@ -286,7 +278,6 @@ function FilterSidebar({
         </p>
       </div>
 
-      {/* PRICE SLIDER */}
       <div>
         <label className="text-xs uppercase text-slate-500">
           Price Range
@@ -314,13 +305,12 @@ function FilterSidebar({
           />
 
           <div className="flex justify-between text-sm text-slate-600">
-            <span>₹{minPrice}</span>
-            <span>₹{maxPrice}</span>
+            <span>Rs {minPrice}</span>
+            <span>Rs {maxPrice}</span>
           </div>
         </div>
       </div>
 
-      {/* SORT */}
       <div>
         <label className="text-xs uppercase text-slate-500">
           Sort By
@@ -331,8 +321,8 @@ function FilterSidebar({
           onChange={(e) => setSortOption(e.target.value)}
           className="w-full mt-2 bg-slate-50 rounded-2xl px-4 py-3 outline-none"
         >
-          <option value="price-asc">Price: Low → High</option>
-          <option value="price-desc">Price: High → Low</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
         </select>
       </div>
 

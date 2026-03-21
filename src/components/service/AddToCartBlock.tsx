@@ -3,12 +3,15 @@ import { useCart } from "../../context/CartContext";
 import { useRequireAuth } from "../../hooks/useRequireAuth";
 import { useAuth } from "../../context/AuthContext";
 import PhoneLogin from "../auth/PhoneLogin";
+import { useLocationContext } from "../../context/LocationContext";
+import { getLocationLabel } from "../../lib/locations";
 
 interface Props {
   serviceId: string;
   title: string;
   price: number;
   slug: string;
+  availableInLocation: boolean;
 }
 
 const AddToCartBlock: React.FC<Props> = ({
@@ -16,9 +19,11 @@ const AddToCartBlock: React.FC<Props> = ({
   title,
   price,
   slug,
+  availableInLocation,
 }) => {
   const { cart, addToCart, removeFromCart } = useCart();
   const { user } = useAuth();
+  const { selectedLocation, openLocationPicker } = useLocationContext();
 
   const {
     requireAuth,
@@ -37,6 +42,11 @@ const AddToCartBlock: React.FC<Props> = ({
     requireAuth(async () => {
       if (!user || isInCart) return;
 
+      if (!selectedLocation) {
+        openLocationPicker();
+        return;
+      }
+
       try {
         setLoading(true);
 
@@ -45,8 +55,8 @@ const AddToCartBlock: React.FC<Props> = ({
           title,
           price,
           slug,
+          locationId: selectedLocation,
         });
-
       } catch (err) {
         console.error("Add to cart failed:", err);
       } finally {
@@ -58,19 +68,39 @@ const AddToCartBlock: React.FC<Props> = ({
   return (
     <>
       <div className="bg-white rounded-3xl shadow-xl p-8 space-y-6">
-
-        {/* Price */}
         <div>
           <p className="text-xs uppercase text-slate-500">
             Starting Price
           </p>
           <span className="text-4xl font-bold text-slate-900">
-            ₹{price}
+            Rs {price}
           </span>
         </div>
 
-        {/* Add Button */}
-        {!isInCart && (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          Booking location:{" "}
+          <span className="font-semibold text-slate-800">
+            {getLocationLabel(selectedLocation)}
+          </span>
+        </div>
+
+        {!selectedLocation && (
+          <button
+            type="button"
+            onClick={openLocationPicker}
+            className="w-full rounded-2xl border border-blue-200 bg-blue-50 py-4 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+          >
+            Choose location before booking
+          </button>
+        )}
+
+        {selectedLocation && !availableInLocation && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-800">
+            This service is unavailable in the selected location, so booking is disabled.
+          </div>
+        )}
+
+        {selectedLocation && availableInLocation && !isInCart && (
           <button
             onClick={handleAdd}
             disabled={loading}
@@ -80,11 +110,10 @@ const AddToCartBlock: React.FC<Props> = ({
           </button>
         )}
 
-        {/* Persistent Confirmation */}
         {isInCart && (
           <div className="bg-green-50 border border-green-200 rounded-2xl p-5 space-y-4">
             <p className="text-green-700 font-medium">
-              ✓ This service is in your cart
+              This service is in your cart
             </p>
 
             <div className="flex gap-3">
@@ -114,7 +143,6 @@ const AddToCartBlock: React.FC<Props> = ({
         </p>
       </div>
 
-      {/* Login Modal */}
       {showLogin && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-sm relative">
@@ -122,7 +150,7 @@ const AddToCartBlock: React.FC<Props> = ({
               onClick={() => setShowLogin(false)}
               className="absolute top-3 right-3 text-sm"
             >
-              ✕
+              x
             </button>
 
             <PhoneLogin onSuccess={handleLoginSuccess} />
