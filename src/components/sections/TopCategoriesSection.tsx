@@ -23,26 +23,10 @@ const iconMap = {
 };
 
 const categoryStyles = [
-  {
-    icon: "bg-slate-100 text-slate-600",
-    card: "border-slate-150 hover:border-slate-200 hover:bg-slate-50/50",
-    label: "text-slate-800",
-  },
-  {
-    icon: "bg-stone-100 text-stone-600",
-    card: "border-stone-150 hover:border-stone-200 hover:bg-stone-50/50",
-    label: "text-stone-800",
-  },
-  {
-    icon: "bg-zinc-100 text-zinc-600",
-    card: "border-zinc-150 hover:border-zinc-200 hover:bg-zinc-50/50",
-    label: "text-zinc-800",
-  },
-  {
-    icon: "bg-neutral-100 text-neutral-600",
-    card: "border-neutral-150 hover:border-neutral-200 hover:bg-neutral-50/50",
-    label: "text-neutral-800",
-  },
+  { icon: "bg-slate-900 text-white", arrow: "text-slate-400 group-hover:text-slate-600" },
+  { icon: "bg-stone-800 text-white", arrow: "text-stone-400 group-hover:text-stone-600" },
+  { icon: "bg-zinc-800 text-white", arrow: "text-zinc-400 group-hover:text-zinc-600" },
+  { icon: "bg-neutral-800 text-white", arrow: "text-neutral-400 group-hover:text-neutral-600" },
 ];
 
 export default function TopCategoriesSection({ content }: Props) {
@@ -126,7 +110,7 @@ export default function TopCategoriesSection({ content }: Props) {
             No categories are available yet. Add them from the admin panel and they will appear here.
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {orderedCategories.map((category, index) => {
               const sectionKey = inferCategorySectionKey(category.slug, category.name) || "repair";
               const Icon = iconMap[sectionKey];
@@ -136,14 +120,15 @@ export default function TopCategoriesSection({ content }: Props) {
                 <Link
                   key={category.id}
                   to={`/category/${category.slug}`}
-                  className={`flex items-center gap-3 rounded-2xl border bg-white p-4 transition hover:shadow-md ${style.card}`}
+                  className="group flex items-center gap-3.5 rounded-xl bg-slate-50 px-4 py-4 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-md hover:shadow-slate-200/60"
                 >
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${style.icon}`}>
-                    <Icon size={22} />
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${style.icon}`}>
+                    <Icon size={18} />
                   </div>
-                  <span className={`text-sm font-semibold ${style.label}`}>
+                  <span className="flex-1 text-sm font-semibold text-slate-700 group-hover:text-slate-900">
                     {category.name}
                   </span>
+                  <ArrowRight size={14} className={`shrink-0 transition ${style.arrow}`} />
                 </Link>
               );
             })}
