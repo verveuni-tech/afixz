@@ -5,6 +5,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 import { useState } from "react";
 import { LayoutDashboard, FileText, LogOut, Menu, X, List } from "lucide-react";
+import logoImg from "../../assets/AfixZ logo_20260322_144619_0000.png";
 
 const AdminHeader = () => {
   const location = useLocation();
@@ -24,9 +25,7 @@ const AdminHeader = () => {
         {/* LEFT SECTION */}
         <div className="flex items-center gap-6">
           <Link to="/admin/dashboard" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-[11px] font-bold tracking-tight text-white">
-              aZ
-            </div>
+            <img src={logoImg} alt="AfixZ" className="h-8 w-auto" />
             <span className="text-sm font-semibold text-slate-700">Admin</span>
           </Link>
 

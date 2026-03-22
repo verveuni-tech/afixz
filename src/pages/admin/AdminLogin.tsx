@@ -5,6 +5,7 @@ import { ArrowLeft, LockKeyhole, ShieldCheck } from "lucide-react";
 import { auth, googleProvider } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
 import useSeo from "../../hooks/useSeo";
+import logoImg from "../../assets/AfixZ logo_20260322_144619_0000.png";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -69,9 +70,11 @@ const AdminLogin = () => {
             </Link>
 
             <div className="mt-8">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-[10px] font-bold tracking-tight text-white">
-                aZ
-              </div>
+              <img
+                src={logoImg}
+                alt="AfixZ"
+                className="h-10 w-auto"
+              />
               <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Admin sign-in
               </h1>

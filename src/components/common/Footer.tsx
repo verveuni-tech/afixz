@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import logoImg from "../../assets/AfixZ logo_20260322_144559_0000.png";
 
 const Footer: React.FC = () => {
   return (
@@ -9,11 +10,12 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12 border-b border-white/10 pb-12">
           
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-white font-bold">
-                A
-              </div>
-              <span className="text-2xl font-bold text-white">AfixZ</span>
+            <div className="mb-6">
+              <img
+                src={logoImg}
+                alt="AfixZ"
+                className="h-12 w-auto brightness-0 invert"
+              />
             </div>
             <p className="text-slate-400 max-w-sm mb-6">
               Simplifying home maintenance for modern living. We connect you with the best local professionals for a seamless service experience.

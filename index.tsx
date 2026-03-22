@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import './index.css'
+import './index.css';
 import "@fontsource-variable/inter";
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './src/context/AuthContext';
 import { CartProvider } from './src/context/CartContext';
 import { LocationProvider } from './src/context/LocationContext';
-
+import { Analytics } from "@vercel/analytics/react";
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -18,12 +18,13 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-    <AuthProvider> 
-      <LocationProvider>
-        <CartProvider> 
-          <App />
-        </CartProvider>
-      </LocationProvider>
+      <AuthProvider>
+        <LocationProvider>
+          <CartProvider>
+            <App />
+            <Analytics />
+          </CartProvider>
+        </LocationProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

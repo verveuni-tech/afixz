@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Search, ShoppingCart, User, Menu, X, MapPin } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import logoImg from "../../assets/AfixZ logo_20260322_144619_0000.png";
 import { useCart } from "../../context/CartContext";
 import {
   collection,
@@ -132,9 +133,9 @@ const Navbar: React.FC = () => {
           {/* Logo */}
           <button onClick={() => goTo("/")}>
             <img
-              src="https://res.cloudinary.com/du4ner2ab/image/upload/f_auto,q_auto,w_140/v1771519338/Untitled_design_13_1_dd7vux.png"
-              alt="Logo"
-              className="h-14 w-auto"
+              src={logoImg}
+              alt="AfixZ"
+              className="h-12 w-auto"
             />
           </button>
 
