@@ -20,7 +20,7 @@ export default function LocationPickerModal() {
       <div className="w-full max-w-2xl overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-6 sm:px-8">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1 text-sm font-medium text-blue-700">
+            <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1 text-sm font-medium text-accent">
               <MapPin size={15} />
               Service area
             </div>
@@ -56,11 +56,11 @@ export default function LocationPickerModal() {
                 onClick={() => void setSelectedLocation(location.id)}
                 className={`rounded-[28px] border px-5 py-6 text-left transition ${
                   active
-                    ? "border-blue-500 bg-blue-50 shadow-sm"
-                    : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg"
+                    ? "border-accent bg-accent/5 shadow-sm"
+                    : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-lg"
                 }`}
               >
-                <span className="text-xs font-medium uppercase tracking-[0.2em] text-blue-700">
+                <span className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
                   {location.label}
                 </span>
                 <p className="mt-3 text-base font-semibold text-slate-900">{location.shortLabel}</p>

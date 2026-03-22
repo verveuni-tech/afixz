@@ -112,7 +112,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           {Object.entries(progressMap).map(([key, percent]) => (
             <div key={key} className="w-full bg-slate-100 rounded-full h-2">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all"
+                className="bg-accent h-2 rounded-full transition-all"
                 style={{ width: `${percent}%` }}
               />
             </div>

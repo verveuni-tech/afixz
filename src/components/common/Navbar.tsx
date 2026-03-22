@@ -150,7 +150,7 @@ const Navbar: React.FC = () => {
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 placeholder="Search services..."
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-accent outline-none"
               />
 
               {term.length >= 2 && (
@@ -187,7 +187,7 @@ const Navbar: React.FC = () => {
                           <p className="font-medium text-slate-900">
                             {service.title}
                           </p>
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm font-semibold text-accent">
                             ₹{service.price}
                           </p>
                         </div>
@@ -204,7 +204,7 @@ const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={openLocationPicker}
-              className="hidden items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-blue-200 hover:text-blue-700 md:inline-flex"
+              className="hidden items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-accent/30 hover:text-accent md:inline-flex"
             >
               <MapPin size={16} />
               {getLocationLabel(selectedLocation)}
@@ -213,16 +213,16 @@ const Navbar: React.FC = () => {
             <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-600">
               <Link
                 to="/"
-                className={`transition-colors hover:text-blue-600 ${
-                  location.pathname === "/" ? "text-blue-600" : ""
+                className={`transition-colors hover:text-accent ${
+                  location.pathname === "/" ? "text-accent" : ""
                 }`}
               >
                 Home
               </Link>
               <Link
                 to="/blogs"
-                className={`transition-colors hover:text-blue-600 ${
-                  location.pathname.startsWith("/blogs") ? "text-blue-600" : ""
+                className={`transition-colors hover:text-accent ${
+                  location.pathname.startsWith("/blogs") ? "text-accent" : ""
                 }`}
               >
                 Blogs
@@ -235,7 +235,7 @@ const Navbar: React.FC = () => {
             >
               <ShoppingCart size={20} />
               {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                <span className="absolute -top-1 -right-1 bg-accent text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
                   {cart.length}
                 </span>
               )}
@@ -243,7 +243,7 @@ const Navbar: React.FC = () => {
 
             <button
               onClick={() => goTo("/profile")}
-              className="hidden md:flex w-9 h-9 bg-slate-200 rounded-full items-center justify-center"
+              className="hidden md:flex w-9 h-9 bg-primary rounded-full items-center justify-center text-white"
             >
               <User size={18} />
             </button>
@@ -263,9 +263,9 @@ const Navbar: React.FC = () => {
           <div className="space-y-3">
             <button
               onClick={openLocationPicker}
-              className="flex w-full items-center gap-2 rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700"
+              className="flex w-full items-center gap-2 rounded-2xl bg-accent/5 px-4 py-3 text-left text-sm font-medium text-primary"
             >
-              <MapPin size={16} />
+              <MapPin size={16} className="text-accent" />
               {getLocationLabel(selectedLocation)}
             </button>
 
@@ -273,7 +273,7 @@ const Navbar: React.FC = () => {
               onClick={() => goTo("/")}
               className={`block w-full rounded-2xl px-4 py-3 text-left text-sm font-medium ${
                 location.pathname === "/"
-                  ? "bg-blue-50 text-blue-700"
+                  ? "bg-accent/10 text-accent"
                   : "bg-slate-50 text-slate-700"
               }`}
             >
@@ -284,7 +284,7 @@ const Navbar: React.FC = () => {
               onClick={() => goTo("/blogs")}
               className={`block w-full rounded-2xl px-4 py-3 text-left text-sm font-medium ${
                 location.pathname.startsWith("/blogs")
-                  ? "bg-blue-50 text-blue-700"
+                  ? "bg-accent/10 text-accent"
                   : "bg-slate-50 text-slate-700"
               }`}
             >

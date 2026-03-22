@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import PhoneLogin from "../auth/PhoneLogin";
 import { useLocationContext } from "../../context/LocationContext";
 import { getLocationLabel } from "../../lib/locations";
+import { MapPin, ShoppingCart, Trash2, X } from "lucide-react";
 
 interface Props {
   serviceId: string;
@@ -67,90 +68,107 @@ const AddToCartBlock: React.FC<Props> = ({
 
   return (
     <>
-      <div className="bg-white rounded-3xl shadow-xl p-8 space-y-6">
+      <div className="rounded-xl border border-slate-200 bg-white p-5">
+        {/* Price */}
         <div>
-          <p className="text-xs uppercase text-slate-500">
-            Starting Price
+          <p className="text-[11px] uppercase tracking-wider text-slate-400">
+            Starting at
           </p>
-          <span className="text-4xl font-bold text-slate-900">
-            Rs {price}
-          </span>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-3xl font-bold text-accent">₹{price}</span>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Booking location:{" "}
-          <span className="font-semibold text-slate-800">
-            {getLocationLabel(selectedLocation)}
-          </span>
-        </div>
+        {/* Divider */}
+        <div className="my-4 border-t border-slate-100" />
 
-        {!selectedLocation && (
+        {/* Location */}
+        <div className="flex items-center gap-2.5 rounded-lg bg-accent/5 px-3.5 py-2.5">
+          <MapPin size={14} className="shrink-0 text-accent" />
+          <div className="flex-1 text-sm">
+            <span className="text-slate-500">Location: </span>
+            <span className="font-medium text-slate-700">
+              {getLocationLabel(selectedLocation)}
+            </span>
+          </div>
           <button
-            type="button"
             onClick={openLocationPicker}
-            className="w-full rounded-2xl border border-blue-200 bg-blue-50 py-4 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+            className="text-xs font-medium text-accent transition hover:text-accent-hover"
           >
-            Choose location before booking
+            Change
           </button>
-        )}
+        </div>
 
-        {selectedLocation && !availableInLocation && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-800">
-            This service is unavailable in the selected location, so booking is disabled.
-          </div>
-        )}
+        {/* Actions */}
+        <div className="mt-4 space-y-3">
+          {!selectedLocation && (
+            <button
+              type="button"
+              onClick={openLocationPicker}
+              className="w-full rounded-lg border border-accent/20 bg-accent/5 py-3 text-sm font-semibold text-accent transition hover:bg-accent/10"
+            >
+              Choose location to book
+            </button>
+          )}
 
-        {selectedLocation && availableInLocation && !isInCart && (
-          <button
-            onClick={handleAdd}
-            disabled={loading}
-            className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 transition disabled:opacity-60"
-          >
-            {loading ? "Adding..." : "Add to Cart"}
-          </button>
-        )}
-
-        {isInCart && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-5 space-y-4">
-            <p className="text-green-700 font-medium">
-              This service is in your cart
-            </p>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() =>
-                  window.location.assign("/cart")
-                }
-                className="flex-1 bg-green-600 text-white py-3 rounded-xl text-sm"
-              >
-                Go to Cart
-              </button>
-
-              <button
-                onClick={() =>
-                  removeFromCart(serviceId)
-                }
-                className="flex-1 border border-green-300 text-green-700 py-3 rounded-xl text-sm"
-              >
-                Remove
-              </button>
+          {selectedLocation && !availableInLocation && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-700">
+              Unavailable in this location. Booking is disabled.
             </div>
-          </div>
-        )}
+          )}
 
-        <p className="text-xs text-slate-500 text-center">
+          {selectedLocation && availableInLocation && !isInCart && (
+            <button
+              onClick={handleAdd}
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-semibold text-white transition hover:bg-accent-hover disabled:opacity-50"
+            >
+              <ShoppingCart size={15} />
+              {loading ? "Adding..." : "Add to Cart"}
+            </button>
+          )}
+
+          {isInCart && (
+            <div className="space-y-2">
+              <div className="rounded-lg bg-emerald-50 px-4 py-2.5 text-center text-sm font-medium text-emerald-700">
+                ✓ In your cart
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => window.location.assign("/cart")}
+                  className="rounded-lg bg-primary py-2.5 text-xs font-medium text-white transition hover:bg-primary-hover"
+                >
+                  Go to Cart
+                </button>
+
+                <button
+                  onClick={() => removeFromCart(serviceId)}
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 py-2.5 text-xs font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 size={12} />
+                  Remove
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer note */}
+        <p className="mt-4 text-center text-[11px] text-slate-400">
           Combine multiple services in one visit.
         </p>
       </div>
 
+      {/* Login Modal */}
       {showLogin && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-sm relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="relative w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
             <button
               onClick={() => setShowLogin(false)}
-              className="absolute top-3 right-3 text-sm"
+              className="absolute right-3 top-3 rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
             >
-              x
+              <X size={16} />
             </button>
 
             <PhoneLogin onSuccess={handleLoginSuccess} />

@@ -29,7 +29,6 @@ const Home = () => {
       <ServiceCategorySection
         content={content.sections.cleaning}
         sectionKey="cleaning"
-        accentColor="blue"
         layout="grid"
         backgroundClassName="bg-white"
       />
@@ -37,15 +36,13 @@ const Home = () => {
       <ServiceCategorySection
         content={content.sections.repair}
         sectionKey="repair"
-        accentColor="violet"
         layout="list"
-        backgroundClassName="bg-zinc-50/60"
+        backgroundClassName="bg-[#f9fafb]"
       />
 
       <ServiceCategorySection
         content={content.sections.beauty}
         sectionKey="beauty"
-        accentColor="rose"
         layout="grid"
         backgroundClassName="bg-white"
       />
@@ -53,9 +50,8 @@ const Home = () => {
       <ServiceCategorySection
         content={content.sections.gardening}
         sectionKey="gardening"
-        accentColor="emerald"
         layout="list"
-        backgroundClassName="bg-stone-50/60"
+        backgroundClassName="bg-[#f9fafb]"
       />
     </div>
   );

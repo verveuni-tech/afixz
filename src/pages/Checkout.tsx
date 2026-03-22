@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { collection, addDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useLocationContext } from "../context/LocationContext";
 import { db } from "../firebase";
 import { normalizeService, resolveServiceForLocation } from "../lib/services";
 import { getLocationLabel } from "../lib/locations";
+import { ChevronRight, Loader2, MapPin, Lock } from "lucide-react";
 
 const Checkout: React.FC = () => {
   const { cart, clearCart } = useCart();
@@ -81,179 +82,237 @@ const Checkout: React.FC = () => {
   };
 
   const handlePlaceOrder = async () => {
-    if (!validate()) return;
-    if (!user || !selectedLocation) return;
+  if (!validate()) return;
+  if (!user || !selectedLocation) return;
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const validatedBookings = await Promise.all(
-        cart.map(async (item) => {
-          const snapshot = await getDoc(doc(db, "services", item.serviceId));
+    const validatedBookings = await Promise.all(
+      cart.map(async (item) => {
+        const snapshot = await getDoc(doc(db, "services", item.serviceId));
 
-          if (!snapshot.exists()) {
-            throw new Error(`Service "${item.title}" is no longer available.`);
-          }
+        if (!snapshot.exists()) {
+          throw new Error(`Service "${item.title}" is no longer available.`);
+        }
 
-          const service = resolveServiceForLocation(
-            normalizeService(snapshot.id, snapshot.data() as Record<string, any>),
-            selectedLocation
-          );
+        const service = resolveServiceForLocation(
+          normalizeService(snapshot.id, snapshot.data() as Record<string, any>),
+          selectedLocation
+        );
 
-          if (item.locationId && item.locationId !== selectedLocation) {
-            throw new Error(`"${item.title}" belongs to another location and must be removed first.`);
-          }
+        if (item.locationId && item.locationId !== selectedLocation) {
+          throw new Error(`"${item.title}" belongs to another location and must be removed first.`);
+        }
 
-          return {
-            serviceId: service.id,
-            serviceSlug: service.slug,
-            serviceTitle: service.title,
-            price: service.price,
-            locationId: selectedLocation,
-          };
-        })
-      );
+        return {
+          serviceId: service.id,
+          serviceSlug: service.slug,
+          serviceTitle: service.title,
+          price: service.price,
+          locationId: selectedLocation,
+        };
+      })
+    );
 
-      const bookingIds: string[] = [];
+    const bookingIds: string[] = [];
 
-      for (const booking of validatedBookings) {
-        const bookingRef = await addDoc(collection(db, "bookings"), {
-          userId: user.uid,
-          ...booking,
-          address: form,
-          scheduledDate: form.date,
-          scheduledTime: form.time,
-          customerName: form.name,
-          customerPhone: form.phone,
-          paymentMode: "cod",
-          status: "pending",
-          createdAt: serverTimestamp(),
-        });
+    for (const booking of validatedBookings) {
+      const bookingRef = await addDoc(collection(db, "bookings"), {
+        userId: user.uid,
+        serviceId: booking.serviceId,
+        serviceSlug: booking.serviceSlug,
+        serviceTitle: booking.serviceTitle,
+        price: booking.price,
+        totalPrice: booking.price,
+        locationId: booking.locationId,
 
-        bookingIds.push(bookingRef.id);
-      }
+        address: {
+          name: form.name,
+          phone: form.phone,
+          houseNo: form.houseNo,
+          area: form.area,
+          landmark: form.landmark,
+          city: form.city,
+          pincode: form.pincode,
+          fullAddress: form.fullAddress,
+        },
 
-      setOrderPlaced(true);
-      await clearCart();
+        scheduledDate: form.date,
+        scheduledTime: form.time,
+        customerName: form.name,
+        customerPhone: form.phone,
+        paymentMode: "cod",
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
 
-      navigate(`/booking-success/${bookingIds[0]}`);
-    } catch (err: any) {
-      console.error(err);
-      alert(err?.message || "Something went wrong.");
-    } finally {
-      setLoading(false);
+      bookingIds.push(bookingRef.id);
     }
-  };
+
+    setOrderPlaced(true);
+    await clearCart();
+
+    navigate(`/booking-success/${bookingIds[0]}`);
+  } catch (err: any) {
+    console.error(err);
+    alert(err?.message || "Something went wrong.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-slate-100 pt-32 pb-28">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="mb-16">
-          <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
-            Checkout
-          </h1>
-          <p className="mt-3 text-slate-500 text-lg">
-            Confirm your details and schedule your service.
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-50 pb-20 pt-28">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1 text-sm text-slate-400">
+          <Link to="/" className="transition hover:text-slate-600">Home</Link>
+          <ChevronRight size={13} />
+          <Link to="/cart" className="transition hover:text-slate-600">Cart</Link>
+          <ChevronRight size={13} />
+          <span className="font-medium text-slate-700">Checkout</span>
+        </nav>
 
-        <div className="mb-8 rounded-3xl border border-slate-200 bg-white px-6 py-5 text-sm text-slate-600 shadow-sm">
-          Booking location:{" "}
+        <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
+          Checkout
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Confirm your details and schedule your service.
+        </p>
+
+        {/* Location Bar */}
+        <div className="mt-6 flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <MapPin size={14} className="shrink-0 text-slate-400" />
+          <span className="flex-1 text-sm text-slate-600">
+            Booking for <span className="font-medium text-slate-800">{getLocationLabel(selectedLocation)}</span>
+          </span>
           <button
             type="button"
             onClick={openLocationPicker}
-            className="font-semibold text-blue-600 hover:underline"
+            className="text-xs font-medium text-accent transition hover:text-accent-hover"
           >
-            {getLocationLabel(selectedLocation)}
+            Change
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-          <div className="lg:col-span-2 space-y-14">
-            <ModernSection title="Customer Details">
-              <TwoCol>
-                <ModernInput label="Full Name" name="name" value={form.name} onChange={handleChange} />
-                <ModernInput label="Phone Number" name="phone" value={form.phone} onChange={handleChange} />
-              </TwoCol>
-            </ModernSection>
+        {/* Main Layout */}
+        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
+          {/* Left — Form */}
+          <div className="space-y-6">
+            {/* Customer Details */}
+            <FormSection title="Customer Details" step={1}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormInput label="Full Name" name="name" value={form.name} onChange={handleChange} required />
+                <FormInput label="Phone Number" name="phone" value={form.phone} onChange={handleChange} required />
+              </div>
+            </FormSection>
 
-            <ModernSection title="Service Address">
-              <TwoCol>
-                <ModernInput label="House / Flat No" name="houseNo" value={form.houseNo} onChange={handleChange} />
-                <ModernInput label="Area / Street" name="area" value={form.area} onChange={handleChange} />
-                <ModernInput label="Landmark (Optional)" name="landmark" value={form.landmark} onChange={handleChange} />
-                <ModernInput label="City" name="city" value={form.city} onChange={handleChange} />
-                <ModernInput label="Pincode" name="pincode" value={form.pincode} onChange={handleChange} />
-              </TwoCol>
+            {/* Service Address */}
+            <FormSection title="Service Address" step={2}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormInput label="House / Flat No" name="houseNo" value={form.houseNo} onChange={handleChange} required />
+                <FormInput label="Area / Street" name="area" value={form.area} onChange={handleChange} required />
+                <FormInput label="Landmark" name="landmark" value={form.landmark} onChange={handleChange} placeholder="Optional" />
+                <FormInput label="City" name="city" value={form.city} onChange={handleChange} required />
+                <FormInput label="Pincode" name="pincode" value={form.pincode} onChange={handleChange} required />
+              </div>
+              <div className="mt-4">
+                <label className="mb-1.5 block text-xs font-medium text-slate-600">
+                  Complete Address <span className="text-red-400">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  name="fullAddress"
+                  value={form.fullAddress}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100"
+                  placeholder="Full address for the service visit"
+                />
+              </div>
+            </FormSection>
 
-              <ModernTextarea
-                label="Complete Address"
-                name="fullAddress"
-                value={form.fullAddress}
-                onChange={handleChange}
-              />
-            </ModernSection>
-
-            <ModernSection title="Schedule">
-              <TwoCol>
-                <ModernInput
+            {/* Schedule */}
+            <FormSection title="Schedule" step={3}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormInput
                   type="date"
-                  min={today}
-                  label="Select Date"
+                  label="Preferred Date"
                   name="date"
                   value={form.date}
                   onChange={handleChange}
+                  min={today}
+                  required
                 />
-                <ModernSelect
-                  label="Select Time"
-                  name="time"
-                  value={form.time}
-                  onChange={handleChange}
-                  options={["10:00 AM", "12:00 PM", "2:00 PM", "4:00 PM"]}
-                />
-              </TwoCol>
-            </ModernSection>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-slate-600">
+                    Preferred Time <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    name="time"
+                    value={form.time}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100"
+                  >
+                    {["10:00 AM", "12:00 PM", "2:00 PM", "4:00 PM"].map((t) => (
+                      <option key={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </FormSection>
           </div>
 
-          <div className="lg:sticky lg:top-32 h-fit">
-            <div className="bg-white/80 backdrop-blur-md border border-white/40 shadow-2xl rounded-3xl p-10 space-y-8">
-              <h2 className="text-xl font-semibold text-slate-900">
+          {/* Right — Order Summary */}
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <div className="rounded-xl border border-slate-200 bg-white p-6">
+              <h2 className="text-base font-semibold text-slate-800">
                 Order Summary
               </h2>
 
-              <div className="space-y-4 text-sm text-slate-600">
+              <div className="mt-5 space-y-3">
                 {cart.map((item) => (
-                  <div key={item.serviceId} className="flex justify-between gap-3">
-                    <div>
-                      <p>{item.title}</p>
+                  <div key={item.serviceId} className="flex justify-between gap-3 text-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-slate-600">{item.title}</p>
                       {item.locationId && (
-                        <p className="mt-1 text-xs text-slate-400">For {getLocationLabel(item.locationId)}</p>
+                        <p className="mt-0.5 text-[11px] text-slate-400">
+                          {getLocationLabel(item.locationId)}
+                        </p>
                       )}
                     </div>
-                    <span>Rs {item.price}</span>
+                    <span className="shrink-0 font-medium text-slate-800">₹{item.price}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="border-t pt-6 flex justify-between text-lg font-semibold text-slate-900">
-                <span>Total</span>
-                <span>Rs {totalPrice}</span>
+              <div className="mt-5 border-t border-slate-100 pt-4 flex justify-between">
+                <span className="font-semibold text-slate-800">Total</span>
+                <span className="text-lg font-bold text-accent">₹{totalPrice}</span>
               </div>
 
               <button
                 onClick={handlePlaceOrder}
                 disabled={loading}
-                className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 transition-all duration-200 shadow-lg"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-semibold text-white transition hover:bg-accent-hover disabled:opacity-50"
               >
-                {loading ? "Processing..." : "Place Order (Cash on Delivery)"}
+                {loading ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Place Order — Cash on Delivery"
+                )}
               </button>
 
-              <p className="text-xs text-center text-slate-400">
-                Secure booking for {getLocationLabel(selectedLocation)}.
-              </p>
+              <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+                <Lock size={10} />
+                Secure booking for {getLocationLabel(selectedLocation)}
+              </div>
             </div>
           </div>
         </div>
@@ -264,58 +323,47 @@ const Checkout: React.FC = () => {
 
 export default Checkout;
 
-const ModernSection = ({ title, children }: any) => (
-  <div className="bg-white rounded-3xl shadow-xl p-10 border border-slate-100">
-    <h3 className="text-lg font-semibold text-slate-900 mb-8">
-      {title}
-    </h3>
-    <div className="space-y-6">{children}</div>
-  </div>
-);
+/* ---- Sub-components ---- */
 
-const TwoCol = ({ children }: any) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-    {children}
-  </div>
-);
+function FormSection({
+  title,
+  step,
+  children,
+}: {
+  title: string;
+  step: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="mb-5 flex items-center gap-3">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-white">
+          {step}
+        </span>
+        <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
 
-const ModernInput = ({ label, ...props }: any) => (
-  <div>
-    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide">
-      {label}
-    </label>
-    <input
-      {...props}
-      className="w-full mt-3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-    />
-  </div>
-);
-
-const ModernTextarea = ({ label, ...props }: any) => (
-  <div>
-    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide">
-      {label}
-    </label>
-    <textarea
-      rows={4}
-      {...props}
-      className="w-full mt-3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-    />
-  </div>
-);
-
-const ModernSelect = ({ label, options, ...props }: any) => (
-  <div>
-    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide">
-      {label}
-    </label>
-    <select
-      {...props}
-      className="w-full mt-3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-    >
-      {options.map((o: string) => (
-        <option key={o}>{o}</option>
-      ))}
-    </select>
-  </div>
-);
+function FormInput({
+  label,
+  required,
+  ...props
+}: {
+  label: string;
+  required?: boolean;
+} & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-xs font-medium text-slate-600">
+        {label} {required && <span className="text-red-400">*</span>}
+      </label>
+      <input
+        {...props}
+        className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100"
+      />
+    </div>
+  );
+}

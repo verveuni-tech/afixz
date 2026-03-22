@@ -2,40 +2,39 @@ import React from "react";
 
 const CartSkeleton = () => {
   return (
-    <div className="min-h-screen pt-32 pb-24 bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-7xl mx-auto px-6">
-
+    <div className="min-h-screen bg-white pb-20 pt-28">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* Header skeleton */}
-        <div className="mb-12 animate-pulse">
-          <div className="h-10 w-40 bg-slate-200 rounded" />
-          <div className="h-4 w-72 bg-slate-200 rounded mt-3" />
+        <div className="mb-8 animate-pulse">
+          <div className="h-3 w-32 rounded bg-slate-100" />
+          <div className="mt-4 h-7 w-36 rounded bg-slate-100" />
+          <div className="mt-2 h-3 w-24 rounded bg-slate-100" />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 animate-pulse">
-
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px] animate-pulse">
           {/* Left skeleton */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-3">
             {[1, 2].map((i) => (
-              <div
-                key={i}
-                className="bg-white rounded-3xl shadow p-6 space-y-4"
-              >
-                <div className="h-5 w-48 bg-slate-200 rounded" />
-                <div className="h-4 w-24 bg-slate-200 rounded" />
+              <div key={i} className="rounded-xl border border-slate-200 bg-white p-5">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2.5">
+                    <div className="h-4 w-44 rounded bg-slate-100" />
+                    <div className="h-3 w-20 rounded bg-slate-100" />
+                  </div>
+                  <div className="h-8 w-16 rounded-lg bg-slate-100" />
+                </div>
               </div>
             ))}
           </div>
 
           {/* Summary skeleton */}
-          <div className="bg-white rounded-3xl shadow-xl p-8 space-y-6">
-            <div className="h-6 w-32 bg-slate-200 rounded" />
-            <div className="h-4 w-full bg-slate-200 rounded" />
-            <div className="h-4 w-3/4 bg-slate-200 rounded" />
-            <div className="h-12 w-full bg-slate-200 rounded-2xl" />
+          <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+            <div className="h-5 w-28 rounded bg-slate-100" />
+            <div className="h-3 w-full rounded bg-slate-100" />
+            <div className="h-3 w-3/4 rounded bg-slate-100" />
+            <div className="h-10 w-full rounded-lg bg-slate-100" />
           </div>
-
         </div>
-
       </div>
     </div>
   );

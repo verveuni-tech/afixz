@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { Link } from "react-router-dom";
+import { ArrowRight, Plus } from "lucide-react";
 import { db } from "../../firebase";
 
 export default function ServicesTable() {
@@ -24,59 +25,70 @@ export default function ServicesTable() {
   }, []);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-800">Recent Services</h2>
-          <p className="mt-1 text-xs text-slate-500">Showing latest 10</p>
+          <h2 className="text-sm font-semibold text-slate-800">Recent Services</h2>
+          <p className="mt-0.5 text-xs text-slate-400">Latest 10</p>
         </div>
 
-        <Link
-          to="/admin/services?tab=services"
-          className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-        >
-          New Service
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/admin/all-services"
+            className="group inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
+          >
+            View All
+            <ArrowRight size={12} className="transition group-hover:translate-x-0.5" />
+          </Link>
+          <Link
+            to="/admin/services?tab=services"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-slate-800"
+          >
+            <Plus size={13} />
+            New
+          </Link>
+        </div>
       </div>
 
       {services.length === 0 ? (
-        <div className="py-16 text-center text-sm text-slate-500">No services found.</div>
+        <div className="py-16 text-center text-sm text-slate-400">No services found.</div>
       ) : (
         <>
-          <div className="hidden overflow-x-auto md:block">
+          {/* Desktop Table */}
+          <div className="hidden md:block">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 text-slate-500">
-                <tr>
-                  <th className="py-3 font-medium">Title</th>
-                  <th className="font-medium">Price</th>
-                  <th className="font-medium">Duration</th>
-                  <th className="font-medium">Slug</th>
-                  <th className="font-medium text-right">Action</th>
+              <thead>
+                <tr className="border-b border-slate-100 text-xs uppercase tracking-wider text-slate-400">
+                  <th className="px-5 py-3 font-medium">Title</th>
+                  <th className="px-3 py-3 font-medium">Price</th>
+                  <th className="px-3 py-3 font-medium">Duration</th>
+                  <th className="px-3 py-3 font-medium">Slug</th>
+                  <th className="px-5 py-3 text-right font-medium">Action</th>
                 </tr>
               </thead>
 
-              <tbody>
+              <tbody className="divide-y divide-slate-50">
                 {services.map((service) => (
                   <tr
                     key={service.id}
-                    className="border-b border-slate-100 transition-colors hover:bg-slate-50"
+                    className="transition-colors hover:bg-slate-50/50"
                   >
-                    <td className="py-4 font-medium text-slate-700">{service.title}</td>
-                    <td className="font-semibold text-blue-600">Rs {service.price}</td>
-                    <td>
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
+                    <td className="px-5 py-3.5 font-medium text-slate-700">{service.title}</td>
+                    <td className="px-3 py-3.5 font-semibold text-slate-800">₹{service.price}</td>
+                    <td className="px-3 py-3.5">
+                      <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
                         {service.duration}
                       </span>
                     </td>
-                    <td>
-                      <span className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                    <td className="px-3 py-3.5">
+                      <span className="font-mono text-xs text-slate-400">
                         {service.slug}
                       </span>
                     </td>
-                    <td className="text-right">
+                    <td className="px-5 py-3.5 text-right">
                       <Link
                         to={`/admin/services?tab=services&editService=${service.id}`}
-                        className="text-sm font-medium text-blue-600 hover:underline"
+                        className="text-xs font-medium text-blue-600 transition hover:text-blue-700"
                       >
                         Edit
                       </Link>
@@ -87,33 +99,26 @@ export default function ServicesTable() {
             </table>
           </div>
 
-          <div className="space-y-4 md:hidden">
+          {/* Mobile Cards */}
+          <div className="divide-y divide-slate-100 md:hidden">
             {services.map((service) => (
-              <div
-                key={service.id}
-                className="rounded-2xl border border-slate-200 p-4"
-              >
-                <div className="flex items-start justify-between gap-4">
+              <div key={service.id} className="px-5 py-4">
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-medium text-slate-800">{service.title}</p>
-                    <p className="mt-1 text-sm font-semibold text-blue-600">
-                      Rs {service.price}
+                    <p className="text-sm font-medium text-slate-700">{service.title}</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-800">
+                      ₹{service.price}
                     </p>
                   </div>
-
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
+                  <span className="shrink-0 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
                     {service.duration}
                   </span>
                 </div>
-
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">
-                    {service.slug}
-                  </span>
-
+                <div className="mt-2.5 flex items-center justify-between">
+                  <span className="font-mono text-xs text-slate-400">{service.slug}</span>
                   <Link
                     to={`/admin/services?tab=services&editService=${service.id}`}
-                    className="text-sm font-medium text-blue-600 hover:underline"
+                    className="text-xs font-medium text-blue-600"
                   >
                     Edit
                   </Link>

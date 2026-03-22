@@ -7,6 +7,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import React, {
@@ -25,6 +26,8 @@ export interface UserProfile {
   uid: string;
   phone: string | null;
   email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
   provider: string | null;
   role: "user" | "admin";
   selectedLocation?: LocationId | null;
@@ -38,6 +41,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 /* ---------------- Context ---------------- */
@@ -101,9 +105,16 @@ export const AuthProvider = ({
               phone:
                 firebaseUser.phoneNumber || null,
               email: firebaseUser.email || null,
+              displayName:
+                firebaseUser.displayName || null,
+              photoURL:
+                firebaseUser.photoURL || null,
               provider:
                 firebaseUser.providerData[0]
-                  ?.providerId || null,
+                  ?.providerId ||
+                (firebaseUser.phoneNumber
+                  ? "phone"
+                  : "unknown"),
               role: adminStatus ? "admin" : "user",
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),
@@ -114,6 +125,25 @@ export const AuthProvider = ({
           } else {
             const existingProfile =
               snap.data() as UserProfile;
+
+            // Migrate profiles with missing provider
+            if (
+              !existingProfile.provider &&
+              firebaseUser.phoneNumber
+            ) {
+              try {
+                await updateDoc(userRef, {
+                  provider: "phone",
+                  updatedAt: serverTimestamp(),
+                });
+                existingProfile.provider = "phone";
+              } catch (migrationErr) {
+                console.warn(
+                  "Provider migration failed:",
+                  migrationErr
+                );
+              }
+            }
 
             setProfile(existingProfile);
           }
@@ -135,6 +165,18 @@ export const AuthProvider = ({
     await signOut(auth);
   };
 
+  const refreshProfile = async () => {
+    if (!user) return;
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists()) {
+        setProfile(snap.data() as UserProfile);
+      }
+    } catch (err) {
+      console.error("Failed to refresh profile:", err);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -143,6 +185,7 @@ export const AuthProvider = ({
         loading,
         isAdmin,
         logout,
+        refreshProfile,
       }}
     >
       {children}

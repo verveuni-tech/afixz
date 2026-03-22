@@ -67,7 +67,7 @@ export default function PhoneLogin({ onSuccess }: Props) {
           <button
             disabled={!isValidPhone || loading || !ready}
             onClick={() => void handleSendOtp()}
-            className="w-full rounded-lg bg-blue-600 py-3 text-white disabled:opacity-50"
+            className="w-full rounded-lg bg-accent py-3 text-white disabled:opacity-50"
           >
             {loading ? "Sending..." : !ready ? "Preparing..." : "Send OTP"}
           </button>
@@ -89,7 +89,7 @@ export default function PhoneLogin({ onSuccess }: Props) {
           <button
             disabled={otp.length !== 6 || loading}
             onClick={() => void handleVerifyOtp()}
-            className="w-full rounded-lg bg-blue-600 py-3 text-white disabled:opacity-50"
+            className="w-full rounded-lg bg-accent py-3 text-white disabled:opacity-50"
           >
             {loading ? "Verifying..." : "Verify"}
           </button>

@@ -29,75 +29,53 @@ service cloud.firestore {
       return value is int || value is float;
     }
 
+    function isValidLocation(locationId) {
+      return locationId == "delhi"
+        || locationId == "noida"
+        || locationId == "gurgaon";
+    }
+
     function optionalString(data, field) {
+      return !hasField(data, field) || data[field] is string;
+    }
+
+    function optionalNullableString(data, field) {
       return !hasField(data, field) || data[field] == null || data[field] is string;
-    }
-
-    function optionalBool(data, field) {
-      return !hasField(data, field) || data[field] is bool;
-    }
-
-    function optionalList(data, field) {
-      return !hasField(data, field) || data[field] is list;
-    }
-
-    function optionalMap(data, field) {
-      return !hasField(data, field) || data[field] is map;
     }
 
     function optionalTimestampOrNull(data, field) {
       return !hasField(data, field) || data[field] == null || data[field] is timestamp;
     }
 
-    function servicePath(serviceId) {
-      return /databases/$(database)/documents/services/$(serviceId);
+    function optionalMapOrString(data, field) {
+      return !hasField(data, field) || data[field] is map || data[field] is string;
+    }
+
+    function serviceDoc(serviceId) {
+      return get(/databases/$(database)/documents/services/$(serviceId));
     }
 
     function serviceExists(serviceId) {
-      return exists(servicePath(serviceId));
+      return exists(/databases/$(database)/documents/services/$(serviceId));
     }
 
-    function serviceData(serviceId) {
-      return get(servicePath(serviceId)).data;
-    }
-
-    function serviceAllowsLocation(serviceId, locationId) {
-      let service = serviceData(serviceId);
-      return !hasField(service, "availableLocations")
-        || !(service.availableLocations is list)
-        || service.availableLocations.size() == 0
-        || service.availableLocations.hasAny([locationId]);
-    }
-
-    function serviceSlugMatches(serviceId, slug) {
-      let service = serviceData(serviceId);
-      return service.slug is string && service.slug == slug;
+    function serviceSupportsLocation(serviceId, locationId) {
+      return !serviceDoc(serviceId).data.keys().hasAny(["availableLocations"])
+        || serviceDoc(serviceId).data.availableLocations.hasAny([locationId]);
     }
 
     function servicePriceMatches(serviceId, locationId, price) {
-      let service = serviceData(serviceId);
       return (
-          hasField(service, "priceByLocation")
-          && service.priceByLocation is map
-          && service.priceByLocation.keys().hasAny([locationId])
-          && isNumber(service.priceByLocation[locationId])
-          && price == service.priceByLocation[locationId]
-        )
-        || (
-          (
-            !hasField(service, "priceByLocation")
-            || !(service.priceByLocation is map)
-            || !service.priceByLocation.keys().hasAny([locationId])
-          )
-          && isNumber(service.price)
-          && price == service.price
-        );
+        serviceDoc(serviceId).data.keys().hasAny(["priceByLocation"])
+        && serviceDoc(serviceId).data.priceByLocation.keys().hasAny([locationId])
+        && price == serviceDoc(serviceId).data.priceByLocation[locationId]
+      ) || price == serviceDoc(serviceId).data.price;
     }
 
     function validService(data) {
       return hasOnlyKeys(data, [
           "title", "slug", "price", "duration", "warranty",
-          "professionals", "overview", "shortDescription", "included", "images",
+          "professionals", "overview", "included", "images",
           "categoryId", "categorySlug", "searchKeywords", "rating",
           "reviewCount", "isRecommended", "availableLocations",
           "contentByLocation", "priceByLocation", "createdAt", "updatedAt"
@@ -106,7 +84,7 @@ service cloud.firestore {
           "title", "slug", "price", "duration", "warranty",
           "professionals", "overview", "included", "images",
           "categoryId", "categorySlug", "searchKeywords", "rating",
-          "reviewCount", "createdAt", "updatedAt"
+          "reviewCount", "isRecommended", "availableLocations", "updatedAt"
         ])
         && data.title is string
         && data.slug is string
@@ -115,7 +93,6 @@ service cloud.firestore {
         && data.warranty is string
         && (data.professionals is string || isNumber(data.professionals))
         && data.overview is string
-        && optionalString(data, "shortDescription")
         && data.included is list
         && data.images is list
         && data.categoryId is string
@@ -123,11 +100,11 @@ service cloud.firestore {
         && data.searchKeywords is list
         && isNumber(data.rating)
         && isNumber(data.reviewCount)
-        && optionalBool(data, "isRecommended")
-        && optionalList(data, "availableLocations")
-        && optionalMap(data, "contentByLocation")
-        && optionalMap(data, "priceByLocation")
-        && data.createdAt is timestamp
+        && data.isRecommended is bool
+        && data.availableLocations is list
+        && data.contentByLocation is map
+        && data.priceByLocation is map
+        && optionalTimestampOrNull(data, "createdAt")
         && data.updatedAt is timestamp;
     }
 
@@ -172,56 +149,64 @@ service cloud.firestore {
         && data.canonicalUrl is string
         && data.readTime is string
         && data.searchKeywords is list
-        && optionalList(data, "availableLocations")
-        && optionalMap(data, "contentByLocation")
+        && (!hasField(data, "availableLocations") || data.availableLocations is list)
+        && (!hasField(data, "contentByLocation") || data.contentByLocation is map)
         && optionalTimestampOrNull(data, "createdAt")
         && data.updatedAt is timestamp;
     }
 
-    function validSiteContent(data) {
+    function validHomepageContent(data) {
       return hasOnlyKeys(data, ["default", "byLocation", "updatedAt"])
         && hasRequiredKeys(data, ["default", "updatedAt"])
         && data.default is map
-        && optionalMap(data, "byLocation")
+        && (!hasField(data, "byLocation") || data.byLocation is map)
         && data.updatedAt is timestamp;
     }
 
-    function validUserProfile(data) {
+    // UPDATED
+    function validUserProfile(data, userId) {
       return hasOnlyKeys(data, [
-          "uid", "phone", "email", "provider", "role",
-          "selectedLocation", "createdAt", "updatedAt"
+          "uid", "displayName", "photoURL", "phone", "email",
+          "provider", "role", "selectedLocation", "createdAt", "updatedAt"
         ])
         && hasRequiredKeys(data, [
-          "uid", "role", "createdAt", "updatedAt"
+          "uid", "provider", "role", "createdAt", "updatedAt"
         ])
         && data.uid is string
-        && (data.phone == null || data.phone is string)
-        && (data.email == null || data.email is string)
-        && (data.provider == null || data.provider is string)
-        && optionalString(data, "selectedLocation")
+        && data.uid == userId
+        && optionalNullableString(data, "displayName")
+        && optionalNullableString(data, "photoURL")
+        && optionalNullableString(data, "phone")
+        && optionalNullableString(data, "email")
+        && data.provider is string
+        && (data.provider == "phone" || data.provider == "google.com")
         && data.role is string
+        && (data.role == "user" || data.role == "admin")
+        && (
+          (data.role == "user" && data.provider == "phone")
+          || (data.role == "admin" && data.provider == "google.com")
+        )
+        && (!hasField(data, "selectedLocation")
+          || data.selectedLocation == null
+          || isValidLocation(data.selectedLocation))
         && data.createdAt is timestamp
         && data.updatedAt is timestamp;
     }
 
     function validCartItem(data, cartItemId) {
-      return hasOnlyKeys(data, [
-          "serviceId", "title", "price", "slug", "locationId", "addedAt"
-        ])
-        && hasRequiredKeys(data, [
-          "serviceId", "title", "price", "slug", "locationId", "addedAt"
-        ])
+      return hasOnlyKeys(data, ["serviceId", "title", "price", "slug", "locationId", "addedAt"])
+        && hasRequiredKeys(data, ["serviceId", "title", "price", "slug", "locationId", "addedAt"])
         && data.serviceId is string
         && data.serviceId == cartItemId
+        && serviceExists(data.serviceId)
         && data.title is string
         && isNumber(data.price)
         && data.slug is string
         && data.locationId is string
-        && data.addedAt is timestamp
-        && serviceExists(data.serviceId)
-        && serviceSlugMatches(data.serviceId, data.slug)
-        && serviceAllowsLocation(data.serviceId, data.locationId)
-        && servicePriceMatches(data.serviceId, data.locationId, data.price);
+        && isValidLocation(data.locationId)
+        && serviceSupportsLocation(data.serviceId, data.locationId)
+        && servicePriceMatches(data.serviceId, data.locationId, data.price)
+        && data.addedAt is timestamp;
     }
 
     function validAddress(data) {
@@ -244,34 +229,38 @@ service cloud.firestore {
 
     function validBooking(data) {
       return hasOnlyKeys(data, [
-          "userId", "serviceId", "serviceSlug", "serviceTitle", "price",
-          "locationId", "address", "scheduledDate", "scheduledTime",
-          "paymentMode", "status", "createdAt", "customerName", "customerPhone"
+          "orderGroupId", "userId", "serviceId", "serviceSlug", "serviceTitle",
+          "price", "totalPrice", "locationId", "address", "scheduledDate",
+          "scheduledTime", "paymentMode", "status", "createdAt",
+          "customerName", "customerPhone"
         ])
         && hasRequiredKeys(data, [
-          "userId", "serviceId", "serviceSlug", "serviceTitle", "price",
-          "locationId", "address", "scheduledDate", "scheduledTime",
-          "paymentMode", "status", "createdAt", "customerName", "customerPhone"
+          "userId", "serviceId", "serviceSlug", "serviceTitle",
+          "price", "totalPrice", "locationId", "scheduledDate",
+          "scheduledTime", "paymentMode", "status", "createdAt"
         ])
         && data.userId is string
         && data.userId == request.auth.uid
         && data.serviceId is string
+        && serviceExists(data.serviceId)
         && data.serviceSlug is string
         && data.serviceTitle is string
         && isNumber(data.price)
+        && isNumber(data.totalPrice)
+        && data.totalPrice == data.price
         && data.locationId is string
-        && data.address is map
+        && isValidLocation(data.locationId)
+        && serviceSupportsLocation(data.serviceId, data.locationId)
+        && servicePriceMatches(data.serviceId, data.locationId, data.price)
         && data.scheduledDate is string
         && data.scheduledTime is string
-        && data.customerName is string
-        && data.customerPhone is string
         && data.paymentMode == "cod"
         && data.status == "pending"
-        && data.createdAt is timestamp
-        && serviceExists(data.serviceId)
-        && serviceSlugMatches(data.serviceId, data.serviceSlug)
-        && serviceAllowsLocation(data.serviceId, data.locationId)
-        && servicePriceMatches(data.serviceId, data.locationId, data.price);
+        && optionalString(data, "orderGroupId")
+        && optionalMapOrString(data, "address")
+        && optionalString(data, "customerName")
+        && optionalString(data, "customerPhone")
+        && data.createdAt is timestamp;
     }
 
     match /services/{doc} {
@@ -292,35 +281,48 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    match /siteContent/{doc} {
+    match /siteContent/{docId} {
       allow read: if true;
-      allow create, update: if isAdmin() && validSiteContent(request.resource.data);
+      allow create, update: if isAdmin() && validHomepageContent(request.resource.data);
       allow delete: if isAdmin();
     }
 
+    // UPDATED
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
+
+      // phone-auth users can create only their own user profile
+      // admins can create valid user/admin profiles
       allow create: if (
           isOwner(userId)
-          && request.resource.data.uid == userId
+          && request.auth.token.firebase.sign_in_provider == "phone"
           && request.resource.data.role == "user"
-          && validUserProfile(request.resource.data)
+          && request.resource.data.provider == "phone"
+          && validUserProfile(request.resource.data, userId)
         ) || (
           isAdmin()
-          && request.resource.data.uid == userId
-          && validUserProfile(request.resource.data)
+          && validUserProfile(request.resource.data, userId)
         );
+
+      // phone-auth users can update only their own profile
+      // role/createdAt stay locked for self-updates
+      // provider can be corrected from null to "phone" for migration
+      // admins can update any valid profile
       allow update: if (
           isOwner(userId)
-          && request.resource.data.uid == userId
-          && request.resource.data.role == resource.data.role
+          && request.auth.token.firebase.sign_in_provider == "phone"
           && resource.data.role == "user"
-          && validUserProfile(request.resource.data)
+          && (resource.data.provider == "phone" || resource.data.provider == null)
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.provider == "phone"
+          && request.resource.data.createdAt == resource.data.createdAt
+          && validUserProfile(request.resource.data, userId)
         ) || (
           isAdmin()
-          && request.resource.data.uid == userId
-          && validUserProfile(request.resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && validUserProfile(request.resource.data, userId)
         );
+
       allow delete: if isAdmin();
     }
 

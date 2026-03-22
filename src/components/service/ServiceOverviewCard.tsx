@@ -1,4 +1,5 @@
 import React from "react";
+import { Clock, Shield, Users, CheckCircle } from "lucide-react";
 
 interface Props {
   overview: string;
@@ -16,53 +17,61 @@ const ServiceOverviewCard: React.FC<Props> = ({
   professionals,
 }) => {
   return (
-    <div className="bg-white rounded-3xl shadow-lg shadow-slate-200/40 p-10 space-y-10">
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <InfoItem label="Duration" value={duration} />
-        <InfoItem label="Warranty" value={warranty} />
-        <InfoItem label="Professionals" value={professionals} />
+    <div className="space-y-6">
+      {/* Key Info Bar */}
+      <div className="grid grid-cols-3 divide-x divide-slate-200 rounded-xl border border-slate-200 bg-white">
+        <InfoItem icon={<Clock size={16} />} label="Duration" value={duration} />
+        <InfoItem icon={<Shield size={16} />} label="Warranty" value={warranty} />
+        <InfoItem icon={<Users size={16} />} label="Professionals" value={professionals} />
       </div>
 
-      <div>
-        <h3 className="text-2xl font-semibold tracking-tight text-slate-900 mb-4">
+      {/* Overview */}
+      <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <h3 className="text-base font-semibold text-slate-800">
           Service Overview
         </h3>
-        <p className="text-slate-600 leading-relaxed">
+        <p className="mt-3 text-sm leading-7 text-slate-600">
           {overview}
         </p>
       </div>
 
-      <div>
-        <h3 className="text-2xl font-semibold tracking-tight text-slate-900 mb-6">
-          What’s Included
-        </h3>
+      {/* What's Included */}
+      {included && included.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-6">
+          <h3 className="text-base font-semibold text-slate-800">
+            What's Included
+          </h3>
 
-        <ul className="space-y-4">
-          {included?.map((item, index) => (
-            <li key={index} className="flex items-start gap-3 text-slate-600">
-              <span className="mt-2 h-2 w-2 rounded-full bg-blue-600"></span>
-              {item}
-            </li>
-          ))}
-        </ul>
-      </div>
-
+          <ul className="mt-4 space-y-3">
+            {included.map((item, index) => (
+              <li key={index} className="flex items-start gap-2.5 text-sm text-slate-600">
+                <CheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-500" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
 
 export default ServiceOverviewCard;
 
-function InfoItem({ label, value }: { label: string; value: string }) {
+function InfoItem({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl py-6 px-6 shadow-sm text-center">
-      <p className="text-xs uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      <p className="font-semibold text-lg text-slate-900 mt-2">
-        {value}
-      </p>
+    <div className="flex flex-col items-center gap-1.5 px-4 py-4 text-center">
+      <span className="text-slate-400">{icon}</span>
+      <span className="text-[11px] uppercase tracking-wider text-slate-400">{label}</span>
+      <span className="text-sm font-semibold text-slate-800">{value}</span>
     </div>
   );
 }

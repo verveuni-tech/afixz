@@ -45,7 +45,7 @@ export default function DashboardStats() {
   }, []);
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-5">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
       <StatCard
         title="Total Services"
         value={services}
@@ -94,43 +94,49 @@ interface CardProps {
 function StatCard({ title, value, icon, color }: CardProps) {
   const colorMap = {
     blue: {
-      accent: "bg-blue-500",
-      icon: "bg-blue-50 text-blue-600",
+      bg: "bg-blue-50/80",
+      icon: "text-blue-600",
+      value: "text-blue-700",
+      border: "border-blue-100",
     },
     emerald: {
-      accent: "bg-emerald-500",
-      icon: "bg-emerald-50 text-emerald-600",
+      bg: "bg-emerald-50/80",
+      icon: "text-emerald-600",
+      value: "text-emerald-700",
+      border: "border-emerald-100",
     },
     amber: {
-      accent: "bg-amber-500",
-      icon: "bg-amber-50 text-amber-700",
+      bg: "bg-amber-50/80",
+      icon: "text-amber-600",
+      value: "text-amber-700",
+      border: "border-amber-100",
     },
     violet: {
-      accent: "bg-violet-500",
-      icon: "bg-violet-50 text-violet-600",
+      bg: "bg-violet-50/80",
+      icon: "text-violet-600",
+      value: "text-violet-700",
+      border: "border-violet-100",
     },
     slate: {
-      accent: "bg-slate-500",
-      icon: "bg-slate-100 text-slate-700",
+      bg: "bg-slate-50",
+      icon: "text-slate-600",
+      value: "text-slate-700",
+      border: "border-slate-200",
     },
   };
 
-  return (
-    <div className="relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-      <div
-        className={`absolute left-0 top-0 h-full w-1 rounded-l-2xl ${colorMap[color].accent}`}
-      />
+  const c = colorMap[color];
 
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm text-slate-500">{title}</div>
-        <div
-          className={`flex h-8 w-8 items-center justify-center rounded-lg ${colorMap[color].icon}`}
-        >
-          {icon}
-        </div>
+  return (
+    <div className={`rounded-xl border ${c.border} ${c.bg} p-5 transition-shadow hover:shadow-sm`}>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium uppercase tracking-wider text-slate-500">{title}</span>
+        <span className={c.icon}>{icon}</span>
       </div>
 
-      <div className="break-words text-2xl font-semibold text-slate-800">{value}</div>
+      <div className={`mt-3 break-words text-2xl font-bold ${c.value}`}>
+        {value}
+      </div>
     </div>
   );
 }

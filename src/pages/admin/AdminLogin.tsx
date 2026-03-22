@@ -54,61 +54,64 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid w-full gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+    <div className="min-h-screen bg-slate-50/50">
+      <div className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-4 py-10 sm:px-6 lg:px-8">
+        <div className="grid w-full gap-10 lg:grid-cols-2 lg:gap-16">
+
+          {/* Left — Info */}
           <section className="flex flex-col justify-center">
             <Link
               to="/"
-              className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+              className="inline-flex w-fit items-center gap-2 rounded-lg text-sm text-slate-500 transition hover:text-slate-700"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-3.5 w-3.5" />
               Back to site
             </Link>
 
-            <div className="mt-8 max-w-xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-600">
-                Admin Access
-              </p>
-              <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
-                Sign in to manage AfixZ content.
+            <div className="mt-8">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-[10px] font-bold tracking-tight text-white">
+                aZ
+              </div>
+              <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+                Admin sign-in
               </h1>
-              <p className="mt-5 text-base leading-8 text-slate-600 sm:text-lg">
-                Use your approved Google account to access the admin dashboard for
-                services, categories, blogs, and storefront updates.
+              <p className="mt-4 text-sm leading-7 text-slate-500 sm:text-base">
+                Use your approved Google account to access the dashboard
+                for services, categories, blogs, and storefront updates.
               </p>
             </div>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
               <InfoCard
-                icon={<ShieldCheck className="h-5 w-5" />}
+                icon={<ShieldCheck className="h-4 w-4" />}
                 title="Admin-only access"
-                description="Only accounts with the admin custom claim can enter the dashboard."
+                description="Only accounts with the admin claim can enter."
               />
               <InfoCard
-                icon={<LockKeyhole className="h-5 w-5" />}
-                title="Protected by rules"
-                description="Firestore security rules stay in control of dashboard permissions."
+                icon={<LockKeyhole className="h-4 w-4" />}
+                title="Firestore rules"
+                description="Security rules enforce dashboard permissions."
               />
             </div>
           </section>
 
+          {/* Right — Login Card */}
           <section className="flex items-center">
-            <div className="w-full rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8 lg:p-10">
-              <div className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+            <div className="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+              <span className="inline-block rounded-md bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
                 Secure Sign-In
-              </div>
+              </span>
 
-              <h2 className="mt-6 text-2xl font-semibold text-slate-900 sm:text-3xl">
+              <h2 className="mt-5 text-xl font-semibold text-slate-800 sm:text-2xl">
                 Continue with Google
               </h2>
-              <p className="mt-3 text-sm leading-7 text-slate-600">
-                This login page is only for administrators. If your account has not
-                been granted access yet, sign-in will be blocked after authentication.
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Only administrators can access this page. Unauthorized accounts
+                will be blocked after authentication.
               </p>
 
               {error ? (
-                <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">
+                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                   {error}
                 </div>
               ) : null}
@@ -116,16 +119,16 @@ const AdminLogin = () => {
               <button
                 onClick={handleGoogleLogin}
                 disabled={loading || authLoading}
-                className="mt-6 flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 px-4 py-4 text-base font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                className="mt-5 flex w-full items-center justify-center gap-2.5 rounded-xl bg-primary px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <GoogleIcon />
                 {loading || authLoading ? "Checking access..." : "Sign in with Google"}
               </button>
 
-              <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-                If your role was updated recently, sign out and try again so the latest
-                admin claim can be read.
-              </div>
+              <p className="mt-4 text-center text-xs leading-5 text-slate-400">
+                If your role was updated recently, sign out and try again
+                so the latest admin claim can be read.
+              </p>
             </div>
           </section>
         </div>
@@ -144,12 +147,12 @@ interface InfoCardProps {
 
 function InfoCard({ icon, title, description }: InfoCardProps) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
         {icon}
       </div>
-      <h3 className="mt-4 text-base font-semibold text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+      <h3 className="mt-3 text-sm font-semibold text-slate-700">{title}</h3>
+      <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
     </div>
   );
 }
@@ -158,7 +161,7 @@ function GoogleIcon() {
   return (
     <svg
       aria-hidden="true"
-      className="h-5 w-5"
+      className="h-4 w-4"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >

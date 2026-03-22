@@ -6,37 +6,58 @@ interface Props {
 
 const ServiceGalleryCard: React.FC<Props> = ({ images = [] }) => {
   const [active, setActive] = useState(0);
-  const validImages = images.length > 0 ? images : ["/placeholder.jpg"];
+  const hasImages = images.length > 0;
+  const validImages = hasImages ? images : [];
 
   return (
-    <div className="bg-white rounded-3xl shadow-lg shadow-slate-200/40 p-6 overflow-hidden">
-
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-
-        <div className="flex md:flex-col gap-4 md:col-span-1 order-2 md:order-1">
-          {validImages.map((img, index) => (
-            <img
-              key={index}
-              src={img}
-              alt=""
-              onClick={() => setActive(index)}
-              className={`h-20 w-20 object-cover rounded-2xl cursor-pointer transition-all duration-200 
-              ${active === index
-                ? "ring-2 ring-blue-600 shadow-md scale-105"
-                : "opacity-70 hover:opacity-100"}`}
-            />
-          ))}
-        </div>
-
-        <div className="md:col-span-4 order-1 md:order-2">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      {/* Main Image */}
+      <div className="relative aspect-[16/9] w-full bg-slate-100">
+        {hasImages ? (
           <img
             src={validImages[active]}
             alt=""
-            className="w-full h-96 object-cover rounded-3xl"
+            className="h-full w-full object-cover"
           />
-        </div>
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+            <span className="text-3xl font-bold tracking-tight text-primary/25">
+              afixz
+            </span>
+            <span className="mt-1 text-xs text-primary/40">No images available</span>
+          </div>
+        )}
 
+        {/* Image counter */}
+        {hasImages && validImages.length > 1 && (
+          <span className="absolute bottom-3 right-3 rounded-md bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+            {active + 1} / {validImages.length}
+          </span>
+        )}
       </div>
+
+      {/* Thumbnails */}
+      {hasImages && validImages.length > 1 && (
+        <div className="flex gap-2 border-t border-slate-100 p-3">
+          {validImages.map((img, index) => (
+            <button
+              key={index}
+              onClick={() => setActive(index)}
+              className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg transition-all ${
+                active === index
+                  ? "ring-2 ring-slate-900 ring-offset-1"
+                  : "opacity-60 hover:opacity-100"
+              }`}
+            >
+              <img
+                src={img}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -4,13 +4,13 @@ import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-slate-900 text-slate-300 py-16">
+    <footer className="bg-primary text-slate-300 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12 border-b border-slate-800 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12 border-b border-white/10 pb-12">
           
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
+              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-white font-bold">
                 A
               </div>
               <span className="text-2xl font-bold text-white">AfixZ</span>
@@ -29,23 +29,23 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="text-white font-bold mb-6">Services</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Plumbing</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Electrician</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Cleaning</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Appliance Repair</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Salon at Home</a></li>
-              <li><Link to="/blogs" className="hover:text-blue-400 transition-colors">Blogs</Link></li>
+              <li><a href="#" className="hover:text-accent-light transition-colors">Plumbing</a></li>
+              <li><a href="#" className="hover:text-accent-light transition-colors">Electrician</a></li>
+              <li><a href="#" className="hover:text-accent-light transition-colors">Cleaning</a></li>
+              <li><a href="#" className="hover:text-accent-light transition-colors">Appliance Repair</a></li>
+              <li><a href="#" className="hover:text-accent-light transition-colors">Salon at Home</a></li>
+              <li><Link to="/blogs" className="hover:text-accent-light transition-colors">Blogs</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-white font-bold mb-6">Company</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-blue-400 transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Careers</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Contact</a></li>
+              <li><a href="#" className="hover:text-accent-light transition-colors">About Us</a></li>
+              <li><a href="#" className="hover:text-accent-light transition-colors">Careers</a></li>
+              <li><a href="#" className="hover:text-accent-light transition-colors">Terms of Service</a></li>
+              <li><a href="#" className="hover:text-accent-light transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-accent-light transition-colors">Contact</a></li>
             </ul>
           </div>
         </div>

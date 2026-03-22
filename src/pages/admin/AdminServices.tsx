@@ -12,6 +12,7 @@ import BlogFormCard, {
 } from "../../components/admin/BlogFormCard";
 import HomepageContentFormCard from "../../components/admin/HomepageContentFormCard";
 import { db } from "../../firebase";
+import { Info } from "lucide-react";
 
 const validTabs: AdminTab[] = ["services", "categories", "blogs", "homepage"];
 
@@ -105,50 +106,45 @@ const AdminServices = () => {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-slate-50/50">
       <AdminHeader />
-      <div className="min-h-screen bg-slate-100 py-8 px-4 md:px-6">
-        <div className="max-w-5xl mx-auto space-y-8">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <h1 className="text-3xl font-semibold">
-              Manage Content
-            </h1>
-            <p className="max-w-2xl text-sm leading-6 text-slate-500">
-              Create services, categories, homepage copy, and SEO-ready blog articles from one
-              streamlined workspace.
-            </p>
-          </div>
 
-          <AdminTabs activeTab={activeTab} setActiveTab={handleTabChange} />
+      <div className="mx-auto max-w-5xl px-4 py-8 md:px-6 md:py-10">
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold text-slate-800 md:text-2xl">
+            Manage Content
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Services, categories, homepage copy, and blog articles.
+          </p>
+        </div>
 
-          <div className="space-y-6">
-            {activeTab === "services" ? (
-              <ServiceFormCard
-                serviceToEdit={editingService}
-                onSaved={clearServiceEditing}
-                onCancelEdit={clearServiceEditing}
-              />
-            ) : activeTab === "categories" ? (
-              <CategoryFormCard />
-            ) : activeTab === "blogs" ? (
-              <BlogFormCard
-                blogToEdit={editingBlog}
-                onSaved={clearBlogEditing}
-                onCancelEdit={clearBlogEditing}
-              />
-            ) : (
-              <HomepageContentFormCard />
-            )}
+        <AdminTabs activeTab={activeTab} setActiveTab={handleTabChange} />
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-800">
-                Publishing Notes
-              </h2>
-              <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
-                <p>Use the dashboard for recent services and blog visibility.</p>
-                <p>Draft blogs stay private until you switch the status to published.</p>
-                <p>Homepage content falls back safely to code defaults if Firestore content is incomplete.</p>
-              </div>
+        <div className="mt-6 space-y-6">
+          {activeTab === "services" ? (
+            <ServiceFormCard
+              serviceToEdit={editingService}
+              onSaved={clearServiceEditing}
+              onCancelEdit={clearServiceEditing}
+            />
+          ) : activeTab === "categories" ? (
+            <CategoryFormCard />
+          ) : activeTab === "blogs" ? (
+            <BlogFormCard
+              blogToEdit={editingBlog}
+              onSaved={clearBlogEditing}
+              onCancelEdit={clearBlogEditing}
+            />
+          ) : (
+            <HomepageContentFormCard />
+          )}
+
+          <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4">
+            <Info size={16} className="mt-0.5 shrink-0 text-slate-400" />
+            <div className="space-y-1 text-xs leading-5 text-slate-500">
+              <p>Draft blogs stay private until you switch the status to published.</p>
+              <p>Homepage content falls back to code defaults if Firestore data is incomplete.</p>
             </div>
           </div>
         </div>

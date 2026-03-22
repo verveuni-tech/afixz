@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
-import { ArrowLeft, CalendarDays, Clock3 } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock3, Loader2 } from "lucide-react";
 import { db } from "../firebase";
 import useSeo from "../hooks/useSeo";
 import {
@@ -115,38 +115,34 @@ const BlogDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <section className="min-h-screen bg-slate-50 pt-28 pb-24">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="h-10 w-40 animate-pulse rounded-full bg-slate-200" />
-          <div className="mt-8 h-16 animate-pulse rounded-3xl bg-slate-200" />
-          <div className="mt-6 h-[420px] animate-pulse rounded-[32px] bg-slate-200" />
-          <div className="mt-8 space-y-4">
-            <div className="h-4 animate-pulse rounded bg-slate-200" />
-            <div className="h-4 animate-pulse rounded bg-slate-200" />
-            <div className="h-4 animate-pulse rounded bg-slate-200" />
+      <div className="min-h-screen bg-white pb-20 pt-28">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <Loader2 size={14} className="animate-spin" />
+            Loading article...
           </div>
         </div>
-      </section>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <section className="min-h-screen bg-slate-50 pt-28 pb-24">
-        <div className="max-w-4xl mx-auto px-6">
+      <div className="min-h-screen bg-white pb-20 pt-28">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <Link
             to="/blogs"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-700"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-slate-700"
           >
-            <ArrowLeft size={16} />
-            Back to blogs
+            <ArrowLeft size={14} />
+            All articles
           </Link>
 
-          <div className="mt-8 rounded-3xl border border-red-200 bg-red-50 px-6 py-5 text-red-700">
+          <div className="mt-8 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
             {error}
           </div>
         </div>
-      </section>
+      </div>
     );
   }
 
@@ -160,86 +156,135 @@ const BlogDetail: React.FC = () => {
     .filter(Boolean);
 
   return (
-    <section className="min-h-screen bg-slate-50 pt-28 pb-24">
-      <div className="max-w-4xl mx-auto px-6">
+    <div className="min-h-screen bg-white pb-20 pt-28">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        {/* Back link */}
         <Link
           to="/blogs"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-700"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 transition hover:text-slate-600"
         >
-          <ArrowLeft size={16} />
-          Back to blogs
+          <ArrowLeft size={14} />
+          All articles
         </Link>
 
+        {/* Location warning */}
         {unavailableForLocation && (
-          <div className="mt-8 rounded-3xl border border-amber-200 bg-amber-50 px-6 py-5 text-amber-800">
-            This article is not available for the currently selected location.
+          <div className="mt-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700">
+            <span className="mt-0.5 shrink-0">⚠</span>
+            <span>This article is not available for your currently selected location.</span>
           </div>
         )}
 
-        <article className="mt-8 overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-sm">
-          <div className="relative aspect-[16/8] overflow-hidden bg-slate-100">
-            <img
-              src={resolvedBlog.coverImage}
-              alt={resolvedBlog.title}
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-900/10 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10">
-              <div className="flex flex-wrap items-center gap-3 text-xs font-medium uppercase tracking-[0.18em] text-blue-100">
-                <span className="rounded-full bg-white/12 px-3 py-1">
-                  {resolvedBlog.category}
+        <article className="mt-8">
+          {/* Header */}
+          <header>
+            {/* Meta */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+                {resolvedBlog.category}
+              </span>
+              {resolvedBlog.tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-slate-200 px-2.5 py-0.5 text-[11px] font-medium text-slate-500"
+                >
+                  {tag}
                 </span>
-                {resolvedBlog.tags.slice(0, 2).map((tag) => (
-                  <span key={tag} className="rounded-full bg-white/12 px-3 py-1">
+              ))}
+            </div>
+
+            {/* Title */}
+            <h1 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl">
+              {resolvedBlog.title}
+            </h1>
+
+            {/* Author & date bar */}
+            <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-400">
+              <span className="font-medium text-slate-700">{resolvedBlog.author}</span>
+              <span className="h-4 w-px bg-slate-200" />
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays size={13} />
+                {formatBlogDate(resolvedBlog.publishedAt)}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Clock3 size={13} />
+                {resolvedBlog.readTime}
+              </span>
+            </div>
+          </header>
+
+          {/* Cover Image */}
+          <div className="mt-8 overflow-hidden rounded-xl bg-slate-100">
+            {resolvedBlog.coverImage ? (
+              <img
+                src={resolvedBlog.coverImage}
+                alt={resolvedBlog.title}
+                className="aspect-[16/9] w-full object-cover"
+              />
+            ) : (
+              <div className="flex aspect-[16/9] w-full items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+                <span className="text-4xl font-bold tracking-tight text-slate-200">afixz</span>
+              </div>
+            )}
+          </div>
+
+          {/* Excerpt / Lede */}
+          <div className="mt-8 border-l-2 border-accent/30 pl-5">
+            <p className="font-display text-lg leading-8 text-slate-600 italic">{resolvedBlog.excerpt}</p>
+          </div>
+
+          {/* Body */}
+          <div className="mt-8 border-t border-slate-100 pt-8">
+            {paragraphs.length > 0 ? (
+              paragraphs.map((paragraph, index) => (
+                <p
+                  key={`${resolvedBlog.id}-${index}`}
+                  className="mb-6 text-[15px] leading-8 text-slate-700"
+                >
+                  {paragraph}
+                </p>
+              ))
+            ) : (
+              <p className="text-[15px] leading-8 text-slate-500 italic">
+                Full article content will appear here once it is added from the admin panel.
+              </p>
+            )}
+          </div>
+
+          {/* Footer */}
+          <footer className="mt-10 border-t border-slate-100 pt-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="text-sm text-slate-400">
+                Written by{" "}
+                <span className="font-medium text-slate-600">{resolvedBlog.author}</span>
+              </div>
+
+              <Link
+                to="/blogs"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-slate-700"
+              >
+                <ArrowLeft size={14} />
+                Back to all articles
+              </Link>
+            </div>
+
+            {/* Tags */}
+            {resolvedBlog.tags.length > 0 && (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {resolvedBlog.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-medium text-slate-500"
+                  >
                     {tag}
                   </span>
                 ))}
               </div>
-
-              <h1 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight text-white sm:text-5xl">
-                {resolvedBlog.title}
-              </h1>
-            </div>
-          </div>
-
-          <div className="border-b border-slate-100 px-6 py-5 sm:px-10">
-            <div className="flex flex-wrap items-center gap-5 text-sm text-slate-500">
-              <span className="font-medium text-slate-800">{resolvedBlog.author}</span>
-              <span className="inline-flex items-center gap-2">
-                <CalendarDays size={16} />
-                {formatBlogDate(resolvedBlog.publishedAt)}
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <Clock3 size={16} />
-                {resolvedBlog.readTime}
-              </span>
-            </div>
-          </div>
-
-          <div className="px-6 py-8 sm:px-10 sm:py-10">
-            <p className="text-lg leading-8 text-slate-600">{resolvedBlog.excerpt}</p>
-
-            <div className="mt-8">
-              {paragraphs.length > 0 ? (
-                paragraphs.map((paragraph, index) => (
-                  <p
-                    key={`${resolvedBlog.id}-${index}`}
-                    className="mb-6 mt-0 text-base leading-8 text-slate-700"
-                  >
-                    {paragraph}
-                  </p>
-                ))
-              ) : (
-                <p className="text-base leading-8 text-slate-700">
-                  Full article content will appear here once it is added from the
-                  admin workflow.
-                </p>
-              )}
-            </div>
-          </div>
+            )}
+          </footer>
         </article>
       </div>
-    </section>
+    </div>
   );
 };
 

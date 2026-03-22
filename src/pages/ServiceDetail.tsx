@@ -14,6 +14,7 @@ import {
   resolveServiceForLocation,
   ServiceEntry,
 } from "../lib/services";
+import { ChevronRight, Loader2 } from "lucide-react";
 
 const ServiceDetail: React.FC = () => {
   const { slug } = useParams();
@@ -64,16 +65,28 @@ const ServiceDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="pt-40 text-center text-slate-500">
-        Loading service...
+      <div className="flex min-h-[60vh] items-center justify-center pt-32">
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <Loader2 size={16} className="animate-spin" />
+          Loading service...
+        </div>
       </div>
     );
   }
 
   if (notFound || !resolvedService) {
     return (
-      <div className="pt-40 text-center text-slate-600">
-        Service not found.
+      <div className="flex min-h-[60vh] flex-col items-center justify-center pt-32">
+        <p className="text-lg font-medium text-slate-700">Service not found</p>
+        <p className="mt-2 text-sm text-slate-500">
+          The service you're looking for doesn't exist or has been removed.
+        </p>
+        <Link
+          to="/services"
+          className="mt-5 rounded-lg bg-slate-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+        >
+          Browse all services
+        </Link>
       </div>
     );
   }
@@ -82,43 +95,53 @@ const ServiceDetail: React.FC = () => {
     resolvedService.categorySlug?.replace(/-/g, " ");
 
   return (
-    <div className="bg-gradient-to-b from-white to-blue-50 min-h-screen pt-32 pb-24">
-      <div className="max-w-7xl mx-auto px-6 space-y-12">
-        <div className="text-sm text-slate-500">
-          <Link to="/" className="hover:text-blue-600 transition">
+    <div className="min-h-screen bg-white pb-20 pt-28">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1 text-sm text-slate-400">
+          <Link to="/" className="transition hover:text-slate-600">
             Home
           </Link>
-          <span className="mx-2">/</span>
+          <ChevronRight size={13} />
           <Link
             to={`/category/${resolvedService.categorySlug}`}
-            className="hover:text-blue-600 transition capitalize"
+            className="capitalize transition hover:text-slate-600"
           >
             {formattedCategory}
           </Link>
-          <span className="mx-2">/</span>
-          <span className="text-slate-800 font-medium">
+          <ChevronRight size={13} />
+          <span className="font-medium text-slate-700">
             {resolvedService.title}
           </span>
-        </div>
+        </nav>
 
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">
+        {/* Title Section */}
+        <div className="mt-6">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             {resolvedService.title}
           </h1>
-          <p className="mt-3 max-w-3xl text-slate-600">
-            {resolvedService.shortDescription || formattedCategory}
-          </p>
+          {resolvedService.shortDescription && (
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500 sm:text-base">
+              {resolvedService.shortDescription}
+            </p>
+          )}
         </div>
 
+        {/* Availability Warning */}
         {!availableInLocation && selectedLocation && (
-          <div className="rounded-3xl border border-amber-200 bg-amber-50 px-6 py-5 text-amber-800">
-            This service is not currently available in your selected location. You can switch the
-            location from the header to see availability in another city.
+          <div className="mt-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700">
+            <span className="mt-0.5 shrink-0">⚠</span>
+            <span>
+              This service is not currently available in your selected location.
+              Switch your location from the header to check other cities.
+            </span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2 space-y-10">
+        {/* Main Content Grid */}
+        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
+          {/* Left Column */}
+          <div className="space-y-8">
             <ServiceGalleryCard images={resolvedService.images} />
 
             <ServiceOverviewCard
@@ -128,9 +151,12 @@ const ServiceDetail: React.FC = () => {
               warranty={resolvedService.warranty}
               professionals={resolvedService.professionals}
             />
+
+            <ServiceFAQCard />
           </div>
 
-          <div className="lg:sticky lg:top-32 h-fit">
+          {/* Right Column — Sticky Cart */}
+          <div className="lg:sticky lg:top-28 lg:self-start">
             <AddToCartBlock
               serviceId={resolvedService.id}
               title={resolvedService.title}
@@ -140,8 +166,6 @@ const ServiceDetail: React.FC = () => {
             />
           </div>
         </div>
-
-        <ServiceFAQCard />
       </div>
     </div>
   );

@@ -24,43 +24,48 @@ const ServiceFAQCard: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   return (
-    <div className="bg-white rounded-3xl shadow-lg shadow-slate-200/40 p-10">
-
-      <h3 className="text-2xl font-semibold tracking-tight mb-8">
+    <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <h3 className="text-base font-semibold text-slate-800">
         Frequently Asked Questions
       </h3>
 
-      <div className="space-y-4">
-        {faqs.map((faq, index) => (
-          <div
-            key={index}
-            className="bg-slate-50 rounded-2xl transition-all duration-200"
-          >
-            <button
-              onClick={() =>
-                setActiveIndex(activeIndex === index ? null : index)
-              }
-              className="w-full flex items-center justify-between px-6 py-5 text-left font-medium text-slate-800 hover:bg-slate-100 rounded-2xl transition"
-            >
-              {faq.question}
+      <div className="mt-4 divide-y divide-slate-100">
+        {faqs.map((faq, index) => {
+          const isOpen = activeIndex === index;
 
-              <ChevronDown
-                size={18}
-                className={`transition-transform duration-200 ${
-                  activeIndex === index ? "rotate-180" : ""
+          return (
+            <div key={index}>
+              <button
+                onClick={() =>
+                  setActiveIndex(isOpen ? null : index)
+                }
+                className="flex w-full items-center justify-between gap-4 py-4 text-left text-sm font-medium text-slate-700 transition-colors hover:text-slate-900"
+              >
+                {faq.question}
+
+                <ChevronDown
+                  size={15}
+                  className={`shrink-0 text-slate-400 transition-transform duration-200 ${
+                    isOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              <div
+                className={`grid transition-all duration-200 ${
+                  isOpen ? "grid-rows-[1fr] pb-4" : "grid-rows-[0fr]"
                 }`}
-              />
-            </button>
-
-            {activeIndex === index && (
-              <div className="px-6 pb-6 text-slate-600 text-sm">
-                {faq.answer}
+              >
+                <div className="overflow-hidden">
+                  <p className="text-sm leading-6 text-slate-500">
+                    {faq.answer}
+                  </p>
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
-
     </div>
   );
 };

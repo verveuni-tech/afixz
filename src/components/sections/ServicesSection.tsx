@@ -14,7 +14,7 @@ const ServicesSection: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto mb-20">
           <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 leading-tight">
             Book Verified Experts for
-            <span className="text-blue-600"> Every Home Need</span>
+            <span className="text-accent"> Every Home Need</span>
           </h2>
 
           <p className="mt-5 text-lg text-slate-600">

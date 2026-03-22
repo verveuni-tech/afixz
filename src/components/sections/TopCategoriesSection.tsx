@@ -23,10 +23,10 @@ const iconMap = {
 };
 
 const categoryStyles = [
-  { icon: "bg-slate-900 text-white", arrow: "text-slate-400 group-hover:text-slate-600" },
-  { icon: "bg-stone-800 text-white", arrow: "text-stone-400 group-hover:text-stone-600" },
-  { icon: "bg-zinc-800 text-white", arrow: "text-zinc-400 group-hover:text-zinc-600" },
-  { icon: "bg-neutral-800 text-white", arrow: "text-neutral-400 group-hover:text-neutral-600" },
+  { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
+  { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
+  { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
+  { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
 ];
 
 export default function TopCategoriesSection({ content }: Props) {
@@ -86,10 +86,10 @@ export default function TopCategoriesSection({ content }: Props) {
     <section className="bg-white py-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900">{content.title}</h2>
+          <h2 className="text-lg font-bold text-primary">{content.title}</h2>
           <Link
             to="/services"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-700"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
           >
             {content.ctaText}
             <ArrowRight size={12} />
@@ -120,12 +120,12 @@ export default function TopCategoriesSection({ content }: Props) {
                 <Link
                   key={category.id}
                   to={`/category/${category.slug}`}
-                  className="group flex items-center gap-3.5 rounded-xl bg-slate-50 px-4 py-4 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-md hover:shadow-slate-200/60"
+                  className="group flex items-center gap-3.5 rounded-xl border border-slate-100 bg-white px-4 py-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md hover:shadow-primary/10"
                 >
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${style.icon}`}>
                     <Icon size={18} />
                   </div>
-                  <span className="flex-1 text-sm font-semibold text-slate-700 group-hover:text-slate-900">
+                  <span className="flex-1 text-sm font-semibold text-primary group-hover:text-primary">
                     {category.name}
                   </span>
                   <ArrowRight size={14} className={`shrink-0 transition ${style.arrow}`} />
