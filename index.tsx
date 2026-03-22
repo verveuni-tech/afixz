@@ -8,6 +8,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import { CartProvider } from './src/context/CartContext';
 import { LocationProvider } from './src/context/LocationContext';
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -23,6 +24,7 @@ root.render(
           <CartProvider>
             <App />
             <Analytics />
+            <SpeedInsights />
           </CartProvider>
         </LocationProvider>
       </AuthProvider>
