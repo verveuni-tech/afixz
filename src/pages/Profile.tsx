@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
@@ -33,11 +34,12 @@ import {
   Camera,
   Pencil,
   Check,
+  RefreshCw,
 } from "lucide-react";
 import { getLocationLabel } from "../lib/locations";
 import { uploadImageWithProgress } from "../lib/cloudinary";
 
-type Tab = "bookings" | "profile" | "addresses" | "support";
+type Tab = "bookings" | "subscriptions" | "profile" | "addresses" | "support";
 
 export default function Profile() {
   const { user, profile, loading } = useAuth();
@@ -54,6 +56,7 @@ export default function Profile() {
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "bookings", label: "Bookings", icon: <ShoppingBag size={16} /> },
+    { key: "subscriptions", label: "Subscriptions", icon: <RefreshCw size={16} /> },
     { key: "profile", label: "Profile", icon: <User size={16} /> },
     { key: "addresses", label: "Addresses", icon: <MapPin size={16} /> },
     { key: "support", label: "Support", icon: <Phone size={16} /> },
@@ -161,6 +164,7 @@ export default function Profile() {
         <div className="mt-6">
           {activeTab === "profile" && <ProfilePanel />}
           {activeTab === "bookings" && <BookingsPanel userId={user.uid} />}
+          {activeTab === "subscriptions" && <SubscriptionsShortcut />}
           {activeTab === "addresses" && <AddressesPanel userId={user.uid} />}
           {activeTab === "support" && <SupportPanel />}
         </div>
@@ -829,6 +833,35 @@ function AddressesPanel({ userId }: { userId: string }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ==============================
+   Subscriptions shortcut
+   ============================== */
+
+function SubscriptionsShortcut() {
+  return (
+    <div className="space-y-4">
+      <h2 className="text-base font-semibold text-slate-800">Subscriptions</h2>
+      <Link
+        to="/subscriptions"
+        className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 transition hover:border-slate-300 hover:shadow-sm"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10">
+            <RefreshCw size={16} className="text-accent" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-800">Manage subscriptions</p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              View, pause, skip, or cancel recurring services.
+            </p>
+          </div>
+        </div>
+        <ChevronRight size={16} className="shrink-0 text-slate-400 transition group-hover:translate-x-0.5" />
+      </Link>
     </div>
   );
 }

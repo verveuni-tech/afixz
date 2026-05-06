@@ -22,6 +22,10 @@ const AdminLogin = lazy(() => import("./src/pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./src/pages/admin/AdminDashboard"));
 const AdminServices = lazy(() => import("./src/pages/admin/AdminServices"));
 const AdminAllServices = lazy(() => import("./src/pages/admin/AdminAllServices"));
+const AdminSubscriptions = lazy(() => import("./src/pages/admin/AdminSubscriptions"));
+const MySubscriptionsPage = lazy(
+  () => import("./src/features/subscriptions/pages/MySubscriptionsPage")
+);
 
 const AppLayout = () => {
   return (
@@ -75,6 +79,15 @@ function App() {
               </UserProtectedRoute>
             }
           />
+
+          <Route
+            path="/subscriptions"
+            element={
+              <UserProtectedRoute>
+                <MySubscriptionsPage />
+              </UserProtectedRoute>
+            }
+          />
         </Route>
 
         <Route path="/admin/login" element={<AdminLogin />} />
@@ -102,6 +115,15 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminAllServices />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/subscriptions"
+          element={
+            <ProtectedRoute>
+              <AdminSubscriptions />
             </ProtectedRoute>
           }
         />

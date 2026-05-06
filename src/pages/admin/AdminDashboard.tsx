@@ -3,7 +3,7 @@ import DashboardStats from "../../components/admin/DashboardStats";
 import RecentBlogsTable from "../../components/admin/RecentBlogsTable";
 import ServicesTable from "../../components/admin/ServicesTable";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, RefreshCw } from "lucide-react";
 
 export default function AdminDashboard() {
   return (
@@ -27,21 +27,32 @@ export default function AdminDashboard() {
           <DashboardStats />
         </section>
 
-        {/* Quick Action */}
-        <section className="mb-8">
+        {/* Quick Actions */}
+        <section className="mb-8 grid gap-3 sm:grid-cols-2">
           <Link
             to="/admin/services"
             className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 transition hover:border-slate-300 hover:shadow-sm"
           >
             <div>
-              <h2 className="text-sm font-semibold text-slate-800">
-                Content Manager
-              </h2>
+              <h2 className="text-sm font-semibold text-slate-800">Content Manager</h2>
               <p className="mt-0.5 text-xs text-slate-500">
                 Create services, publish blogs, and manage homepage copy.
               </p>
             </div>
             <ArrowRight size={16} className="shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-600" />
+          </Link>
+
+          <Link
+            to="/admin/subscriptions"
+            className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 transition hover:border-slate-300 hover:shadow-sm"
+          >
+            <div>
+              <h2 className="text-sm font-semibold text-slate-800">Subscriptions</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                View active subscriptions, trigger bookings for due visits.
+              </p>
+            </div>
+            <RefreshCw size={16} className="shrink-0 text-slate-400 transition group-hover:rotate-180 group-hover:text-slate-600" style={{ transition: "transform 0.4s" }} />
           </Link>
         </section>
 

@@ -232,7 +232,7 @@ service cloud.firestore {
           "orderGroupId", "userId", "serviceId", "serviceSlug", "serviceTitle",
           "price", "totalPrice", "locationId", "address", "scheduledDate",
           "scheduledTime", "paymentMode", "status", "createdAt",
-          "customerName", "customerPhone"
+          "customerName", "customerPhone", "subscriptionId"
         ])
         && hasRequiredKeys(data, [
           "userId", "serviceId", "serviceSlug", "serviceTitle",
@@ -257,10 +257,41 @@ service cloud.firestore {
         && data.paymentMode == "cod"
         && data.status == "pending"
         && optionalString(data, "orderGroupId")
+        && optionalString(data, "subscriptionId")
         && optionalMapOrString(data, "address")
         && optionalString(data, "customerName")
         && optionalString(data, "customerPhone")
         && data.createdAt is timestamp;
+    }
+
+    function validSubscription(data, userId) {
+      return hasOnlyKeys(data, [
+          "userId", "serviceId", "serviceTitle", "serviceSlug",
+          "price", "locationId", "address", "frequency", "preferredTime",
+          "status", "nextScheduledDate", "createdAt", "lastBookingId", "skippedDates"
+        ])
+        && hasRequiredKeys(data, [
+          "userId", "serviceId", "serviceTitle", "serviceSlug",
+          "price", "locationId", "address", "frequency", "preferredTime",
+          "status", "nextScheduledDate", "createdAt", "skippedDates"
+        ])
+        && data.userId is string
+        && data.userId == userId
+        && data.serviceId is string
+        && serviceExists(data.serviceId)
+        && data.serviceTitle is string
+        && data.serviceSlug is string
+        && isNumber(data.price)
+        && data.locationId is string
+        && isValidLocation(data.locationId)
+        && data.address is map
+        && (data.frequency == "weekly" || data.frequency == "biweekly" || data.frequency == "monthly")
+        && data.preferredTime is string
+        && (data.status == "active" || data.status == "paused" || data.status == "cancelled")
+        && data.nextScheduledDate is string
+        && data.createdAt is timestamp
+        && data.skippedDates is list
+        && (!hasField(data, "lastBookingId") || data.lastBookingId == null || data.lastBookingId is string);
     }
 
     match /services/{doc} {
@@ -336,6 +367,24 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin();
       allow create, update: if (isOwner(userId) || isAdmin()) && validAddress(request.resource.data);
       allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    match /subscriptions/{subscriptionId} {
+      allow read: if isSignedIn()
+        && (request.auth.uid == resource.data.userId || isAdmin());
+
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && validSubscription(request.resource.data, request.auth.uid);
+
+      // Users can update status/nextScheduledDate/skippedDates/lastBookingId on their own subs.
+      // userId and serviceId are immutable after creation.
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.serviceId == resource.data.serviceId;
+
+      allow delete: if isAdmin();
     }
 
     match /bookings/{bookingId} {
