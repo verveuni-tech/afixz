@@ -3,6 +3,10 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { Phone, Mail, MapPin, Send, CheckCircle } from "lucide-react";
 import useSeo from "../hooks/useSeo";
+import { checkRateLimit, recordSubmission } from "../lib/rateLimit";
+
+const MAX_SUBMISSIONS_PER_HOUR = 3;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 
 const SERVICES = [
   "Gardening",
@@ -66,16 +70,33 @@ const Contact: React.FC = () => {
       return;
     }
 
+    const { allowed, retryAfterMs } = checkRateLimit(MAX_SUBMISSIONS_PER_HOUR, RATE_LIMIT_WINDOW_MS);
+    if (!allowed) {
+      const mins = Math.ceil(retryAfterMs / 60000);
+      setError(`Too many submissions. Please try again in ${mins} minute${mins > 1 ? "s" : ""}.`);
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
     try {
-      await addDoc(collection(db, "offlineBookings"), {
-        ...form,
-        phone: form.phone.replace(/\s/g, ""),
-        createdAt: serverTimestamp(),
+      const sanitize = (s: string) => s.trim().slice(0, 500);
+
+      await addDoc(collection(db, "queries"), {
+        name: sanitize(form.name),
+        email: sanitize(form.email).toLowerCase(),
+        phone: form.phone.replace(/\s/g, "").slice(0, 16),
+        address: sanitize(form.address),
+        service: form.service,
+        notes: form.notes.trim().slice(0, 1000),
+        type: "offline_booking",
         status: "pending",
+        source: "website",
+        createdAt: serverTimestamp(),
       });
+
+      recordSubmission();
       setSubmitted(true);
       setForm(initialForm);
     } catch {

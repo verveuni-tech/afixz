@@ -387,6 +387,33 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /queries/{queryId} {
+      function validQuery(data) {
+        return hasOnlyKeys(data, [
+            "name", "email", "phone", "address", "service",
+            "notes", "type", "status", "source", "createdAt"
+          ])
+          && hasRequiredKeys(data, [
+            "name", "email", "phone", "address", "service",
+            "type", "status", "source", "createdAt"
+          ])
+          && data.name is string && data.name.size() > 0 && data.name.size() <= 500
+          && data.email is string && data.email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
+          && data.phone is string && data.phone.size() >= 7 && data.phone.size() <= 16
+          && data.address is string && data.address.size() > 0 && data.address.size() <= 500
+          && data.service in ["Gardening", "Bike Service", "Cycle Service", "Home Interior & Fabrication"]
+          && data.notes is string && data.notes.size() <= 1000
+          && data.type == "offline_booking"
+          && data.status == "pending"
+          && data.source == "website"
+          && data.createdAt is timestamp;
+      }
+
+      allow read: if isAdmin();
+      allow create: if validQuery(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
     match /bookings/{bookingId} {
       allow create: if isSignedIn() && validBooking(request.resource.data);
 
