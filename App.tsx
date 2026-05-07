@@ -18,6 +18,7 @@ const BookingSuccess = lazy(() => import("./src/pages/BookingSuccess"));
 const ServicesPage = lazy(() => import("./src/pages/ServicesPage"));
 const BlogsPage = lazy(() => import("./src/pages/BlogsPage"));
 const BlogDetail = lazy(() => import("./src/pages/BlogDetail"));
+const Contact = lazy(() => import("./src/pages/Contact"));
 const AdminLogin = lazy(() => import("./src/pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./src/pages/admin/AdminDashboard"));
 const AdminServices = lazy(() => import("./src/pages/admin/AdminServices"));
@@ -51,6 +52,7 @@ function App() {
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/services/:slug" element={<ServiceDetail />} />
           <Route path="/category/:categorySlug" element={<CategoryServices />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/profile" element={<Profile />} />
 
           <Route
