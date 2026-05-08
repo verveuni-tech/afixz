@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { ArrowRight, BrushCleaning, Scissors, Sprout, Wrench } from "lucide-react";
+import { ArrowRight, BrushCleaning, Scissors, Sprout, Wrench, Bike, Home, Hammer } from "lucide-react";
 import { Link } from "react-router-dom";
 import { db } from "../../firebase";
 import {
@@ -15,14 +15,18 @@ type Props = {
   content: HomepageContent["topCategories"];
 };
 
-const iconMap = {
+const iconMap: Record<string, typeof Wrench> = {
   cleaning: BrushCleaning,
   gardening: Sprout,
   beauty: Scissors,
   repair: Wrench,
+  mechanic: Bike,
+  interior: Home,
+  fabrication: Hammer,
 };
 
 const categoryStyles = [
+  { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
   { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
   { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
   { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
@@ -68,7 +72,7 @@ export default function TopCategoriesSection({ content }: Props) {
 
   const orderedCategories = useMemo(() => {
     if (content.featuredCategorySlugs.length === 0) {
-      return categories.slice(0, 4);
+      return categories.slice(0, 5);
     }
 
     const prioritized = content.featuredCategorySlugs
@@ -79,7 +83,7 @@ export default function TopCategoriesSection({ content }: Props) {
 
     const remainder = categories.filter((category) => !prioritized.some((entry) => entry.id === category.id));
 
-    return [...prioritized, ...remainder].slice(0, 4);
+    return [...prioritized, ...remainder].slice(0, 5);
   }, [categories, content.featuredCategorySlugs]);
 
   return (
@@ -97,8 +101,8 @@ export default function TopCategoriesSection({ content }: Props) {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, index) => (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {Array.from({ length: 5 }).map((_, index) => (
               <div key={index} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4">
                 <div className="h-12 w-12 animate-pulse rounded-xl bg-slate-200" />
                 <div className="h-4 w-16 animate-pulse rounded bg-slate-200" />
@@ -110,10 +114,10 @@ export default function TopCategoriesSection({ content }: Props) {
             No categories are available yet. Add them from the admin panel and they will appear here.
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {orderedCategories.map((category, index) => {
               const sectionKey = inferCategorySectionKey(category.slug, category.name) || "repair";
-              const Icon = iconMap[sectionKey];
+              const Icon = iconMap[sectionKey] || Wrench;
               const style = categoryStyles[index % categoryStyles.length];
 
               return (

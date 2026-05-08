@@ -38,79 +38,114 @@ export type HomepageContent = {
     repair: HomepageSectionContent;
     beauty: HomepageSectionContent;
     gardening: HomepageSectionContent;
+    mechanic: HomepageSectionContent;
+    interior: HomepageSectionContent;
+    fabrication: HomepageSectionContent;
   };
 };
 
 export const homepageFallbackContent: HomepageContent = {
   hero: {
-    eyebrow: "Trusted local experts",
-    title: "Book verified home services without the back-and-forth.",
+    eyebrow: "Verified & trained experts",
+    title: "Book a fix for everything between A to Z.",
     description:
-      "From cleaning and repairs to grooming and gardening, choose reliable professionals and book in minutes.",
+      "We don't just fix it, we make sure it stays fixed. Verified experts, regular follow-ups, and guaranteed repairs for every home service you need.",
     searchPlaceholder: "What service do you need?",
-    ctaText: "Search services",
+    ctaText: "Find services",
     quickServices: [
-      "Cleaning",
-      "Repair",
-      "Haircut",
       "Gardening",
-      "Plumbing",
-      "Electrical",
+      "Mechanic",
+      "Interior",
+      "Cleaning",
+      "Fabrication",
     ],
-    trustBadge: "4.8 rated professionals",
+    trustBadge: "Verified experts · Regular follow-ups · Guaranteed repairs",
   },
   topCategories: {
-    eyebrow: "Top categories",
-    title: "Start with the service category you need most.",
+    eyebrow: "Service categories",
+    title: "Choose a service category that's your priority right now.",
     description:
-      "Browse the main categories available on AfixZ and jump straight to the services listed inside each one.",
+      "From garden care and vehicle servicing to home interiors and deep cleaning — pick what your home needs most and book verified professionals near you.",
     ctaText: "Explore all services",
-    featuredCategorySlugs: ["cleaning", "gardening", "haircut", "repair-maintainance"],
+    featuredCategorySlugs: [
+      "gardening",
+      "mechanic",
+      "interior",
+      "cleaning",
+      "fabrication",
+    ],
   },
   recommended: {
-    eyebrow: "Recommended services",
-    title: "Popular services customers book first.",
+    eyebrow: "Popular services",
+    title: "Most booked services by homeowners near you.",
     description:
-      "A clean, location-aware shortlist of featured services, ready for quick discovery and booking.",
+      "Discover top-rated home services in your area — from doorstep bike repairs to deep cleaning and garden maintenance.",
     ctaText: "Browse all services",
     featuredServiceIds: [],
   },
   sections: {
-    cleaning: {
-      eyebrow: "Home cleaning",
-      title: "Cleaning Services",
-      subtitle: "Reliable cleaning for homes and apartments.",
+    gardening: {
+      eyebrow: "Garden & landscaping",
+      title: "Doorstep Gardening & Landscaping Services",
+      subtitle: "Premium plant care by Flying Mali experts.",
       description:
-        "Choose from deep cleaning, sofa cleaning, kitchen cleaning, and other essentials for a spotless home.",
-      ctaText: "View all cleaning services",
+        "Premium plant care, kitchen garden setup, and seasonal garden maintenance at your doorstep. Avail gardening kits and materials alongside professional landscaping services from trained experts.",
+      ctaText: "View gardening services",
+      categorySlug: "gardening",
+    },
+    mechanic: {
+      eyebrow: "Doorstep mechanic",
+      title: "Bike & Cycle Service at Your Doorstep",
+      subtitle: "Flying Mechanic — skip the garage, we come to you.",
+      description:
+        "Doorstep mechanic service for your vehicle's routine care without waiting outside a garage. Two-wheeler service, washing, puncture repair, and accessories installation or replacement at your home.",
+      ctaText: "View mechanic services",
+      categorySlug: "mechanic",
+    },
+    interior: {
+      eyebrow: "Home interior",
+      title: "End-to-End Home Interior Services",
+      subtitle: "Consult-first approach for sustainable home fixes.",
+      description:
+        "From curtain and wallpaper installation to adding indoor greenery — AfixZ guides you through every possibility. Avail PVC panels, decorative fittings, and accessories installation at your fingertips.",
+      ctaText: "View interior services",
+      categorySlug: "interior",
+    },
+    fabrication: {
+      eyebrow: "Custom fabrication",
+      title: "Custom Fabrication & Welding Work",
+      subtitle: "Built to fit your space and budget.",
+      description:
+        "Customised fabrication beyond basic standards — gates, frames, and structural fixes built as per your home requirements. All types of welding work by skilled professionals.",
+      ctaText: "View fabrication services",
+      categorySlug: "fabrication",
+    },
+    cleaning: {
+      eyebrow: "Deep cleaning",
+      title: "Professional Deep Cleaning Services",
+      subtitle: "Reset and refresh your entire space.",
+      description:
+        "Home, office, washroom, and kitchen deep cleaning by trained professionals. A thorough reset for every corner of your space with AfixZ's verified cleaning experts.",
+      ctaText: "View cleaning services",
       categorySlug: "cleaning",
     },
     repair: {
       eyebrow: "Repairs",
-      title: "Repair & Maintenance",
+      title: "Repair & Maintenance Services",
       subtitle: "Fast-response fixes by trusted professionals.",
       description:
-        "Explore repair services for electrical, plumbing, appliance issues, and other common home problems.",
-      ctaText: "View all repair services",
+        "Explore repair services for electrical, plumbing, appliance issues, and other common home problems handled by verified experts.",
+      ctaText: "View repair services",
       categorySlug: "repair-maintainance",
     },
     beauty: {
       eyebrow: "Beauty at home",
-      title: "Beauty & Personal Care",
-      subtitle: "Salon-style experiences delivered at home.",
+      title: "Beauty & Personal Care at Home",
+      subtitle: "Salon-style experiences delivered at your doorstep.",
       description:
-        "Find haircut, grooming, beauty, and self-care services that fit your routine and schedule.",
-      ctaText: "View all beauty services",
+        "Find haircut, grooming, beauty, and self-care services that fit your routine and schedule — all at your home.",
+      ctaText: "View beauty services",
       categorySlug: "haircut",
-    },
-    gardening: {
-      eyebrow: "Green spaces",
-      title: "Plant & Gardening Services",
-      subtitle: "For balconies, lawns, and indoor green corners.",
-      description:
-        "Book gardening help for setup, maintenance, styling, and one-time care across home spaces.",
-      ctaText: "View all gardening services",
-      categorySlug: "gardening",
     },
   },
 };

@@ -1,4 +1,11 @@
-export type CategorySectionKey = "cleaning" | "repair" | "beauty" | "gardening";
+export type CategorySectionKey =
+  | "cleaning"
+  | "repair"
+  | "beauty"
+  | "gardening"
+  | "mechanic"
+  | "interior"
+  | "fabrication";
 
 export type CategoryEntry = {
   id: string;
@@ -7,7 +14,7 @@ export type CategoryEntry = {
 };
 
 const SECTION_ALIASES: Record<CategorySectionKey, string[]> = {
-  cleaning: ["cleaning", "home-cleaning", "cleaning-services"],
+  cleaning: ["cleaning", "home-cleaning", "cleaning-services", "deep-cleaning"],
   repair: [
     "repair",
     "repair-maintainance",
@@ -32,6 +39,33 @@ const SECTION_ALIASES: Record<CategorySectionKey, string[]> = {
     "plant-gardening",
     "plant-and-gardening",
     "plant-care",
+    "garden-landscaping",
+    "landscaping",
+    "flying-mali",
+  ],
+  mechanic: [
+    "mechanic",
+    "flying-mechanic",
+    "bike-service",
+    "cycle-service",
+    "two-wheeler",
+    "vehicle-service",
+  ],
+  interior: [
+    "interior",
+    "home-interior",
+    "curtain",
+    "wallpaper",
+    "pvc-panel",
+    "interior-design",
+  ],
+  fabrication: [
+    "fabrication",
+    "fabrication-work",
+    "welding",
+    "gate",
+    "metal-work",
+    "structural-fix",
   ],
 };
 
