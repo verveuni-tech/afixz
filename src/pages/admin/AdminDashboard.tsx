@@ -3,7 +3,7 @@ import DashboardStats from "../../components/admin/DashboardStats";
 import RecentBlogsTable from "../../components/admin/RecentBlogsTable";
 import ServicesTable from "../../components/admin/ServicesTable";
 import { Link } from "react-router-dom";
-import { ArrowRight, RefreshCw } from "lucide-react";
+import { ArrowRight, RefreshCw, ShoppingBag } from "lucide-react";
 
 export default function AdminDashboard() {
   return (
@@ -28,7 +28,20 @@ export default function AdminDashboard() {
         </section>
 
         {/* Quick Actions */}
-        <section className="mb-8 grid gap-3 sm:grid-cols-2">
+        <section className="mb-8 grid gap-3 sm:grid-cols-3">
+          <Link
+            to="/admin/orders"
+            className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 transition hover:border-slate-300 hover:shadow-sm"
+          >
+            <div>
+              <h2 className="text-sm font-semibold text-slate-800">Orders</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                View and manage all online and offline bookings.
+              </p>
+            </div>
+            <ShoppingBag size={16} className="shrink-0 text-slate-400 transition group-hover:text-slate-600" />
+          </Link>
+
           <Link
             to="/admin/services"
             className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 transition hover:border-slate-300 hover:shadow-sm"

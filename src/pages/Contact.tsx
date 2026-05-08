@@ -4,6 +4,7 @@ import { db } from "../firebase";
 import { Phone, Mail, MapPin, Send, CheckCircle } from "lucide-react";
 import useSeo from "../hooks/useSeo";
 import { checkRateLimit, recordSubmission } from "../lib/rateLimit";
+import { sendOrderNotification } from "../lib/notifications";
 
 const MAX_SUBMISSIONS_PER_HOUR = 3;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -97,6 +98,18 @@ const Contact: React.FC = () => {
       });
 
       recordSubmission();
+
+      // Send email notifications (non-blocking)
+      sendOrderNotification({
+        type: "offline_booking",
+        name: sanitize(form.name),
+        email: sanitize(form.email).toLowerCase(),
+        phone: form.phone.replace(/\s/g, "").slice(0, 16),
+        service: form.service,
+        address: sanitize(form.address),
+        notes: form.notes.trim().slice(0, 1000),
+      });
+
       setSubmitted(true);
       setForm(initialForm);
     } catch {

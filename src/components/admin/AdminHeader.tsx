@@ -4,12 +4,14 @@ import { Link, useLocation } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 import { useState } from "react";
-import { LayoutDashboard, FileText, LogOut, Menu, X, List } from "lucide-react";
+import { LayoutDashboard, FileText, LogOut, Menu, X, List, Bell, ShoppingBag } from "lucide-react";
 import logoImg from "../../assets/AfixZ logo_20260322_144619_0000.png";
+import { useOrderNotifications } from "../../hooks/useOrderNotifications";
 
 const AdminHeader = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { unreadCount, markAllRead } = useOrderNotifications();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -44,6 +46,13 @@ const AdminHeader = () => {
               active={isActive("/admin/all-services")}
             />
             <NavItem
+              to="/admin/orders"
+              label="Orders"
+              icon={<ShoppingBag size={15} />}
+              active={isActive("/admin/orders")}
+              badge={unreadCount > 0 ? unreadCount : undefined}
+            />
+            <NavItem
               to="/admin/services"
               label="Content"
               icon={<FileText size={15} />}
@@ -54,6 +63,20 @@ const AdminHeader = () => {
 
         {/* RIGHT SECTION */}
         <div className="flex items-center gap-3">
+          {/* Notification Bell */}
+          <Link
+            to="/admin/orders"
+            onClick={markAllRead}
+            className="relative hidden items-center justify-center rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 md:inline-flex"
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </Link>
+
           {/* Desktop Logout */}
           <button
             onClick={handleLogout}
@@ -93,6 +116,14 @@ const AdminHeader = () => {
               onClick={() => setMobileOpen(false)}
             />
             <MobileNavItem
+              to="/admin/orders"
+              label="Orders"
+              icon={<ShoppingBag size={16} />}
+              active={isActive("/admin/orders")}
+              onClick={() => { setMobileOpen(false); markAllRead(); }}
+              badge={unreadCount > 0 ? unreadCount : undefined}
+            />
+            <MobileNavItem
               to="/admin/services"
               label="Manage Content"
               icon={<FileText size={16} />}
@@ -126,13 +157,14 @@ interface NavItemProps {
   label: string;
   icon: React.ReactNode;
   active: boolean;
+  badge?: number;
 }
 
-function NavItem({ to, label, icon, active }: NavItemProps) {
+function NavItem({ to, label, icon, active, badge }: NavItemProps) {
   return (
     <Link
       to={to}
-      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+      className={`relative inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
         active
           ? "bg-slate-100 text-slate-900"
           : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
@@ -140,6 +172,11 @@ function NavItem({ to, label, icon, active }: NavItemProps) {
     >
       {icon}
       {label}
+      {badge != null && badge > 0 && (
+        <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+          {badge > 9 ? "9+" : badge}
+        </span>
+      )}
     </Link>
   );
 }
@@ -148,7 +185,7 @@ interface MobileNavItemProps extends NavItemProps {
   onClick: () => void;
 }
 
-function MobileNavItem({ to, label, icon, active, onClick }: MobileNavItemProps) {
+function MobileNavItem({ to, label, icon, active, onClick, badge }: MobileNavItemProps) {
   return (
     <Link
       to={to}
@@ -161,6 +198,11 @@ function MobileNavItem({ to, label, icon, active, onClick }: MobileNavItemProps)
     >
       {icon}
       {label}
+      {badge != null && badge > 0 && (
+        <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+          {badge > 9 ? "9+" : badge}
+        </span>
+      )}
     </Link>
   );
 }

@@ -8,6 +8,7 @@ import { db } from "../firebase";
 import { normalizeService, resolveServiceForLocation } from "../lib/services";
 import { getLocationLabel } from "../lib/locations";
 import { ChevronRight, Loader2, MapPin, Lock } from "lucide-react";
+import { sendOrderNotification } from "../lib/notifications";
 
 const Checkout: React.FC = () => {
   const { cart, clearCart } = useCart();
@@ -152,6 +153,22 @@ const Checkout: React.FC = () => {
 
     setOrderPlaced(true);
     await clearCart();
+
+    // Send email notifications (non-blocking)
+    for (const booking of validatedBookings) {
+      sendOrderNotification({
+        type: "online_booking",
+        name: form.name,
+        email: user.email || "",
+        phone: form.phone,
+        service: booking.serviceTitle,
+        address: form.fullAddress,
+        scheduledDate: form.date,
+        scheduledTime: form.time,
+        price: booking.price,
+        bookingId: bookingIds[0],
+      });
+    }
 
     navigate(`/booking-success/${bookingIds[0]}`);
   } catch (err: any) {

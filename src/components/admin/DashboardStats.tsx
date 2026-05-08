@@ -7,23 +7,25 @@ import {
   orderBy,
   query,
 } from "firebase/firestore";
-import { Grid, Layers, Newspaper, Sparkles } from "lucide-react";
+import { Grid, Layers, Newspaper, Sparkles, ShoppingBag } from "lucide-react";
 import { db } from "../../firebase";
 
 export default function DashboardStats() {
   const [services, setServices] = useState(0);
   const [categories, setCategories] = useState(0);
   const [blogs, setBlogs] = useState(0);
+  const [orders, setOrders] = useState(0);
   const [latestService, setLatestService] = useState("No services yet");
   const [latestBlog, setLatestBlog] = useState("No blogs yet");
 
   useEffect(() => {
     async function load() {
-      const [servicesCount, categoriesCount, blogsCount, latestServiceSnapshot, latestBlogSnapshot] =
+      const [servicesCount, categoriesCount, blogsCount, bookingsCount, latestServiceSnapshot, latestBlogSnapshot] =
         await Promise.all([
           getCountFromServer(collection(db, "services")),
           getCountFromServer(collection(db, "categories")),
           getCountFromServer(collection(db, "blogs")),
+          getCountFromServer(collection(db, "bookings")),
           getDocs(query(collection(db, "services"), orderBy("createdAt", "desc"), limit(1))),
           getDocs(query(collection(db, "blogs"), orderBy("createdAt", "desc"), limit(1))),
         ]);
@@ -31,6 +33,7 @@ export default function DashboardStats() {
       setServices(servicesCount.data().count);
       setCategories(categoriesCount.data().count);
       setBlogs(blogsCount.data().count);
+      setOrders(bookingsCount.data().count);
 
       if (!latestServiceSnapshot.empty) {
         setLatestService(String(latestServiceSnapshot.docs[0].data().title || "Untitled"));
@@ -45,7 +48,14 @@ export default function DashboardStats() {
   }, []);
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+      <StatCard
+        title="Total Orders"
+        value={orders}
+        icon={<ShoppingBag size={18} />}
+        color="orange"
+      />
+
       <StatCard
         title="Total Services"
         value={services}
@@ -88,7 +98,7 @@ interface CardProps {
   title: string;
   value: string | number;
   icon: ReactNode;
-  color: "blue" | "emerald" | "amber" | "violet" | "slate";
+  color: "blue" | "emerald" | "amber" | "violet" | "slate" | "orange";
 }
 
 function StatCard({ title, value, icon, color }: CardProps) {
@@ -122,6 +132,12 @@ function StatCard({ title, value, icon, color }: CardProps) {
       icon: "text-slate-600",
       value: "text-slate-700",
       border: "border-slate-200",
+    },
+    orange: {
+      bg: "bg-orange-50/80",
+      icon: "text-orange-600",
+      value: "text-orange-700",
+      border: "border-orange-100",
     },
   };
 
