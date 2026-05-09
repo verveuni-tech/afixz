@@ -48,8 +48,8 @@ export const homepageFallbackContent: HomepageContent = {
     title: "Book a fix for everything between A to Z.",
     description:
       "We don't just fix it, we make sure it stays fixed. Verified experts, regular follow-ups, and guaranteed repairs for every home service you need.",
-    searchPlaceholder: "What service do you need?",
-    ctaText: "Find services",
+    searchPlaceholder: "",
+    ctaText: "Explore services",
     quickServices: [
       "Gardening",
       "Mechanic",

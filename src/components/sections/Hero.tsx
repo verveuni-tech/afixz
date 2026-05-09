@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Sprout,
   Bike,
@@ -10,6 +10,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { db } from "../../firebase";
 import { HomepageHeroContent } from "../../lib/homepageFallbackContent";
 import { getLocationLabel } from "../../lib/locations";
 import { useLocationContext } from "../../context/LocationContext";
@@ -18,53 +20,98 @@ type Props = {
   content: HomepageHeroContent;
 };
 
-const SERVICE_CARDS: {
+type CategoryCard = {
   label: string;
   slug: string;
   icon: typeof Sprout;
-  accent: string;
-  iconBg: string;
-}[] = [
-  {
-    label: "Gardening",
-    slug: "garden-and-landscaping",
-    icon: Sprout,
-    accent: "from-emerald-500/10 to-emerald-500/5",
-    iconBg: "bg-emerald-500/12 text-emerald-600",
-  },
-  {
-    label: "Mechanic",
-    slug: "mechanic",
-    icon: Bike,
-    accent: "from-sky-500/10 to-sky-500/5",
-    iconBg: "bg-sky-500/12 text-sky-600",
-  },
-  {
-    label: "Interior",
-    slug: "interior",
-    icon: Home,
-    accent: "from-violet-500/10 to-violet-500/5",
-    iconBg: "bg-violet-500/12 text-violet-600",
-  },
-  {
-    label: "Fabrication",
-    slug: "fabrication",
-    icon: Hammer,
-    accent: "from-amber-500/10 to-amber-500/5",
-    iconBg: "bg-amber-500/12 text-amber-600",
-  },
-  {
-    label: "Cleaning",
-    slug: "cleaning",
-    icon: BrushCleaning,
-    accent: "from-rose-500/10 to-rose-500/5",
-    iconBg: "bg-rose-500/12 text-rose-600",
-  },
-];
+  image: string;
+  serviceCount: number;
+};
+
+const CATEGORY_META: Record<
+  string,
+  { icon: typeof Sprout; label: string; order: number }
+> = {
+  "garden-and-landscaping": { icon: Sprout, label: "Gardening", order: 0 },
+  mechanic: { icon: Bike, label: "Mechanic", order: 1 },
+  interior: { icon: Home, label: "Interior", order: 2 },
+  fabrication: { icon: Hammer, label: "Fabrication", order: 3 },
+  cleaning: { icon: BrushCleaning, label: "Cleaning", order: 4 },
+};
+
+const CATEGORY_SLUGS = Object.keys(CATEGORY_META);
 
 const Hero: React.FC<Props> = ({ content }) => {
   const navigate = useNavigate();
   const { selectedLocation, openLocationPicker } = useLocationContext();
+  const [cards, setCards] = useState<CategoryCard[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadCategoryImages() {
+      try {
+        const catSnap = await getDocs(collection(db, "categories"));
+        const categoryMap = new Map<string, string>();
+
+        catSnap.docs.forEach((doc) => {
+          const data = doc.data();
+          const slug = String(data.slug || doc.id).trim().toLowerCase();
+          categoryMap.set(slug, doc.id);
+        });
+
+        const results: CategoryCard[] = [];
+
+        for (const slug of CATEGORY_SLUGS) {
+          const meta = CATEGORY_META[slug];
+          const catId = categoryMap.get(slug);
+
+          let image = "";
+          let serviceCount = 0;
+
+          if (catId) {
+            const svcSnap = await getDocs(
+              query(
+                collection(db, "services"),
+                where("categoryId", "==", catId),
+                limit(10)
+              )
+            );
+            serviceCount = svcSnap.size;
+
+            for (const svcDoc of svcSnap.docs) {
+              const svcData = svcDoc.data();
+              const images = Array.isArray(svcData.images) ? svcData.images : [];
+              const firstImage = images.find(
+                (img: unknown) => typeof img === "string" && img.trim()
+              );
+              if (firstImage) {
+                image = String(firstImage).trim();
+                break;
+              }
+            }
+          }
+
+          results.push({
+            label: meta.label,
+            slug,
+            icon: meta.icon,
+            image,
+            serviceCount,
+          });
+        }
+
+        if (active) {
+          setCards(results.sort((a, b) => CATEGORY_META[a.slug].order - CATEGORY_META[b.slug].order));
+        }
+      } catch (error) {
+        console.error("Failed to load hero category images:", error);
+      }
+    }
+
+    void loadCategoryImages();
+    return () => { active = false; };
+  }, []);
 
   const trustItems = content.trustBadge
     .split("·")
@@ -72,116 +119,155 @@ const Hero: React.FC<Props> = ({ content }) => {
     .filter(Boolean);
 
   return (
-    <section className="relative overflow-hidden bg-primary pt-24 pb-16 sm:pt-28 sm:pb-20">
-      {/* Subtle grid texture */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.15) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-        }}
-      />
+    <section className="relative overflow-hidden bg-[#fafaf9] pt-24 pb-14 sm:pt-28 sm:pb-18">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        {/* Header row */}
+        <div className="mb-8 flex flex-col gap-5 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-xl">
+            <div className="mb-4 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={openLocationPicker}
+                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:shadow"
+              >
+                <MapPin size={12} className="text-accent shrink-0" />
+                <span className="max-w-[120px] truncate">
+                  {getLocationLabel(selectedLocation)}
+                </span>
+              </button>
 
-      <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
-        {/* Top row: location + trust */}
-        <div className="mb-8 flex flex-wrap items-center gap-3 sm:mb-10">
-          <button
-            type="button"
-            onClick={openLocationPicker}
-            className="group flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-white/70 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
-          >
-            <MapPin size={13} className="text-accent shrink-0" />
-            <span className="max-w-[140px] truncate">
-              {getLocationLabel(selectedLocation)}
-            </span>
-          </button>
+              <span className="text-[11px] font-semibold tracking-[0.15em] text-accent uppercase">
+                {content.eyebrow}
+              </span>
+            </div>
 
-          <div className="hidden items-center gap-4 sm:flex">
+            <h1 className="font-heading text-[clamp(1.6rem,3.5vw,2.5rem)] leading-[1.15] font-bold tracking-tight text-slate-900">
+              {content.title}
+            </h1>
+
+            <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-slate-500">
+              {content.description}
+            </p>
+          </div>
+
+          {/* Trust badges — desktop */}
+          <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
             {trustItems.map((item) => (
               <span
                 key={item}
-                className="flex items-center gap-1.5 text-[11px] font-medium tracking-wide text-white/40 uppercase"
+                className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400"
               >
-                <CheckCircle size={11} className="text-accent-light shrink-0" />
+                <CheckCircle size={12} className="text-emerald-500 shrink-0" />
                 {item}
               </span>
             ))}
           </div>
         </div>
 
-        {/* Headline + service grid — two-column on desktop */}
-        <div className="grid items-start gap-10 lg:grid-cols-[1fr,1.1fr] lg:gap-14">
-          {/* Left: copy */}
-          <div className="max-w-lg">
-            <p className="mb-3 text-[11px] font-semibold tracking-[0.2em] text-accent uppercase">
-              {content.eyebrow}
-            </p>
+        {/* Bento grid */}
+        <div className="grid auto-rows-[180px] grid-cols-2 gap-3 sm:auto-rows-[200px] sm:gap-4 lg:grid-cols-4 lg:auto-rows-[220px]">
+          {cards.map((card, index) => {
+            const Icon = card.icon;
+            // First card spans 2 cols + 2 rows on large screens
+            const isFeature = index === 0;
+            // Last card spans 2 cols on mobile only
+            const isLast = index === cards.length - 1 && cards.length % 2 !== 0;
 
-            <h1 className="font-heading text-[clamp(1.75rem,4vw,2.75rem)] leading-[1.15] font-bold tracking-tight text-white">
-              {content.title}
-            </h1>
-
-            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/50">
-              {content.description}
-            </p>
-
-            <button
-              type="button"
-              onClick={() => navigate("/services")}
-              className="mt-7 inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/20 transition hover:bg-accent-hover hover:shadow-xl hover:shadow-accent/30 active:scale-[0.98]"
-            >
-              {content.ctaText}
-              <ArrowRight size={15} className="transition group-hover:translate-x-0.5" />
-            </button>
-
-            {/* Mobile trust badges */}
-            <div className="mt-6 flex flex-wrap gap-x-4 gap-y-1.5 sm:hidden">
-              {trustItems.map((item) => (
-                <span
-                  key={item}
-                  className="flex items-center gap-1 text-[10px] font-medium text-white/35"
-                >
-                  <CheckCircle size={10} className="text-accent-light shrink-0" />
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: service category cards */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3.5">
-            {SERVICE_CARDS.map((card, index) => {
-              const Icon = card.icon;
-              return (
-                <button
-                  key={card.slug}
-                  type="button"
-                  onClick={() => navigate(`/category/${card.slug}`)}
-                  className={`group relative flex flex-col items-start rounded-2xl border border-white/[0.06] bg-gradient-to-br ${card.accent} p-4 text-left backdrop-blur-sm transition-all duration-200 hover:border-white/15 hover:scale-[1.03] hover:shadow-lg hover:shadow-black/20 sm:p-5 ${
-                    index === 4
-                      ? "col-span-2 flex-row items-center gap-4 sm:col-span-1 sm:flex-col sm:items-start sm:gap-0"
-                      : ""
-                  }`}
-                >
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.iconBg} mb-3 transition-transform duration-200 group-hover:scale-110 sm:h-11 sm:w-11`}
-                  >
-                    <Icon size={20} strokeWidth={1.8} />
-                  </div>
-
-                  <div className="flex w-full items-center justify-between">
-                    <span className="text-sm font-semibold text-white/90 transition group-hover:text-white">
-                      {card.label}
-                    </span>
-                    <ArrowRight
-                      size={14}
-                      className="text-white/20 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-white/50"
+            return (
+              <button
+                key={card.slug}
+                type="button"
+                onClick={() => navigate(`/category/${card.slug}`)}
+                className={`group relative overflow-hidden rounded-2xl border border-slate-100 bg-white text-left shadow-sm transition-all duration-300 hover:shadow-lg hover:border-slate-200 hover:-translate-y-0.5 ${
+                  isFeature ? "lg:col-span-2 lg:row-span-2" : ""
+                } ${isLast ? "col-span-2 sm:col-span-1" : ""}`}
+              >
+                {/* Image */}
+                {card.image ? (
+                  <img
+                    src={card.image}
+                    alt={card.label}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading={index < 2 ? "eager" : "lazy"}
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-100">
+                    <Icon
+                      size={isFeature ? 80 : 48}
+                      className="absolute right-4 bottom-4 text-slate-200/80"
+                      strokeWidth={1}
                     />
                   </div>
-                </button>
-              );
-            })}
+                )}
+
+                {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                {/* Content */}
+                <div className="relative flex h-full flex-col justify-end p-4 sm:p-5">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/15 backdrop-blur-sm">
+                      <Icon size={14} className="text-white" strokeWidth={2} />
+                    </div>
+                    {card.serviceCount > 0 && (
+                      <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white/80 backdrop-blur-sm">
+                        {card.serviceCount} {card.serviceCount === 1 ? "service" : "services"}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-end justify-between gap-2">
+                    <h3
+                      className={`font-heading font-semibold text-white ${
+                        isFeature ? "text-xl sm:text-2xl" : "text-base sm:text-lg"
+                      }`}
+                    >
+                      {card.label}
+                    </h3>
+                    <ArrowRight
+                      size={16}
+                      className="shrink-0 text-white/40 transition-all duration-200 group-hover:translate-x-1 group-hover:text-white/80"
+                    />
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+
+          {/* Static loading placeholders when cards haven't loaded */}
+          {cards.length === 0 &&
+            Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className={`animate-pulse rounded-2xl bg-slate-100 ${
+                  i === 0 ? "lg:col-span-2 lg:row-span-2" : ""
+                } ${i === 4 ? "col-span-2 sm:col-span-1" : ""}`}
+              />
+            ))}
+        </div>
+
+        {/* Bottom row: CTA + mobile trust */}
+        <div className="mt-8 flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <button
+            type="button"
+            onClick={() => navigate("/services")}
+            className="inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md shadow-accent/15 transition hover:bg-accent-hover hover:shadow-lg hover:shadow-accent/25 active:scale-[0.98]"
+          >
+            {content.ctaText}
+            <ArrowRight size={15} />
+          </button>
+
+          {/* Mobile trust badges */}
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 sm:hidden">
+            {trustItems.map((item) => (
+              <span
+                key={item}
+                className="flex items-center gap-1 text-[10px] font-medium text-slate-400"
+              >
+                <CheckCircle size={10} className="text-emerald-500 shrink-0" />
+                {item}
+              </span>
+            ))}
           </div>
         </div>
       </div>
