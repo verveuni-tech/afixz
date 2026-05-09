@@ -20,54 +20,55 @@ type Props = {
   content: HomepageHeroContent;
 };
 
-/**
- * Hero carousel slides — using gradient placeholders until real
- * Cloudinary images are uploaded. Replace `url` with actual image
- * URLs when ready; the gradient becomes a fallback.
- */
 const HERO_SLIDES = [
   {
     url: "",
     alt: "Doorstep gardening service",
     caption: "Expert garden care at your doorstep",
     icon: Sprout,
-    gradient: "from-emerald-800 via-emerald-600 to-teal-500",
+    gradient: "from-emerald-950 via-emerald-800 to-teal-600",
   },
   {
     url: "",
     alt: "Bike mechanic service",
     caption: "Flying Mechanic — we come to you",
     icon: Bike,
-    gradient: "from-sky-800 via-sky-600 to-cyan-500",
+    gradient: "from-sky-950 via-sky-800 to-cyan-600",
   },
   {
     url: "",
     alt: "Home interior service",
     caption: "Transform your living space",
     icon: Home,
-    gradient: "from-violet-800 via-violet-600 to-purple-500",
+    gradient: "from-violet-950 via-violet-800 to-purple-600",
   },
   {
     url: "",
     alt: "Custom fabrication work",
     caption: "Custom-built to fit your home",
     icon: Hammer,
-    gradient: "from-amber-800 via-amber-600 to-orange-500",
+    gradient: "from-orange-950 via-orange-800 to-amber-600",
   },
   {
     url: "",
     alt: "Deep cleaning service",
     caption: "A thorough reset for every corner",
     icon: BrushCleaning,
-    gradient: "from-rose-800 via-rose-600 to-pink-500",
+    gradient: "from-rose-950 via-rose-800 to-pink-600",
   },
 ];
 
 const Hero: React.FC<Props> = ({ content }) => {
   const navigate = useNavigate();
-  const { selectedLocation, openLocationPicker } = useLocationContext();
+
+  const { selectedLocation, openLocationPicker } =
+    useLocationContext();
+
   const [active, setActive] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(
+    null
+  );
 
   const slideCount = HERO_SLIDES.length;
 
@@ -80,7 +81,11 @@ const Hero: React.FC<Props> = ({ content }) => {
 
   useEffect(() => {
     if (slideCount < 2) return;
-    timerRef.current = setInterval(() => advance(1), 4500);
+
+    timerRef.current = setInterval(() => {
+      advance(1);
+    }, 4500);
+
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -88,7 +93,10 @@ const Hero: React.FC<Props> = ({ content }) => {
 
   const resetTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => advance(1), 4500);
+
+    timerRef.current = setInterval(() => {
+      advance(1);
+    }, 4500);
   };
 
   const trustItems = content.trustBadge
@@ -97,74 +105,94 @@ const Hero: React.FC<Props> = ({ content }) => {
     .filter(Boolean);
 
   return (
-    <section className="bg-[#fafaf9] pt-20 pb-4 sm:pt-24 sm:pb-6">
+    <section className="bg-[#f8f8f7] pt-20 pb-6 sm:pt-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="overflow-hidden rounded-2xl shadow-2xl shadow-slate-900/8 md:rounded-3xl">
-          {/* ── Split: left copy | right carousel ── */}
-          <div className="grid md:grid-cols-[1fr,1.2fr] min-h-[420px] md:min-h-[480px]">
 
-            {/* LEFT — dark panel */}
-            <div className="relative flex flex-col justify-between bg-primary px-6 py-10 sm:px-10 sm:py-12 md:px-10 md:py-14 lg:px-14">
-              {/* Dot texture */}
+        <div className="overflow-hidden rounded-[2rem] border border-slate-200/70 shadow-[0_30px_80px_rgba(15,23,42,0.12)]">
+
+          {/* HERO */}
+          <div className="grid min-h-[420px] lg:grid-cols-[1.2fr_0.8fr]">
+
+            {/* LEFT */}
+            <div className="relative flex flex-col justify-between overflow-hidden bg-[#0d1726] px-6 py-6 sm:px-8 sm:py-7 lg:px-10 lg:py-8">
+
+              {/* Texture */}
               <div
-                className="pointer-events-none absolute inset-0 opacity-[0.035]"
+                className="pointer-events-none absolute inset-0 opacity-[0.04]"
                 style={{
                   backgroundImage:
-                    "radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px)",
+                    "radial-gradient(rgba(255,255,255,.55) 1px, transparent 1px)",
                   backgroundSize: "18px 18px",
                 }}
               />
 
+              {/* Glow */}
+              <div className="absolute -left-24 top-0 h-[260px] w-[260px] rounded-full bg-orange-500/10 blur-3xl" />
+
               <div className="relative z-10">
-                {/* Location pill + eyebrow */}
-                <div className="mb-8 flex flex-wrap items-center gap-3">
+
+                {/* TOP ROW */}
+                <div className="mb-6 flex flex-wrap items-center gap-3">
+
                   <button
                     type="button"
                     onClick={openLocationPicker}
-                    className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1.5 text-xs font-medium text-white/65 transition hover:bg-white/10 hover:text-white"
+                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-xs font-medium text-white/70 transition hover:bg-white/[0.08]"
                   >
-                    <MapPin size={12} className="text-accent shrink-0" />
+                    <MapPin
+                      size={13}
+                      className="text-orange-400"
+                    />
+
                     <span className="max-w-[110px] truncate">
                       {getLocationLabel(selectedLocation)}
                     </span>
                   </button>
-                  <span className="text-[10px] font-bold tracking-[0.2em] text-accent uppercase">
+
+                  <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-orange-400">
                     {content.eyebrow}
                   </span>
                 </div>
 
-                {/* Headline — dramatic size */}
-                <h1 className="font-heading text-[clamp(1.75rem,4.5vw,3rem)] leading-[1.08] font-extrabold tracking-tight text-white">
+                {/* HEADING */}
+                <h1 className="max-w-[18ch] font-heading text-[clamp(2.8rem,4.6vw,4.8rem)] font-extrabold leading-[0.9] tracking-[-0.06em] text-white">
                   {content.title}
                 </h1>
 
-                <p className="mt-5 max-w-md text-[15px] leading-[1.7] font-light text-white/40">
+                {/* DESCRIPTION */}
+                <p className="mt-5 max-w-xl text-[15px] leading-7 text-white/55 sm:text-base">
                   {content.description}
                 </p>
 
-                {/* CTA — bold, oversized */}
+                {/* CTA */}
                 <button
                   type="button"
                   onClick={() => navigate("/services")}
-                  className="group mt-8 inline-flex items-center gap-2.5 rounded-xl bg-accent px-7 py-3.5 text-[15px] font-bold text-white shadow-xl shadow-accent/25 transition-all duration-200 hover:bg-accent-hover hover:shadow-2xl hover:shadow-accent/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+                  className="group mt-7 inline-flex items-center gap-3 rounded-2xl bg-orange-500 px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(249,115,22,0.35)] transition-all duration-200 hover:-translate-y-1 hover:bg-orange-400"
                 >
-                  {content.ctaText}
+                  Explore Now
+
                   <ArrowRight
-                    size={16}
+                    size={17}
                     className="transition-transform duration-200 group-hover:translate-x-1"
                   />
                 </button>
               </div>
 
-              {/* Trust strip */}
-              <div className="relative z-10 mt-10 border-t border-white/[0.06] pt-5">
+              {/* TRUST STRIP */}
+              <div className="relative z-10 mt-6 border-t border-white/[0.06] pt-4">
+
                 <div className="flex flex-wrap gap-x-5 gap-y-2">
                   {trustItems.map((item) => (
                     <span
                       key={item}
-                      className="flex items-center gap-1.5 text-[11px] font-medium text-white/30"
+                      className="flex items-center gap-2 text-[11px] font-medium tracking-wide text-white/35"
                     >
-                      <CheckCircle size={11} className="text-accent-light/50 shrink-0" />
+                      <CheckCircle
+                        size={12}
+                        className="shrink-0 text-orange-400/70"
+                      />
+
                       {item}
                     </span>
                   ))}
@@ -172,11 +200,13 @@ const Hero: React.FC<Props> = ({ content }) => {
               </div>
             </div>
 
-            {/* RIGHT — image carousel */}
-            <div className="relative overflow-hidden">
-              {/* Slides */}
+            {/* RIGHT */}
+            <div className="relative overflow-hidden bg-[#0b1220] min-h-[320px]">
+
+              {/* SLIDES */}
               {HERO_SLIDES.map((slide, i) => {
                 const Icon = slide.icon;
+
                 const isActive = i === active;
 
                 return (
@@ -185,12 +215,13 @@ const Hero: React.FC<Props> = ({ content }) => {
                     className="absolute inset-0 transition-all duration-700 ease-out"
                     style={{
                       opacity: isActive ? 1 : 0,
-                      transform: `scale(${isActive ? 1 : 1.08})`,
+                      transform: `scale(${isActive ? 1 : 1.04})`,
                       zIndex: isActive ? 2 : 1,
                     }}
                     aria-hidden={!isActive}
                   >
-                    {/* Image or gradient placeholder */}
+
+                    {/* PLACEHOLDER / IMAGE */}
                     {slide.url ? (
                       <img
                         src={slide.url}
@@ -200,71 +231,143 @@ const Hero: React.FC<Props> = ({ content }) => {
                       />
                     ) : (
                       <div
-                        className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${slide.gradient}`}
+                        className={`relative h-full w-full bg-gradient-to-br ${slide.gradient}`}
                       >
-                        <Icon
-                          size={160}
-                          strokeWidth={0.5}
-                          className="text-white/[0.12]"
-                        />
+
+                        {/* Gradient highlight */}
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_30%)]" />
+
+                        {/* Dot texture */}
+                        <div className="absolute inset-0 opacity-[0.08]">
+                          <div
+                            className="h-full w-full"
+                            style={{
+                              backgroundImage:
+                                "radial-gradient(rgba(255,255,255,.9) 1px, transparent 1px)",
+                              backgroundSize: "22px 22px",
+                            }}
+                          />
+                        </div>
+
+                        {/* Center icon */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Icon
+                            size={180}
+                            strokeWidth={0.7}
+                            className="text-white/10"
+                          />
+                        </div>
                       </div>
                     )}
 
-                    {/* Bottom overlay */}
-                    <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-6 pb-16 pt-20 sm:px-8 sm:pb-18">
-                      <p className="max-w-sm text-base font-semibold text-white sm:text-lg">
-                        {slide.caption}
-                      </p>
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-black/15" />
+
+                    {/* Floating stats */}
+                    <div className="absolute left-5 top-5 z-30 hidden items-center gap-3 md:flex">
+
+                      <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl">
+                        <p className="text-lg font-bold text-white">
+                          24/7
+                        </p>
+
+                        <p className="text-[11px] text-white/60">
+                          Booking support
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl">
+                        <p className="text-lg font-bold text-white">
+                          Same Day
+                        </p>
+
+                        <p className="text-[11px] text-white/60">
+                          Service available
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Counter */}
+                    <div className="absolute right-5 top-5 z-30 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-xs font-semibold tracking-wide text-white/75 backdrop-blur-xl">
+                      {String(active + 1).padStart(2, "0")}
+                      <span className="px-1 text-white/30">/</span>
+                      {String(HERO_SLIDES.length).padStart(2, "0")}
+                    </div>
+
+                    {/* BOTTOM CARD */}
+                    <div className="absolute inset-x-0 bottom-5 z-20 p-5">
+
+                      <div className="max-w-[320px] rounded-[1.6rem] border border-white/10 bg-black/30 p-5 backdrop-blur-2xl">
+
+                        <div className="mb-3 inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-white/70">
+                          Premium Home Services
+                        </div>
+
+                        <p className="text-xl font-bold leading-tight text-white">
+                          {slide.caption}
+                        </p>
+
+                        <p className="mt-3 text-sm leading-6 text-white/65">
+                          Trusted professionals, rapid booking,
+                          and reliable service quality for modern
+                          households.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 );
               })}
 
-              {/* Controls bar — pinned to bottom */}
-              <div className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between px-6 py-4 sm:px-8">
-                {/* Dot indicators */}
+              {/* CONTROLS */}
+              <div className="absolute inset-x-0 bottom-0 z-30 flex items-center justify-between px-5 py-5">
+
+                {/* Dots */}
                 <div className="flex items-center gap-2">
                   {HERO_SLIDES.map((_, i) => (
                     <button
                       key={i}
                       type="button"
                       aria-label={`Slide ${i + 1}`}
-                      onClick={() => { setActive(i); resetTimer(); }}
+                      onClick={() => {
+                        setActive(i);
+                        resetTimer();
+                      }}
                       className={`rounded-full transition-all duration-300 ${
                         i === active
-                          ? "h-2 w-6 bg-white"
-                          : "h-2 w-2 bg-white/30 hover:bg-white/50"
+                          ? "h-2 w-10 bg-white"
+                          : "h-2 w-2 bg-white/35 hover:bg-white/60"
                       }`}
                     />
                   ))}
                 </div>
 
                 {/* Arrows */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+
                   <button
                     type="button"
                     aria-label="Previous"
-                    onClick={() => { advance(-1); resetTimer(); }}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/20 text-white/70 backdrop-blur-md transition hover:bg-black/40 hover:text-white"
+                    onClick={() => {
+                      advance(-1);
+                      resetTimer();
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/25 text-white backdrop-blur-xl transition hover:bg-black/40"
                   >
                     <ChevronLeft size={18} />
                   </button>
+
                   <button
                     type="button"
                     aria-label="Next"
-                    onClick={() => { advance(1); resetTimer(); }}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/20 text-white/70 backdrop-blur-md transition hover:bg-black/40 hover:text-white"
+                    onClick={() => {
+                      advance(1);
+                      resetTimer();
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/25 text-white backdrop-blur-xl transition hover:bg-black/40"
                   >
                     <ChevronRight size={18} />
                   </button>
                 </div>
-              </div>
-
-              {/* Slide counter — top right */}
-              <div className="absolute top-5 right-6 z-20 rounded-full bg-black/25 px-3 py-1 text-xs font-semibold tabular-nums text-white/70 backdrop-blur-md sm:top-6 sm:right-8">
-                {String(active + 1).padStart(2, "0")}
-                <span className="text-white/30"> / </span>
-                {String(HERO_SLIDES.length).padStart(2, "0")}
               </div>
             </div>
           </div>
