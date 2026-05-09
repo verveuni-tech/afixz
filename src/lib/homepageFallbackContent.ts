@@ -66,7 +66,7 @@ export const homepageFallbackContent: HomepageContent = {
       "From garden care and vehicle servicing to home interiors and deep cleaning — pick what your home needs most and book verified professionals near you.",
     ctaText: "Explore all services",
     featuredCategorySlugs: [
-      "gardening",
+      "garden-and-landscaping",
       "mechanic",
       "interior",
       "cleaning",
@@ -89,7 +89,7 @@ export const homepageFallbackContent: HomepageContent = {
       description:
         "Premium plant care, kitchen garden setup, and seasonal garden maintenance at your doorstep. Avail gardening kits and materials alongside professional landscaping services from trained experts.",
       ctaText: "View gardening services",
-      categorySlug: "gardening",
+      categorySlug: "garden-and-landscaping",
     },
     mechanic: {
       eyebrow: "Doorstep mechanic",

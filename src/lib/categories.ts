@@ -40,6 +40,7 @@ const SECTION_ALIASES: Record<CategorySectionKey, string[]> = {
     "plant-and-gardening",
     "plant-care",
     "garden-landscaping",
+    "garden-and-landscaping",
     "landscaping",
     "flying-mali",
   ],
