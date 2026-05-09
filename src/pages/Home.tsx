@@ -34,7 +34,6 @@ function useLocalBusinessSchema() {
         "Home Interior",
         "Custom Fabrication & Welding",
         "Deep Cleaning",
-        "Home Repair & Maintenance",
       ],
       priceRange: "$$",
       hasOfferCatalog: {
@@ -116,20 +115,6 @@ const Home = () => {
       <ServiceCategorySection
         content={content.sections.cleaning}
         sectionKey="cleaning"
-        layout="grid"
-        backgroundClassName="bg-white"
-      />
-
-      <ServiceCategorySection
-        content={content.sections.repair}
-        sectionKey="repair"
-        layout="list"
-        backgroundClassName="bg-[#f9fafb]"
-      />
-
-      <ServiceCategorySection
-        content={content.sections.beauty}
-        sectionKey="beauty"
         layout="grid"
         backgroundClassName="bg-white"
       />

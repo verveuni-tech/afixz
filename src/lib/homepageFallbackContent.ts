@@ -35,8 +35,6 @@ export type HomepageContent = {
   };
   sections: {
     cleaning: HomepageSectionContent;
-    repair: HomepageSectionContent;
-    beauty: HomepageSectionContent;
     gardening: HomepageSectionContent;
     mechanic: HomepageSectionContent;
     interior: HomepageSectionContent;
@@ -128,24 +126,6 @@ export const homepageFallbackContent: HomepageContent = {
         "Home, office, washroom, and kitchen deep cleaning by trained professionals. A thorough reset for every corner of your space with AfixZ's verified cleaning experts.",
       ctaText: "View cleaning services",
       categorySlug: "cleaning",
-    },
-    repair: {
-      eyebrow: "Repairs",
-      title: "Repair & Maintenance Services",
-      subtitle: "Fast-response fixes by trusted professionals.",
-      description:
-        "Explore repair services for electrical, plumbing, appliance issues, and other common home problems handled by verified experts.",
-      ctaText: "View repair services",
-      categorySlug: "repair-maintainance",
-    },
-    beauty: {
-      eyebrow: "Beauty at home",
-      title: "Beauty & Personal Care at Home",
-      subtitle: "Salon-style experiences delivered at your doorstep.",
-      description:
-        "Find haircut, grooming, beauty, and self-care services that fit your routine and schedule — all at your home.",
-      ctaText: "View beauty services",
-      categorySlug: "haircut",
     },
   },
 };

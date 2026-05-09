@@ -10,10 +10,6 @@ type LocationOverrideState = {
   heroDescription: string;
   cleaningTitle: string;
   cleaningSubtitle: string;
-  repairTitle: string;
-  repairSubtitle: string;
-  beautyTitle: string;
-  beautySubtitle: string;
   gardeningTitle: string;
   gardeningSubtitle: string;
   featuredServiceIds: string;
@@ -41,12 +37,6 @@ type FormState = {
   cleaningTitle: string;
   cleaningSubtitle: string;
   cleaningDescription: string;
-  repairTitle: string;
-  repairSubtitle: string;
-  repairDescription: string;
-  beautyTitle: string;
-  beautySubtitle: string;
-  beautyDescription: string;
   gardeningTitle: string;
   gardeningSubtitle: string;
   gardeningDescription: string;
@@ -58,10 +48,6 @@ const initialLocationOverride = (): LocationOverrideState => ({
   heroDescription: "",
   cleaningTitle: "",
   cleaningSubtitle: "",
-  repairTitle: "",
-  repairSubtitle: "",
-  beautyTitle: "",
-  beautySubtitle: "",
   gardeningTitle: "",
   gardeningSubtitle: "",
   featuredServiceIds: "",
@@ -89,12 +75,6 @@ const initialState = (): FormState => ({
   cleaningTitle: homepageFallbackContent.sections.cleaning.title,
   cleaningSubtitle: homepageFallbackContent.sections.cleaning.subtitle,
   cleaningDescription: homepageFallbackContent.sections.cleaning.description,
-  repairTitle: homepageFallbackContent.sections.repair.title,
-  repairSubtitle: homepageFallbackContent.sections.repair.subtitle,
-  repairDescription: homepageFallbackContent.sections.repair.description,
-  beautyTitle: homepageFallbackContent.sections.beauty.title,
-  beautySubtitle: homepageFallbackContent.sections.beauty.subtitle,
-  beautyDescription: homepageFallbackContent.sections.beauty.description,
   gardeningTitle: homepageFallbackContent.sections.gardening.title,
   gardeningSubtitle: homepageFallbackContent.sections.gardening.subtitle,
   gardeningDescription: homepageFallbackContent.sections.gardening.description,
@@ -164,14 +144,6 @@ export default function HomepageContentFormCard() {
           cleaningSubtitle: defaultContent.sections?.cleaning?.subtitle || prev.cleaningSubtitle,
           cleaningDescription:
             defaultContent.sections?.cleaning?.description || prev.cleaningDescription,
-          repairTitle: defaultContent.sections?.repair?.title || prev.repairTitle,
-          repairSubtitle: defaultContent.sections?.repair?.subtitle || prev.repairSubtitle,
-          repairDescription:
-            defaultContent.sections?.repair?.description || prev.repairDescription,
-          beautyTitle: defaultContent.sections?.beauty?.title || prev.beautyTitle,
-          beautySubtitle: defaultContent.sections?.beauty?.subtitle || prev.beautySubtitle,
-          beautyDescription:
-            defaultContent.sections?.beauty?.description || prev.beautyDescription,
           gardeningTitle:
             defaultContent.sections?.gardening?.title || prev.gardeningTitle,
           gardeningSubtitle:
@@ -269,16 +241,6 @@ export default function HomepageContentFormCard() {
               title: form.cleaningTitle.trim(),
               subtitle: form.cleaningSubtitle.trim(),
               description: form.cleaningDescription.trim(),
-            },
-            repair: {
-              title: form.repairTitle.trim(),
-              subtitle: form.repairSubtitle.trim(),
-              description: form.repairDescription.trim(),
-            },
-            beauty: {
-              title: form.beautyTitle.trim(),
-              subtitle: form.beautySubtitle.trim(),
-              description: form.beautyDescription.trim(),
             },
             gardening: {
               title: form.gardeningTitle.trim(),
@@ -403,12 +365,6 @@ export default function HomepageContentFormCard() {
               <Input label="Cleaning Title" value={form.cleaningTitle} onChange={handleChange("cleaningTitle")} />
               <Input label="Cleaning Subtitle" value={form.cleaningSubtitle} onChange={handleChange("cleaningSubtitle")} />
               <Textarea label="Cleaning Description" value={form.cleaningDescription} onChange={handleChange("cleaningDescription")} className="md:col-span-2" />
-              <Input label="Repair Title" value={form.repairTitle} onChange={handleChange("repairTitle")} />
-              <Input label="Repair Subtitle" value={form.repairSubtitle} onChange={handleChange("repairSubtitle")} />
-              <Textarea label="Repair Description" value={form.repairDescription} onChange={handleChange("repairDescription")} className="md:col-span-2" />
-              <Input label="Beauty Title" value={form.beautyTitle} onChange={handleChange("beautyTitle")} />
-              <Input label="Beauty Subtitle" value={form.beautySubtitle} onChange={handleChange("beautySubtitle")} />
-              <Textarea label="Beauty Description" value={form.beautyDescription} onChange={handleChange("beautyDescription")} className="md:col-span-2" />
               <Input label="Gardening Title" value={form.gardeningTitle} onChange={handleChange("gardeningTitle")} />
               <Input label="Gardening Subtitle" value={form.gardeningSubtitle} onChange={handleChange("gardeningSubtitle")} />
               <Textarea label="Gardening Description" value={form.gardeningDescription} onChange={handleChange("gardeningDescription")} className="md:col-span-2" />
@@ -428,10 +384,6 @@ export default function HomepageContentFormCard() {
                     <Textarea label="Hero Description Override" value={form.byLocation[location.id].heroDescription} onChange={handleLocationChange(location.id, "heroDescription")} />
                     <Input label="Cleaning Title Override" value={form.byLocation[location.id].cleaningTitle} onChange={handleLocationChange(location.id, "cleaningTitle")} />
                     <Input label="Cleaning Subtitle Override" value={form.byLocation[location.id].cleaningSubtitle} onChange={handleLocationChange(location.id, "cleaningSubtitle")} />
-                    <Input label="Repair Title Override" value={form.byLocation[location.id].repairTitle} onChange={handleLocationChange(location.id, "repairTitle")} />
-                    <Input label="Repair Subtitle Override" value={form.byLocation[location.id].repairSubtitle} onChange={handleLocationChange(location.id, "repairSubtitle")} />
-                    <Input label="Beauty Title Override" value={form.byLocation[location.id].beautyTitle} onChange={handleLocationChange(location.id, "beautyTitle")} />
-                    <Input label="Beauty Subtitle Override" value={form.byLocation[location.id].beautySubtitle} onChange={handleLocationChange(location.id, "beautySubtitle")} />
                     <Input label="Gardening Title Override" value={form.byLocation[location.id].gardeningTitle} onChange={handleLocationChange(location.id, "gardeningTitle")} />
                     <Input label="Gardening Subtitle Override" value={form.byLocation[location.id].gardeningSubtitle} onChange={handleLocationChange(location.id, "gardeningSubtitle")} />
                     <Input label="Featured Service IDs" value={form.byLocation[location.id].featuredServiceIds} onChange={handleLocationChange(location.id, "featuredServiceIds")} />
@@ -463,10 +415,6 @@ function mapLocationOverride(initial: LocationOverrideState, value: Record<strin
     heroDescription: value?.hero?.description || "",
     cleaningTitle: value?.sections?.cleaning?.title || "",
     cleaningSubtitle: value?.sections?.cleaning?.subtitle || "",
-    repairTitle: value?.sections?.repair?.title || "",
-    repairSubtitle: value?.sections?.repair?.subtitle || "",
-    beautyTitle: value?.sections?.beauty?.title || "",
-    beautySubtitle: value?.sections?.beauty?.subtitle || "",
     gardeningTitle: value?.sections?.gardening?.title || "",
     gardeningSubtitle: value?.sections?.gardening?.subtitle || "",
     featuredServiceIds: Array.isArray(value?.recommended?.featuredServiceIds)
@@ -497,14 +445,6 @@ function buildLocationPayload(byLocation: Record<LocationId, LocationOverrideSta
           cleaning: compactMap({
             title: value.cleaningTitle.trim(),
             subtitle: value.cleaningSubtitle.trim(),
-          }),
-          repair: compactMap({
-            title: value.repairTitle.trim(),
-            subtitle: value.repairSubtitle.trim(),
-          }),
-          beauty: compactMap({
-            title: value.beautyTitle.trim(),
-            subtitle: value.beautySubtitle.trim(),
           }),
           gardening: compactMap({
             title: value.gardeningTitle.trim(),
