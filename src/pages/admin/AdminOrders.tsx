@@ -63,6 +63,7 @@ const STATUS_OPTIONS = ["pending", "confirmed", "completed", "cancelled"];
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<OrderType>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -73,22 +74,19 @@ export default function AdminOrders() {
 
   async function loadOrders() {
     setLoading(true);
-    try {
-      const [bookingsSnap, queriesSnap] = await Promise.all([
-        getDocs(
-          query(collection(db, "bookings"), orderBy("createdAt", "desc"), limit(200))
-        ),
-        getDocs(
-          query(
-            collection(db, "queries"),
-            where("type", "==", "offline_booking"),
-            orderBy("createdAt", "desc"),
-            limit(200)
-          )
-        ),
-      ]);
+    setError(null);
 
-      const onlineOrders: Order[] = bookingsSnap.docs.map((d) => {
+    let onlineOrders: Order[] = [];
+    let offlineOrders: Order[] = [];
+    const errors: string[] = [];
+
+    // Fetch bookings and queries independently — one failing shouldn't block the other
+    try {
+      const bookingsSnap = await getDocs(
+        query(collection(db, "bookings"), orderBy("createdAt", "desc"), limit(200))
+      );
+
+      onlineOrders = bookingsSnap.docs.map((d) => {
         const data = d.data();
         return {
           id: d.id,
@@ -106,8 +104,22 @@ export default function AdminOrders() {
           createdAt: data.createdAt?.toDate?.() || new Date(),
         };
       });
+    } catch (err: any) {
+      console.error("Failed to load bookings:", err);
+      errors.push(`Bookings: ${err.message || "Unknown error"}`);
+    }
 
-      const offlineOrders: Order[] = queriesSnap.docs.map((d) => {
+    try {
+      const queriesSnap = await getDocs(
+        query(
+          collection(db, "queries"),
+          where("type", "==", "offline_booking"),
+          orderBy("createdAt", "desc"),
+          limit(200)
+        )
+      );
+
+      offlineOrders = queriesSnap.docs.map((d) => {
         const data = d.data();
         return {
           id: d.id,
@@ -122,17 +134,21 @@ export default function AdminOrders() {
           createdAt: data.createdAt?.toDate?.() || new Date(),
         };
       });
-
-      const all = [...onlineOrders, ...offlineOrders].sort(
-        (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-      );
-
-      setOrders(all);
-    } catch (err) {
-      console.error("Failed to load orders:", err);
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      console.error("Failed to load offline queries:", err);
+      errors.push(`Queries: ${err.message || "Unknown error"}`);
     }
+
+    if (errors.length > 0) {
+      setError(errors.join(" | "));
+    }
+
+    const all = [...onlineOrders, ...offlineOrders].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+
+    setOrders(all);
+    setLoading(false);
   }
 
   async function updateStatus(order: Order, newStatus: string) {
@@ -227,6 +243,17 @@ export default function AdminOrders() {
             ))}
           </div>
         </div>
+
+        {/* Error banner */}
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p className="font-medium">Failed to load some orders</p>
+            <p className="mt-1 text-xs text-red-600">{error}</p>
+            <p className="mt-1 text-xs text-red-500">
+              If this mentions "index", create the required Firestore composite index in Firebase Console.
+            </p>
+          </div>
+        )}
 
         {/* Orders List */}
         {loading ? (

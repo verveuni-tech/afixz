@@ -14,10 +14,12 @@ interface Props {
 
 const EMAIL_LINK_KEY = "afixz_email_for_signin";
 
-const actionCodeSettings = {
-  url: window.location.origin + "/auth/callback",
-  handleCodeInApp: true,
-};
+// Use env var for production URL, fallback to current origin
+function getCallbackUrl() {
+  const siteUrl = import.meta.env.VITE_SITE_URL;
+  if (siteUrl) return siteUrl; // production: https://afixz.com
+  return window.location.origin;  // dev: http://localhost:3000
+}
 
 export default function AuthLogin({ onSuccess }: Props) {
   const [email, setEmail] = useState("");
@@ -33,7 +35,12 @@ export default function AuthLogin({ onSuccess }: Props) {
       await signInWithPopup(auth, googleProvider);
       onSuccess?.();
     } catch (err: any) {
-      if (err.code !== "auth/popup-closed-by-user") {
+      if (err.code === "auth/account-exists-with-different-credential") {
+        setError(
+          "An account already exists with this email using a different sign-in method. " +
+          "Try signing in with email link instead."
+        );
+      } else if (err.code !== "auth/popup-closed-by-user") {
         setError(err.message || "Google sign-in failed.");
       }
     } finally {
@@ -52,6 +59,11 @@ export default function AuthLogin({ onSuccess }: Props) {
     setLoading(true);
 
     try {
+      const actionCodeSettings = {
+        url: getCallbackUrl(),
+        handleCodeInApp: true,
+      };
+
       await sendSignInLinkToEmail(auth, email, actionCodeSettings);
       window.localStorage.setItem(EMAIL_LINK_KEY, email);
       setEmailSent(true);
@@ -76,6 +88,10 @@ export default function AuthLogin({ onSuccess }: Props) {
         <p className="text-sm text-slate-500">
           We sent a sign-in link to <strong>{email}</strong>. Click the link
           to log in — no password needed.
+        </p>
+
+        <p className="text-xs text-slate-400">
+          Don't see it? Check your spam or promotions folder.
         </p>
 
         <button
@@ -167,8 +183,18 @@ export default function AuthLogin({ onSuccess }: Props) {
 }
 
 /**
- * Call this on app load / auth callback page to complete email link sign-in.
- * Should be invoked once in App.tsx or a dedicated /auth/callback route.
+ * Quick synchronous check — is current URL an email sign-in link?
+ * Used to show loading state before React renders routes.
+ */
+export function isEmailSignInUrl(): boolean {
+  const url = window.location.href;
+  return url.includes("mode=signIn") && url.includes("oobCode=");
+}
+
+/**
+ * Complete email link sign-in.
+ * Called on app load — checks if current URL is an email sign-in link.
+ * Returns true if sign-in was completed successfully.
  */
 export async function completeEmailLinkSignIn(): Promise<boolean> {
   if (!isSignInWithEmailLink(auth, window.location.href)) {
@@ -178,7 +204,7 @@ export async function completeEmailLinkSignIn(): Promise<boolean> {
   let email = window.localStorage.getItem(EMAIL_LINK_KEY);
 
   if (!email) {
-    // If user opened link on different device
+    // Different device/browser — need email confirmation
     email = window.prompt("Please enter your email to confirm sign-in:");
   }
 
@@ -187,11 +213,26 @@ export async function completeEmailLinkSignIn(): Promise<boolean> {
   try {
     await signInWithEmailLink(auth, email, window.location.href);
     window.localStorage.removeItem(EMAIL_LINK_KEY);
-    // Clean up URL
-    window.history.replaceState(null, "", window.location.pathname);
+
+    // Redirect to home page — clean up the auth URL params
+    window.location.replace("/");
     return true;
-  } catch (err) {
+  } catch (err: any) {
     console.error("Email link sign-in failed:", err);
+
+    if (err.code === "auth/invalid-action-code") {
+      // Link already used or expired
+      window.localStorage.removeItem(EMAIL_LINK_KEY);
+      alert("This sign-in link has expired or already been used. Please request a new one.");
+      window.location.replace("/");
+    } else if (err.code === "auth/account-exists-with-different-credential") {
+      alert(
+        "An account with this email already exists using a different sign-in method (Google). " +
+        "Please sign in with Google instead."
+      );
+      window.location.replace("/");
+    }
+
     return false;
   }
 }

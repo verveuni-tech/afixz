@@ -99,19 +99,19 @@ export const AuthProvider = ({
 
           const snap = await getDoc(userRef);
 
-          if (!snap.exists()) {
-            // Determine provider: Firebase email-link reports as "password"
-            const rawProvider =
-              firebaseUser.providerData[0]?.providerId || "unknown";
-            const resolvedProvider =
-              rawProvider === "password"
-                ? "email"
-                : rawProvider === "google.com"
-                  ? "google.com"
-                  : firebaseUser.phoneNumber
-                    ? "phone"
-                    : rawProvider;
+          // Determine provider: Firebase email-link reports as "password"
+          const rawProvider =
+            firebaseUser.providerData[0]?.providerId || "unknown";
+          const resolvedProvider =
+            rawProvider === "password"
+              ? "email"
+              : rawProvider === "google.com"
+                ? "google.com"
+                : firebaseUser.phoneNumber
+                  ? "phone"
+                  : rawProvider;
 
+          if (!snap.exists()) {
             const newProfile: UserProfile = {
               uid: firebaseUser.uid,
               phone:
@@ -127,27 +127,68 @@ export const AuthProvider = ({
               updatedAt: serverTimestamp(),
             };
 
-            await setDoc(userRef, newProfile);
-            setProfile(newProfile);
+            try {
+              await setDoc(userRef, newProfile);
+              // Re-read to get server timestamps resolved
+              const freshSnap = await getDoc(userRef);
+              setProfile(
+                freshSnap.exists()
+                  ? (freshSnap.data() as UserProfile)
+                  : newProfile
+              );
+            } catch (createErr) {
+              console.error(
+                "Profile creation failed:",
+                createErr
+              );
+              // Still set local profile so UI works
+              setProfile({
+                ...newProfile,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              });
+            }
           } else {
             const existingProfile =
               snap.data() as UserProfile;
 
-            // Migrate profiles with missing provider
-            if (
-              !existingProfile.provider &&
-              firebaseUser.phoneNumber
-            ) {
+            // Sync provider if user signed in with different method
+            // e.g., first used email link, now using Google
+            const needsProviderUpdate =
+              !existingProfile.provider ||
+              (existingProfile.provider !== resolvedProvider &&
+                resolvedProvider !== "unknown");
+
+            // Sync email/displayName/photoURL from latest auth
+            const needsInfoSync =
+              (firebaseUser.email && existingProfile.email !== firebaseUser.email) ||
+              (firebaseUser.displayName && !existingProfile.displayName) ||
+              (firebaseUser.photoURL && !existingProfile.photoURL);
+
+            if (needsProviderUpdate || needsInfoSync) {
               try {
-                await updateDoc(userRef, {
-                  provider: "phone",
+                const updates: Record<string, any> = {
                   updatedAt: serverTimestamp(),
-                });
-                existingProfile.provider = "phone";
-              } catch (migrationErr) {
+                };
+                if (needsProviderUpdate) {
+                  updates.provider = resolvedProvider;
+                }
+                if (firebaseUser.email) {
+                  updates.email = firebaseUser.email;
+                }
+                if (firebaseUser.displayName && !existingProfile.displayName) {
+                  updates.displayName = firebaseUser.displayName;
+                }
+                if (firebaseUser.photoURL && !existingProfile.photoURL) {
+                  updates.photoURL = firebaseUser.photoURL;
+                }
+
+                await updateDoc(userRef, updates);
+                Object.assign(existingProfile, updates);
+              } catch (syncErr) {
                 console.warn(
-                  "Provider migration failed:",
-                  migrationErr
+                  "Profile sync failed:",
+                  syncErr
                 );
               }
             }

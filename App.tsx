@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Routes, Route, Outlet } from "react-router-dom";
 
 import Navbar from "./src/components/common/Navbar";
@@ -8,7 +8,7 @@ import ErrorBoundary from "./src/components/common/ErrorBoundary";
 
 import ProtectedRoute from "./src/pages/admin/ProtectedRoute";
 import UserProtectedRoute from "./src/hooks/UserProtectedRoute";
-import { completeEmailLinkSignIn } from "./src/components/auth/AuthLogin";
+import { completeEmailLinkSignIn, isEmailSignInUrl } from "./src/components/auth/AuthLogin";
 
 const NotFound = lazy(() => import("./src/pages/NotFound"));
 
@@ -47,10 +47,23 @@ const AppLayout = () => {
 };
 
 function App() {
+  const [authPending, setAuthPending] = useState(() => isEmailSignInUrl());
+
   // Handle email link sign-in callback
   useEffect(() => {
-    completeEmailLinkSignIn();
-  }, []);
+    if (!authPending) return;
+
+    completeEmailLinkSignIn().finally(() => {
+      // completeEmailLinkSignIn does window.location.replace("/") on success,
+      // so this only fires on failure
+      setAuthPending(false);
+    });
+  }, [authPending]);
+
+  // Show loader while processing email link sign-in — prevents 404 flash
+  if (authPending) {
+    return <RouteLoader />;
+  }
 
   return (
     <ErrorBoundary>
