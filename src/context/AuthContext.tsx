@@ -100,6 +100,18 @@ export const AuthProvider = ({
           const snap = await getDoc(userRef);
 
           if (!snap.exists()) {
+            // Determine provider: Firebase email-link reports as "password"
+            const rawProvider =
+              firebaseUser.providerData[0]?.providerId || "unknown";
+            const resolvedProvider =
+              rawProvider === "password"
+                ? "email"
+                : rawProvider === "google.com"
+                  ? "google.com"
+                  : firebaseUser.phoneNumber
+                    ? "phone"
+                    : rawProvider;
+
             const newProfile: UserProfile = {
               uid: firebaseUser.uid,
               phone:
@@ -109,12 +121,7 @@ export const AuthProvider = ({
                 firebaseUser.displayName || null,
               photoURL:
                 firebaseUser.photoURL || null,
-              provider:
-                firebaseUser.providerData[0]
-                  ?.providerId ||
-                (firebaseUser.phoneNumber
-                  ? "phone"
-                  : "unknown"),
+              provider: resolvedProvider,
               role: adminStatus ? "admin" : "user",
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),

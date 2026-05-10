@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { collection, addDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, doc, getDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -18,6 +18,7 @@ const Checkout: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -45,6 +46,8 @@ const Checkout: React.FC = () => {
   };
 
   const validate = () => {
+    setFormError(null);
+
     const required = [
       "name",
       "phone",
@@ -59,14 +62,14 @@ const Checkout: React.FC = () => {
 
     for (const field of required) {
       if (!form[field as keyof typeof form]) {
-        alert("Please complete all required fields.");
+        setFormError("Please complete all required fields.");
         return false;
       }
     }
 
     if (!selectedLocation) {
       openLocationPicker();
-      alert("Please select a booking location before placing the order.");
+      setFormError("Please select a booking location before placing the order.");
       return false;
     }
 
@@ -75,7 +78,7 @@ const Checkout: React.FC = () => {
     );
 
     if (hasLocationMismatch) {
-      alert("Your cart contains services from a different location. Please review the cart first.");
+      setFormError("Your cart contains services from a different location. Please review the cart first.");
       return false;
     }
 
@@ -117,9 +120,11 @@ const Checkout: React.FC = () => {
     );
 
     const bookingIds: string[] = [];
+    const batch = writeBatch(db);
 
     for (const booking of validatedBookings) {
-      const bookingRef = await addDoc(collection(db, "bookings"), {
+      const bookingRef = doc(collection(db, "bookings"));
+      batch.set(bookingRef, {
         userId: user.uid,
         serviceId: booking.serviceId,
         serviceSlug: booking.serviceSlug,
@@ -151,6 +156,9 @@ const Checkout: React.FC = () => {
       bookingIds.push(bookingRef.id);
     }
 
+    // Atomic commit — all bookings succeed or none do
+    await batch.commit();
+
     setOrderPlaced(true);
     await clearCart();
 
@@ -173,7 +181,7 @@ const Checkout: React.FC = () => {
     navigate(`/booking-success/${bookingIds[0]}`);
   } catch (err: any) {
     console.error(err);
-    alert(err?.message || "Something went wrong.");
+    setFormError(err?.message || "Something went wrong. Please try again.");
   } finally {
     setLoading(false);
   }
@@ -200,6 +208,12 @@ const Checkout: React.FC = () => {
         <p className="mt-1 text-sm text-slate-500">
           Confirm your details and schedule your service.
         </p>
+
+        {formError && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {formError}
+          </div>
+        )}
 
         {/* Location Bar */}
         <div className="mt-6 flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-3">
@@ -297,7 +311,7 @@ const Checkout: React.FC = () => {
                       <p className="truncate text-slate-600">{item.title}</p>
                       {item.locationId && (
                         <p className="mt-0.5 text-[11px] text-slate-400">
-                          {getLocationLabel(item.locationId)}
+                          {getLocationLabel(item.locationId as import("../lib/locations").LocationId)}
                         </p>
                       )}
                     </div>

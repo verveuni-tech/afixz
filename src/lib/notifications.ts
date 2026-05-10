@@ -14,9 +14,13 @@ interface NotifyOrderPayload {
 
 export async function sendOrderNotification(payload: NotifyOrderPayload): Promise<void> {
   try {
+    const secret = import.meta.env.VITE_NOTIFY_API_SECRET || "";
     await fetch("/api/notify-order", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-secret": secret,
+      },
       body: JSON.stringify(payload),
     });
   } catch (err) {

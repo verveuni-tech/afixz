@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import PhoneLogin from "../components/auth/PhoneLogin";
+import AuthLogin from "../components/auth/AuthLogin";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useLocationContext } from "../context/LocationContext";
@@ -112,7 +112,7 @@ const Cart: React.FC = () => {
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <Link
-                    to={`/service/${item.slug}`}
+                    to={`/services/${item.slug}`}
                     className="text-sm font-semibold text-slate-800 hover:text-slate-900"
                   >
                     {item.title}
@@ -121,7 +121,7 @@ const Cart: React.FC = () => {
                     <span className="text-sm font-semibold text-accent">₹{item.price}</span>
                     {item.locationId && (
                       <span className="text-xs text-slate-400">
-                        · {getLocationLabel(item.locationId)}
+                        · {getLocationLabel(item.locationId as import("../lib/locations").LocationId)}
                       </span>
                     )}
                   </div>
@@ -237,7 +237,7 @@ const Cart: React.FC = () => {
             >
               <X size={16} />
             </button>
-            <PhoneLogin onSuccess={handleLoginSuccess} />
+            <AuthLogin onSuccess={handleLoginSuccess} />
           </div>
         </div>
       )}

@@ -3,6 +3,37 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || "admin@afixz.com";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "AfixZ <orders@afixz.com>";
+const API_SECRET = process.env.NOTIFY_API_SECRET;
+
+// ---------- Server-side rate limiting (in-memory, per-IP) ----------
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_MAX = 10; // max 10 requests per IP per hour
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return true;
+  }
+
+  entry.count++;
+  return false;
+}
+
+// Clean stale entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitMap) {
+    if (now > entry.resetAt) rateLimitMap.delete(key);
+  }
+}, 10 * 60 * 1000);
 
 interface OrderPayload {
   type: "online_booking" | "offline_booking";
@@ -79,9 +110,31 @@ function buildAdminEmail(data: OrderPayload): { subject: string; html: string } 
   };
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/\r?\n/g, " ")
+    .slice(0, 500);
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Rate limiting by IP
+  const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || "unknown";
+  if (isRateLimited(clientIp)) {
+    return res.status(429).json({ error: "Too many requests. Try again later." });
+  }
+
+  // API secret validation — prevents unauthenticated calls
+  const authHeader = req.headers["x-api-secret"] as string;
+  if (API_SECRET && authHeader !== API_SECRET) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   if (!RESEND_API_KEY) {
@@ -89,11 +142,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: "Email service not configured" });
   }
 
+  // Reject oversized payloads
+  const bodyStr = JSON.stringify(req.body);
+  if (bodyStr.length > 5000) {
+    return res.status(413).json({ error: "Payload too large" });
+  }
+
   const data = req.body as OrderPayload;
 
   if (!data.name || !data.email || !data.service) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+
+  // Sanitize all string inputs to prevent HTML/header injection
+  data.name = escapeHtml(data.name);
+  data.email = escapeHtml(data.email);
+  data.phone = escapeHtml(data.phone || "");
+  data.service = escapeHtml(data.service);
+  data.address = escapeHtml(data.address || "");
+  data.notes = escapeHtml(data.notes || "");
+  data.bookingId = escapeHtml(data.bookingId || "");
 
   const results = { customer: false, admin: false };
 

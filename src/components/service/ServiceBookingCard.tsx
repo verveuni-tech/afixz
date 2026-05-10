@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useRequireAuth } from "../../hooks/useRequireAuth";
 import { useAuth } from "../../context/AuthContext";
-import PhoneLogin from "../auth/PhoneLogin";
+import AuthLogin from "../auth/AuthLogin";
 
 import {
   collection,
@@ -225,7 +225,7 @@ const ServiceBookingCard: React.FC<Props> = ({
               ✕
             </button>
 
-            <PhoneLogin onSuccess={handleLoginSuccess} />
+            <AuthLogin onSuccess={handleLoginSuccess} />
           </div>
         </div>
       )}

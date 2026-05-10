@@ -1,12 +1,16 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, Outlet } from "react-router-dom";
 
 import Navbar from "./src/components/common/Navbar";
 import Footer from "./src/components/common/Footer";
 import LocationPickerModal from "./src/components/common/LocationPickerModal";
+import ErrorBoundary from "./src/components/common/ErrorBoundary";
 
 import ProtectedRoute from "./src/pages/admin/ProtectedRoute";
 import UserProtectedRoute from "./src/hooks/UserProtectedRoute";
+import { completeEmailLinkSignIn } from "./src/components/auth/AuthLogin";
+
+const NotFound = lazy(() => import("./src/pages/NotFound"));
 
 const Home = lazy(() => import("./src/pages/Home"));
 const ServiceDetail = lazy(() => import("./src/pages/ServiceDetail"));
@@ -43,7 +47,13 @@ const AppLayout = () => {
 };
 
 function App() {
+  // Handle email link sign-in callback
+  useEffect(() => {
+    completeEmailLinkSignIn();
+  }, []);
+
   return (
+    <ErrorBoundary>
     <Suspense fallback={<RouteLoader />}>
       <Routes>
         <Route element={<AppLayout />}>
@@ -139,8 +149,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* 404 catch-all */}
+        <Route element={<AppLayout />}>
+          <Route path="*" element={<NotFound />} />
+        </Route>
       </Routes>
     </Suspense>
+    </ErrorBoundary>
   );
 }
 

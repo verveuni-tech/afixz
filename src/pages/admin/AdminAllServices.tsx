@@ -125,7 +125,7 @@ export default function AdminAllServices() {
         const snap = await getDocs(query(...constraints));
 
         const newServices: Service[] = snap.docs.map((d) => {
-          const data = d.data();
+          const data = d.data() as Record<string, any>;
           return {
             id: d.id,
             title: data.title || "Untitled",

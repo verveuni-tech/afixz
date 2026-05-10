@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useCart } from "../../context/CartContext";
 import { useRequireAuth } from "../../hooks/useRequireAuth";
 import { useAuth } from "../../context/AuthContext";
-import PhoneLogin from "../auth/PhoneLogin";
+import AuthLogin from "../auth/AuthLogin";
 import { useLocationContext } from "../../context/LocationContext";
 import { getLocationLabel } from "../../lib/locations";
 import { MapPin, ShoppingCart, Trash2, X, RefreshCw, Check } from "lucide-react";
@@ -237,7 +237,7 @@ const AddToCartBlock: React.FC<Props> = ({
             >
               <X size={16} />
             </button>
-            <PhoneLogin onSuccess={handleLoginSuccess} />
+            <AuthLogin onSuccess={handleLoginSuccess} />
           </div>
         </div>
       )}

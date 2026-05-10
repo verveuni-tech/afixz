@@ -179,11 +179,11 @@ service cloud.firestore {
         && optionalNullableString(data, "phone")
         && optionalNullableString(data, "email")
         && data.provider is string
-        && (data.provider == "phone" || data.provider == "google.com")
+        && (data.provider in ["phone", "email", "google.com"])
         && data.role is string
         && (data.role == "user" || data.role == "admin")
         && (
-          (data.role == "user" && data.provider == "phone")
+          (data.role == "user" && data.provider in ["phone", "email", "google.com"])
           || (data.role == "admin" && data.provider == "google.com")
         )
         && (!hasField(data, "selectedLocation")
@@ -322,30 +322,29 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
 
-      // phone-auth users can create only their own user profile
+      // Authenticated users can create only their own user profile
       // admins can create valid user/admin profiles
       allow create: if (
           isOwner(userId)
-          && request.auth.token.firebase.sign_in_provider == "phone"
+          && request.auth.token.firebase.sign_in_provider in ["phone", "password", "google.com"]
           && request.resource.data.role == "user"
-          && request.resource.data.provider == "phone"
+          && request.resource.data.provider in ["phone", "email", "google.com"]
           && validUserProfile(request.resource.data, userId)
         ) || (
           isAdmin()
           && validUserProfile(request.resource.data, userId)
         );
 
-      // phone-auth users can update only their own profile
+      // Authenticated users can update only their own profile
       // role/createdAt stay locked for self-updates
-      // provider can be corrected from null to "phone" for migration
       // admins can update any valid profile
       allow update: if (
           isOwner(userId)
-          && request.auth.token.firebase.sign_in_provider == "phone"
+          && request.auth.token.firebase.sign_in_provider in ["phone", "password", "google.com"]
           && resource.data.role == "user"
-          && (resource.data.provider == "phone" || resource.data.provider == null)
+          && (resource.data.provider in ["phone", "email", "google.com"] || resource.data.provider == null)
           && request.resource.data.role == resource.data.role
-          && request.resource.data.provider == "phone"
+          && request.resource.data.provider in ["phone", "email", "google.com"]
           && request.resource.data.createdAt == resource.data.createdAt
           && validUserProfile(request.resource.data, userId)
         ) || (
@@ -410,7 +409,9 @@ service cloud.firestore {
       }
 
       allow read: if isAdmin();
-      allow create: if validQuery(request.resource.data);
+      // createdAt must be server timestamp (prevents backdating)
+      allow create: if validQuery(request.resource.data)
+        && request.resource.data.createdAt == request.time;
       allow update, delete: if isAdmin();
     }
 

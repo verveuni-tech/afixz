@@ -25,7 +25,7 @@ export function deepMerge<T extends Record<string, any>>(
   override?: DeepPartial<T> | null
 ): T {
   if (!override) {
-    return Array.isArray(base) ? ([...base] as T) : ({ ...base } as T);
+    return Array.isArray(base) ? ([...base] as unknown as T) : ({ ...base } as T);
   }
 
   const result: Record<string, any> = Array.isArray(base) ? [...base] : { ...base };

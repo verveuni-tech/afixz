@@ -149,7 +149,7 @@ const ServiceDetail: React.FC = () => {
               included={resolvedService.included}
               duration={resolvedService.duration}
               warranty={resolvedService.warranty}
-              professionals={resolvedService.professionals}
+              professionals={String(resolvedService.professionals)}
             />
 
             <ServiceFAQCard />

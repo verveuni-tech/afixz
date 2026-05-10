@@ -9,6 +9,7 @@ type SeoOptions = {
   keywords?: string[];
   publishedTime?: string;
   author?: string;
+  robots?: string;
 };
 
 export default function useSeo({
@@ -20,12 +21,18 @@ export default function useSeo({
   keywords = [],
   publishedTime,
   author,
+  robots,
 }: SeoOptions) {
   useEffect(() => {
     document.title = title;
 
     upsertMeta("name", "description", description);
     upsertMeta("name", "keywords", keywords.join(", "));
+    if (robots) {
+      upsertMeta("name", "robots", robots);
+    } else {
+      removeMeta("name", "robots");
+    }
     upsertMeta("property", "og:title", title);
     upsertMeta("property", "og:description", description);
     upsertMeta("property", "og:type", type);
