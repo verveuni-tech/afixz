@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
+import AuthLogin from "../components/auth/AuthLogin";
 import {
   collection,
   query,
@@ -49,8 +50,19 @@ export default function Profile() {
   if (loading) return <PageLoader />;
   if (!user)
     return (
-      <div className="flex min-h-[60vh] items-center justify-center pt-28 text-sm text-slate-500">
-        Please log in to view your profile.
+      <div className="min-h-screen bg-white pb-20 pt-28">
+        <div className="mx-auto max-w-sm px-4">
+          <div className="mb-6 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+              <User size={28} className="text-slate-400" />
+            </div>
+            <h1 className="text-xl font-semibold text-slate-800">My Account</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Sign in to view your bookings, manage addresses, and more.
+            </p>
+          </div>
+          <AuthLogin />
+        </div>
       </div>
     );
 

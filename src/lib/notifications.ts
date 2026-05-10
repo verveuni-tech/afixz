@@ -1,5 +1,5 @@
 interface NotifyOrderPayload {
-  type: "online_booking" | "offline_booking";
+  type: "online_booking";
   name: string;
   email: string;
   phone: string;
@@ -8,7 +8,6 @@ interface NotifyOrderPayload {
   scheduledDate?: string;
   scheduledTime?: string;
   price?: number;
-  notes?: string;
   bookingId?: string;
 }
 

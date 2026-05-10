@@ -36,7 +36,7 @@ setInterval(() => {
 }, 10 * 60 * 1000);
 
 interface OrderPayload {
-  type: "online_booking" | "offline_booking";
+  type: "online_booking";
   name: string;
   email: string;
   phone: string;
@@ -45,14 +45,12 @@ interface OrderPayload {
   scheduledDate?: string;
   scheduledTime?: string;
   price?: number;
-  notes?: string;
   bookingId?: string;
 }
 
 function buildCustomerEmail(data: OrderPayload): { subject: string; html: string } {
-  const isOnline = data.type === "online_booking";
   return {
-    subject: `AfixZ — Your ${isOnline ? "Booking" : "Service Request"} is Confirmed!`,
+    subject: `AfixZ — Your Booking is Confirmed!`,
     html: `
       <div style="font-family:'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#1f2933">
         <div style="text-align:center;margin-bottom:24px">
@@ -60,24 +58,25 @@ function buildCustomerEmail(data: OrderPayload): { subject: string; html: string
         </div>
         <h2 style="font-size:20px;margin-bottom:8px">Hi ${data.name},</h2>
         <p style="color:#475569;line-height:1.6">
-          ${isOnline
-            ? "Your booking has been confirmed! Here are the details:"
-            : "We've received your service request. Our team will contact you shortly to confirm your appointment."}
+          Your booking has been confirmed! Here are the details:
         </p>
         <div style="background:#f9fafb;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin:20px 0">
           <table style="width:100%;border-collapse:collapse;font-size:14px">
             <tr><td style="padding:6px 0;color:#64748b">Service</td><td style="padding:6px 0;font-weight:600">${data.service}</td></tr>
             ${data.scheduledDate ? `<tr><td style="padding:6px 0;color:#64748b">Date</td><td style="padding:6px 0;font-weight:600">${data.scheduledDate}</td></tr>` : ""}
             ${data.scheduledTime ? `<tr><td style="padding:6px 0;color:#64748b">Time</td><td style="padding:6px 0;font-weight:600">${data.scheduledTime}</td></tr>` : ""}
-            ${data.price ? `<tr><td style="padding:6px 0;color:#64748b">Amount</td><td style="padding:6px 0;font-weight:600;color:#f36b21">₹${data.price}</td></tr>` : ""}
+            ${data.price ? `<tr><td style="padding:6px 0;color:#64748b">Amount</td><td style="padding:6px 0;font-weight:600;color:#f36b21">₹${data.price} (COD)</td></tr>` : ""}
             ${data.bookingId ? `<tr><td style="padding:6px 0;color:#64748b">Booking ID</td><td style="padding:6px 0;font-weight:600;font-family:monospace">${data.bookingId}</td></tr>` : ""}
           </table>
         </div>
+        <p style="color:#475569;font-size:14px;line-height:1.6">
+          <strong>Payment:</strong> Cash on Delivery — pay when our professional arrives.
+        </p>
         <p style="color:#64748b;font-size:13px;line-height:1.6">
           If you have any questions, reply to this email or call us at +91 98765 43210.
         </p>
         <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;text-align:center;color:#94a3b8;font-size:11px">
-          © ${new Date().getFullYear()} AfixZ. All rights reserved.
+          &copy; ${new Date().getFullYear()} AfixZ. All rights reserved.
         </div>
       </div>
     `,
@@ -85,12 +84,11 @@ function buildCustomerEmail(data: OrderPayload): { subject: string; html: string
 }
 
 function buildAdminEmail(data: OrderPayload): { subject: string; html: string } {
-  const isOnline = data.type === "online_booking";
   return {
-    subject: `🔔 New ${isOnline ? "Order" : "Offline Booking"}: ${data.service} — ${data.name}`,
+    subject: `🔔 New Order: ${data.service} — ${data.name}`,
     html: `
       <div style="font-family:'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#1f2933">
-        <h2 style="color:#f36b21;font-size:18px;margin-bottom:16px">New ${isOnline ? "Order" : "Offline Booking Request"}</h2>
+        <h2 style="color:#f36b21;font-size:18px;margin-bottom:16px">New Order Received</h2>
         <div style="background:#f9fafb;border:1px solid #e2e8f0;border-radius:12px;padding:20px">
           <table style="width:100%;border-collapse:collapse;font-size:14px">
             <tr><td style="padding:6px 0;color:#64748b;width:120px">Customer</td><td style="padding:6px 0;font-weight:600">${data.name}</td></tr>
@@ -100,9 +98,8 @@ function buildAdminEmail(data: OrderPayload): { subject: string; html: string } 
             <tr><td style="padding:6px 0;color:#64748b">Address</td><td style="padding:6px 0">${data.address}</td></tr>
             ${data.scheduledDate ? `<tr><td style="padding:6px 0;color:#64748b">Date</td><td style="padding:6px 0">${data.scheduledDate}</td></tr>` : ""}
             ${data.scheduledTime ? `<tr><td style="padding:6px 0;color:#64748b">Time</td><td style="padding:6px 0">${data.scheduledTime}</td></tr>` : ""}
-            ${data.price ? `<tr><td style="padding:6px 0;color:#64748b">Amount</td><td style="padding:6px 0;font-weight:600;color:#f36b21">₹${data.price}</td></tr>` : ""}
+            ${data.price ? `<tr><td style="padding:6px 0;color:#64748b">Amount</td><td style="padding:6px 0;font-weight:600;color:#f36b21">₹${data.price} (COD)</td></tr>` : ""}
             ${data.bookingId ? `<tr><td style="padding:6px 0;color:#64748b">Booking ID</td><td style="padding:6px 0;font-family:monospace">${data.bookingId}</td></tr>` : ""}
-            ${data.notes ? `<tr><td style="padding:6px 0;color:#64748b">Notes</td><td style="padding:6px 0">${data.notes}</td></tr>` : ""}
           </table>
         </div>
       </div>
@@ -160,7 +157,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   data.phone = escapeHtml(data.phone || "");
   data.service = escapeHtml(data.service);
   data.address = escapeHtml(data.address || "");
-  data.notes = escapeHtml(data.notes || "");
   data.bookingId = escapeHtml(data.bookingId || "");
 
   const results = { customer: false, admin: false };

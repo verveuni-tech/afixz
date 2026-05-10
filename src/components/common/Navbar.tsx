@@ -228,14 +228,6 @@ const Navbar: React.FC = () => {
               >
                 Blogs
               </Link>
-              <Link
-                to="/contact"
-                className={`transition-colors hover:text-accent ${
-                  location.pathname === "/contact" ? "text-accent" : ""
-                }`}
-              >
-                Contact
-              </Link>
             </div>
 
             <button
@@ -305,17 +297,6 @@ const Navbar: React.FC = () => {
               className="block w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700"
             >
               Profile
-            </button>
-
-            <button
-              onClick={() => goTo("/contact")}
-              className={`block w-full rounded-2xl px-4 py-3 text-left text-sm font-medium ${
-                location.pathname === "/contact"
-                  ? "bg-accent/10 text-accent"
-                  : "bg-slate-50 text-slate-700"
-              }`}
-            >
-              Contact
             </button>
 
             <button
