@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   RefreshCw,
   Loader2,
   Calendar,
   MapPin,
   Clock,
-  AlertCircle,
+  Leaf,
   ChevronRight,
 } from "lucide-react";
 import AdminHeader from "../../components/admin/AdminHeader";
-import { getAllSubscriptions, createBookingFromSubscription, updateSubscriptionStatus } from "../../features/subscriptions/lib";
-import { Subscription, FREQUENCY_LABELS, SubscriptionStatus } from "../../features/subscriptions/types";
+import { getAllSubscriptions, updateSubscriptionStatus } from "../../features/subscriptions/lib";
+import { Subscription, SubscriptionStatus } from "../../features/subscriptions/types";
+import { BILLING_CYCLE_LABELS } from "../../features/subscriptions/plans";
 import { getLocationLabel } from "../../lib/locations";
+import type { LocationId } from "../../lib/locations";
 
-type FilterStatus = "all" | SubscriptionStatus | "due";
+type FilterStatus = "all" | SubscriptionStatus;
 
 export default function AdminSubscriptions() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -22,8 +23,6 @@ export default function AdminSubscriptions() {
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState("");
-
-  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     void load();
@@ -33,35 +32,14 @@ export default function AdminSubscriptions() {
     setLoading(true);
     try {
       const subs = await getAllSubscriptions();
-      subs.sort((a, b) => a.nextScheduledDate.localeCompare(b.nextScheduledDate));
+      // Sort: active first, then paused, cancelled, expired
+      const order: Record<string, number> = { active: 0, paused: 1, expired: 2, cancelled: 3 };
+      subs.sort((a, b) => (order[a.status] ?? 4) - (order[b.status] ?? 4));
       setSubscriptions(subs);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleForceBook = async (sub: Subscription) => {
-    setBusyId(sub.id);
-    try {
-      const bookingId = await createBookingFromSubscription(sub, sub.userId);
-      setSubscriptions((prev) =>
-        prev.map((s) =>
-          s.id === sub.id
-            ? {
-                ...s,
-                lastBookingId: bookingId,
-                nextScheduledDate: getNextDate(s.nextScheduledDate, s.frequency),
-              }
-            : s
-        )
-      );
-      flash(`Booking created: ${bookingId.slice(0, 8)}`);
-    } catch (err: any) {
-      alert(err?.message || "Failed to create booking.");
-    } finally {
-      setBusyId(null);
     }
   };
 
@@ -72,6 +50,7 @@ export default function AdminSubscriptions() {
       setSubscriptions((prev) =>
         prev.map((s) => (s.id === sub.id ? { ...s, status } : s))
       );
+      flash(`${sub.customerName || "Subscription"} → ${status}`);
     } catch (err) {
       console.error(err);
     } finally {
@@ -86,20 +65,22 @@ export default function AdminSubscriptions() {
 
   const filtered = subscriptions.filter((s) => {
     if (filter === "all") return true;
-    if (filter === "due") return s.status === "active" && s.nextScheduledDate <= today;
     return s.status === filter;
   });
 
-  const dueCount = subscriptions.filter(
-    (s) => s.status === "active" && s.nextScheduledDate <= today
-  ).length;
+  const counts = {
+    active: subscriptions.filter((s) => s.status === "active").length,
+    paused: subscriptions.filter((s) => s.status === "paused").length,
+    cancelled: subscriptions.filter((s) => s.status === "cancelled").length,
+    expired: subscriptions.filter((s) => s.status === "expired").length,
+  };
 
   const FILTERS: { key: FilterStatus; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "due", label: `Due today (${dueCount})` },
-    { key: "active", label: "Active" },
-    { key: "paused", label: "Paused" },
-    { key: "cancelled", label: "Cancelled" },
+    { key: "all", label: `All (${subscriptions.length})` },
+    { key: "active", label: `Active (${counts.active})` },
+    { key: "paused", label: `Paused (${counts.paused})` },
+    { key: "cancelled", label: `Cancelled (${counts.cancelled})` },
+    { key: "expired", label: `Expired (${counts.expired})` },
   ];
 
   return (
@@ -114,7 +95,7 @@ export default function AdminSubscriptions() {
               Subscriptions
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              View all customer subscriptions. Manually trigger bookings or update status.
+              Manage Flying Mali plan subscriptions.
             </p>
           </div>
           <button
@@ -129,17 +110,6 @@ export default function AdminSubscriptions() {
         {successMsg && (
           <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
             ✓ {successMsg}
-          </div>
-        )}
-
-        {/* Due alert */}
-        {dueCount > 0 && (
-          <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
-            <AlertCircle size={16} className="mt-0.5 shrink-0 text-amber-600" />
-            <p className="text-sm text-amber-700">
-              <span className="font-semibold">{dueCount} subscription{dueCount > 1 ? "s" : ""}</span> due today.
-              Click "Book now" to create bookings, or customers will auto-book when they next log in.
-            </p>
           </div>
         )}
 
@@ -167,7 +137,7 @@ export default function AdminSubscriptions() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center py-20 text-center">
-            <RefreshCw size={24} className="mb-3 text-slate-300" />
+            <Leaf size={24} className="mb-3 text-slate-300" />
             <p className="text-sm font-medium text-slate-600">No subscriptions found</p>
           </div>
         ) : (
@@ -175,47 +145,47 @@ export default function AdminSubscriptions() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 text-left">
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Service</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Customer</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Plan</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Location</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Frequency</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Next date</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Period</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filtered.map((sub) => {
-                  const isDue = sub.status === "active" && sub.nextScheduledDate <= today;
                   const isBusy = busyId === sub.id;
 
                   return (
-                    <tr
-                      key={sub.id}
-                      className={`transition hover:bg-slate-50 ${isDue ? "bg-amber-50/40" : ""}`}
-                    >
+                    <tr key={sub.id} className="transition hover:bg-slate-50">
                       <td className="px-4 py-3">
-                        <p className="font-medium text-slate-800">{sub.serviceTitle}</p>
-                        <p className="text-xs text-slate-400">₹{sub.price}/visit</p>
+                        <p className="font-medium text-slate-800">{sub.customerName || "—"}</p>
+                        <p className="text-xs text-slate-400">{sub.customerPhone || "—"}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-slate-700">{sub.planName}</p>
+                        <p className="text-xs text-slate-400">
+                          {BILLING_CYCLE_LABELS[sub.billingCycle]} · ₹{sub.price}
+                          {sub.billingCycle !== "monthly" && ` (₹${sub.pricePerMonth}/mo)`}
+                        </p>
                       </td>
                       <td className="px-4 py-3">
                         <span className="flex items-center gap-1 text-xs text-slate-500">
                           <MapPin size={10} />
-                          {getLocationLabel(sub.locationId as import("../../lib/locations").LocationId)}
+                          {getLocationLabel(sub.locationId as LocationId)}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-slate-500">
-                        {FREQUENCY_LABELS[sub.frequency]}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <Calendar size={11} className={isDue ? "text-amber-500" : "text-slate-400"} />
-                          <span className={`text-xs font-medium ${isDue ? "text-amber-700" : "text-slate-600"}`}>
-                            {formatDate(sub.nextScheduledDate)}
+                          <Calendar size={11} className="text-slate-400" />
+                          <span className="text-xs text-slate-600">
+                            {formatDate(sub.startDate)} → {formatDate(sub.endDate)}
                           </span>
                         </div>
                         <div className="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
                           <Clock size={10} />
-                          {sub.preferredTime}
+                          {sub.preferredTime} · {sub.visitsPerMonth} visits/mo
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -229,22 +199,18 @@ export default function AdminSubscriptions() {
                             <>
                               {sub.status === "active" && (
                                 <button
-                                  onClick={() => handleForceBook(sub)}
-                                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                                    isDue
-                                      ? "bg-accent text-white hover:bg-accent-hover"
-                                      : "border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-                                  }`}
-                                >
-                                  Book now
-                                </button>
-                              )}
-                              {sub.status === "active" && (
-                                <button
                                   onClick={() => handleStatusChange(sub, "paused")}
                                   className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
                                 >
                                   Pause
+                                </button>
+                              )}
+                              {sub.status === "active" && (
+                                <button
+                                  onClick={() => handleStatusChange(sub, "cancelled")}
+                                  className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-500 transition hover:bg-red-50"
+                                >
+                                  Cancel
                                 </button>
                               )}
                               {sub.status === "paused" && (
@@ -276,6 +242,7 @@ function StatusBadge({ status }: { status: string }) {
     active: "bg-emerald-50 text-emerald-700",
     paused: "bg-amber-50 text-amber-700",
     cancelled: "bg-slate-100 text-slate-500",
+    expired: "bg-slate-100 text-slate-500",
   };
   return (
     <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize ${map[status] ?? ""}`}>
@@ -285,16 +252,10 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function formatDate(dateStr: string) {
+  if (!dateStr) return "—";
   return new Date(dateStr + "T00:00:00").toLocaleDateString("en-IN", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
-}
-
-function getNextDate(from: string, frequency: string): string {
-  const d = new Date(from + "T00:00:00");
-  const days = frequency === "weekly" ? 7 : frequency === "biweekly" ? 14 : 30;
-  d.setDate(d.getDate() + days);
-  return d.toISOString().split("T")[0];
 }

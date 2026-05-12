@@ -266,32 +266,40 @@ service cloud.firestore {
 
     function validSubscription(data, userId) {
       return hasOnlyKeys(data, [
-          "userId", "serviceId", "serviceTitle", "serviceSlug",
-          "price", "locationId", "address", "frequency", "preferredTime",
-          "status", "nextScheduledDate", "createdAt", "lastBookingId", "skippedDates"
+          "userId", "planId", "planName", "billingCycle",
+          "price", "pricePerMonth", "durationMonths", "visitsPerMonth", "plantCoverage",
+          "locationId", "address", "preferredTime",
+          "status", "startDate", "endDate", "nextVisitDate",
+          "customerName", "customerPhone", "createdAt"
         ])
         && hasRequiredKeys(data, [
-          "userId", "serviceId", "serviceTitle", "serviceSlug",
-          "price", "locationId", "address", "frequency", "preferredTime",
-          "status", "nextScheduledDate", "createdAt", "skippedDates"
+          "userId", "planId", "planName", "billingCycle",
+          "price", "pricePerMonth", "durationMonths", "visitsPerMonth", "plantCoverage",
+          "locationId", "address", "preferredTime",
+          "status", "startDate", "endDate", "nextVisitDate",
+          "customerName", "customerPhone", "createdAt"
         ])
         && data.userId is string
         && data.userId == userId
-        && data.serviceId is string
-        && serviceExists(data.serviceId)
-        && data.serviceTitle is string
-        && data.serviceSlug is string
+        && data.planId is string
+        && data.planName is string
+        && (data.billingCycle == "monthly" || data.billingCycle == "6months" || data.billingCycle == "yearly")
         && isNumber(data.price)
+        && isNumber(data.pricePerMonth)
+        && isNumber(data.durationMonths)
+        && isNumber(data.visitsPerMonth)
+        && isNumber(data.plantCoverage)
         && data.locationId is string
         && isValidLocation(data.locationId)
         && data.address is map
-        && (data.frequency == "weekly" || data.frequency == "biweekly" || data.frequency == "monthly")
         && data.preferredTime is string
-        && (data.status == "active" || data.status == "paused" || data.status == "cancelled")
-        && data.nextScheduledDate is string
-        && data.createdAt is timestamp
-        && data.skippedDates is list
-        && (!hasField(data, "lastBookingId") || data.lastBookingId == null || data.lastBookingId is string);
+        && (data.status == "active" || data.status == "paused" || data.status == "cancelled" || data.status == "expired")
+        && data.startDate is string
+        && data.endDate is string
+        && data.nextVisitDate is string
+        && data.customerName is string
+        && data.customerPhone is string
+        && data.createdAt is timestamp;
     }
 
     match /services/{doc} {
@@ -376,12 +384,12 @@ service cloud.firestore {
         && request.resource.data.userId == request.auth.uid
         && validSubscription(request.resource.data, request.auth.uid);
 
-      // Users can update status/nextScheduledDate/skippedDates/lastBookingId on their own subs.
-      // userId and serviceId are immutable after creation.
-      allow update: if isSignedIn()
+      // Users can update status on their own subs. userId and planId immutable.
+      allow update: if (isSignedIn()
         && resource.data.userId == request.auth.uid
         && request.resource.data.userId == resource.data.userId
-        && request.resource.data.serviceId == resource.data.serviceId;
+        && request.resource.data.planId == resource.data.planId)
+        || isAdmin();
 
       allow delete: if isAdmin();
     }

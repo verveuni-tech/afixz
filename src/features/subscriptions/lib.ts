@@ -7,61 +7,63 @@ import {
   query,
   where,
   getDocs,
-  getDoc,
-  arrayUnion,
 } from "firebase/firestore";
 import { db } from "../../firebase";
-import {
-  Subscription,
-  SubscriptionAddress,
-  SubscriptionFrequency,
-  SubscriptionStatus,
-} from "./types";
-import { normalizeService, resolveServiceForLocation } from "../../lib/services";
-import type { LocationId } from "../../lib/locations";
+import type { Subscription, SubscriptionAddress, SubscriptionStatus } from "./types";
+import type { SubscriptionPlan } from "./plans";
 
-export function getNextDate(from: string, frequency: SubscriptionFrequency): string {
-  const d = new Date(from);
-  const days = frequency === "weekly" ? 7 : frequency === "biweekly" ? 14 : 30;
+function addMonths(dateStr: string, months: number): string {
+  const d = new Date(dateStr);
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString().split("T")[0];
+}
+
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr);
   d.setDate(d.getDate() + days);
   return d.toISOString().split("T")[0];
 }
 
-export function isToday(dateStr: string): boolean {
-  return dateStr === new Date().toISOString().split("T")[0];
+/** Next visit = 15 days from start (2 visits/month ≈ every 15 days) */
+function getNextVisitDate(startDate: string): string {
+  return addDays(startDate, 15);
 }
 
-export function isDue(dateStr: string): boolean {
-  return dateStr <= new Date().toISOString().split("T")[0];
-}
-
-export async function createSubscription(params: {
+export async function createPlanSubscription(params: {
   userId: string;
-  serviceId: string;
-  serviceTitle: string;
-  serviceSlug: string;
-  price: number;
+  plan: SubscriptionPlan;
   locationId: string;
   address: SubscriptionAddress;
-  frequency: SubscriptionFrequency;
   preferredTime: string;
   startDate: string;
 }): Promise<string> {
+  const { userId, plan, locationId, address, preferredTime, startDate } = params;
+
+  const endDate = addMonths(startDate, plan.durationMonths);
+  const nextVisitDate = getNextVisitDate(startDate);
+
   const ref = await addDoc(collection(db, "subscriptions"), {
-    userId: params.userId,
-    serviceId: params.serviceId,
-    serviceTitle: params.serviceTitle,
-    serviceSlug: params.serviceSlug,
-    price: params.price,
-    locationId: params.locationId,
-    address: params.address,
-    frequency: params.frequency,
-    preferredTime: params.preferredTime,
-    status: "active",
-    nextScheduledDate: params.startDate,
-    skippedDates: [],
+    userId,
+    planId: plan.id,
+    planName: plan.name,
+    billingCycle: plan.billingCycle,
+    price: plan.price,
+    pricePerMonth: plan.pricePerMonth,
+    durationMonths: plan.durationMonths,
+    visitsPerMonth: plan.visitsPerMonth,
+    plantCoverage: plan.plantCoverage,
+    locationId,
+    address,
+    preferredTime,
+    status: "active" as SubscriptionStatus,
+    startDate,
+    endDate,
+    nextVisitDate,
+    customerName: address.name,
+    customerPhone: address.phone,
     createdAt: serverTimestamp(),
   });
+
   return ref.id;
 }
 
@@ -70,18 +72,6 @@ export async function updateSubscriptionStatus(
   status: SubscriptionStatus
 ): Promise<void> {
   await updateDoc(doc(db, "subscriptions", id), { status });
-}
-
-export async function skipNextVisit(
-  id: string,
-  dateToSkip: string,
-  frequency: SubscriptionFrequency
-): Promise<void> {
-  const nextDate = getNextDate(dateToSkip, frequency);
-  await updateDoc(doc(db, "subscriptions", id), {
-    skippedDates: arrayUnion(dateToSkip),
-    nextScheduledDate: nextDate,
-  });
 }
 
 export async function getUserSubscriptions(userId: string): Promise<Subscription[]> {
@@ -96,73 +86,4 @@ export async function getUserSubscriptions(userId: string): Promise<Subscription
 export async function getAllSubscriptions(): Promise<Subscription[]> {
   const snap = await getDocs(collection(db, "subscriptions"));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Subscription));
-}
-
-// Creates a booking from a subscription. Re-fetches the live service price.
-export async function createBookingFromSubscription(
-  sub: Subscription,
-  userId: string
-): Promise<string> {
-  const serviceSnap = await getDoc(doc(db, "services", sub.serviceId));
-  if (!serviceSnap.exists()) {
-    throw new Error(`Service "${sub.serviceTitle}" is no longer available.`);
-  }
-
-  const resolved = resolveServiceForLocation(
-    normalizeService(serviceSnap.id, serviceSnap.data() as Record<string, any>),
-    sub.locationId as LocationId
-  );
-
-  const bookingRef = await addDoc(collection(db, "bookings"), {
-    userId,
-    serviceId: resolved.id,
-    serviceSlug: resolved.slug,
-    serviceTitle: resolved.title,
-    price: resolved.price,
-    totalPrice: resolved.price,
-    locationId: sub.locationId,
-    address: sub.address,
-    scheduledDate: sub.nextScheduledDate,
-    scheduledTime: sub.preferredTime,
-    customerName: sub.address.name,
-    customerPhone: sub.address.phone,
-    paymentMode: "cod",
-    status: "pending",
-    subscriptionId: sub.id,
-    createdAt: serverTimestamp(),
-  });
-
-  return bookingRef.id;
-}
-
-// Checks all active subscriptions for this user and creates bookings for due ones.
-export async function processDueSubscriptions(userId: string): Promise<number> {
-  const today = new Date().toISOString().split("T")[0];
-  const q = query(
-    collection(db, "subscriptions"),
-    where("userId", "==", userId),
-    where("status", "==", "active")
-  );
-  const snap = await getDocs(q);
-
-  let processed = 0;
-
-  for (const docSnap of snap.docs) {
-    const sub = { id: docSnap.id, ...docSnap.data() } as Subscription;
-    if (sub.nextScheduledDate > today) continue;
-
-    try {
-      const bookingId = await createBookingFromSubscription(sub, userId);
-      const nextDate = getNextDate(sub.nextScheduledDate, sub.frequency);
-      await updateDoc(doc(db, "subscriptions", sub.id), {
-        nextScheduledDate: nextDate,
-        lastBookingId: bookingId,
-      });
-      processed++;
-    } catch (err) {
-      console.error(`Subscription ${sub.id} booking failed:`, err);
-    }
-  }
-
-  return processed;
 }

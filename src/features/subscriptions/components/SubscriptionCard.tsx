@@ -1,21 +1,19 @@
 import React, { useState } from "react";
 import {
-  RefreshCw,
+  Leaf,
   MapPin,
   Calendar,
   Clock,
   Pause,
   Play,
   X,
-  SkipForward,
   Loader2,
 } from "lucide-react";
-import { Subscription, FREQUENCY_LABELS } from "../types";
+import { Subscription } from "../types";
+import { BILLING_CYCLE_LABELS } from "../plans";
 import { getLocationLabel } from "../../../lib/locations";
-import {
-  updateSubscriptionStatus,
-  skipNextVisit,
-} from "../lib";
+import { updateSubscriptionStatus } from "../lib";
+import type { LocationId } from "../../../lib/locations";
 
 interface Props {
   subscription: Subscription;
@@ -28,14 +26,17 @@ const SubscriptionCard: React.FC<Props> = ({ subscription: sub, onUpdate }) => {
 
   const isPaused = sub.status === "paused";
   const isCancelled = sub.status === "cancelled";
+  const isExpired = sub.status === "expired";
+  const isInactive = isCancelled || isExpired;
 
-  const formattedDate = sub.nextScheduledDate
-    ? new Date(sub.nextScheduledDate + "T00:00:00").toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : "—";
+  const formatDate = (dateStr: string) =>
+    dateStr
+      ? new Date(dateStr + "T00:00:00").toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "—";
 
   const handlePauseResume = async () => {
     setBusy(true);
@@ -63,23 +64,10 @@ const SubscriptionCard: React.FC<Props> = ({ subscription: sub, onUpdate }) => {
     }
   };
 
-  const handleSkip = async () => {
-    setBusy(true);
-    try {
-      await skipNextVisit(sub.id, sub.nextScheduledDate, sub.frequency);
-      const nextDate = getNextDate(sub.nextScheduledDate, sub.frequency);
-      onUpdate({ nextScheduledDate: nextDate });
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <div
       className={`rounded-xl border bg-white transition ${
-        isCancelled
+        isInactive
           ? "border-slate-100 opacity-60"
           : isPaused
           ? "border-amber-200"
@@ -91,28 +79,34 @@ const SubscriptionCard: React.FC<Props> = ({ subscription: sub, onUpdate }) => {
         <div className="flex items-start gap-3">
           <div
             className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-              isCancelled
+              isInactive
                 ? "bg-slate-100"
                 : isPaused
                 ? "bg-amber-50"
-                : "bg-accent/10"
+                : "bg-emerald-50"
             }`}
           >
-            <RefreshCw
+            <Leaf
               size={16}
               className={
-                isCancelled
+                isInactive
                   ? "text-slate-400"
                   : isPaused
                   ? "text-amber-500"
-                  : "text-accent"
+                  : "text-emerald-600"
               }
             />
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-800">{sub.serviceTitle}</p>
+            <p className="text-sm font-semibold text-slate-800">
+              Flying Mali — {sub.planName}
+            </p>
             <p className="mt-0.5 text-xs text-slate-500">
-              {FREQUENCY_LABELS[sub.frequency]} · ₹{sub.price}/visit
+              {BILLING_CYCLE_LABELS[sub.billingCycle]} · ₹{sub.price}
+              {sub.billingCycle !== "monthly"
+                ? ` (₹${sub.pricePerMonth}/mo)`
+                : "/mo"}
+              {" · "}{sub.visitsPerMonth} visits/month
             </p>
           </div>
         </div>
@@ -124,11 +118,11 @@ const SubscriptionCard: React.FC<Props> = ({ subscription: sub, onUpdate }) => {
       <div className="flex flex-wrap gap-x-5 gap-y-1.5 border-t border-slate-100 px-5 py-3 text-xs text-slate-500">
         <span className="flex items-center gap-1.5">
           <MapPin size={11} className="shrink-0" />
-          {getLocationLabel(sub.locationId as import("../../../lib/locations").LocationId)}
+          {getLocationLabel(sub.locationId as LocationId)}
         </span>
         <span className="flex items-center gap-1.5">
           <Calendar size={11} className="shrink-0" />
-          Next: {formattedDate}
+          {formatDate(sub.startDate)} → {formatDate(sub.endDate)}
         </span>
         <span className="flex items-center gap-1.5">
           <Clock size={11} className="shrink-0" />
@@ -142,7 +136,7 @@ const SubscriptionCard: React.FC<Props> = ({ subscription: sub, onUpdate }) => {
       </div>
 
       {/* Actions */}
-      {!isCancelled && (
+      {!isInactive && (
         <div className="flex items-center gap-2 border-t border-slate-100 px-5 py-3">
           {busy ? (
             <Loader2 size={14} className="animate-spin text-slate-400" />
@@ -164,16 +158,6 @@ const SubscriptionCard: React.FC<Props> = ({ subscription: sub, onUpdate }) => {
                   </>
                 )}
               </button>
-
-              {!isPaused && (
-                <button
-                  onClick={handleSkip}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
-                >
-                  <SkipForward size={11} />
-                  Skip next
-                </button>
-              )}
 
               {confirmCancel ? (
                 <div className="ml-auto flex items-center gap-2">
@@ -197,7 +181,7 @@ const SubscriptionCard: React.FC<Props> = ({ subscription: sub, onUpdate }) => {
                   className="ml-auto flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-400 transition hover:text-red-500"
                 >
                   <X size={11} />
-                  Cancel subscription
+                  Cancel
                 </button>
               )}
             </>
@@ -215,6 +199,7 @@ function StatusBadge({ status }: { status: string }) {
     active: "bg-emerald-50 text-emerald-700",
     paused: "bg-amber-50 text-amber-700",
     cancelled: "bg-slate-100 text-slate-500",
+    expired: "bg-slate-100 text-slate-500",
   };
   return (
     <span
@@ -225,11 +210,4 @@ function StatusBadge({ status }: { status: string }) {
       {status}
     </span>
   );
-}
-
-function getNextDate(from: string, frequency: string): string {
-  const d = new Date(from + "T00:00:00");
-  const days = frequency === "weekly" ? 7 : frequency === "biweekly" ? 14 : 30;
-  d.setDate(d.getDate() + days);
-  return d.toISOString().split("T")[0];
 }

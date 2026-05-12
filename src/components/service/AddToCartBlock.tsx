@@ -5,9 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import AuthLogin from "../auth/AuthLogin";
 import { useLocationContext } from "../../context/LocationContext";
 import { getLocationLabel } from "../../lib/locations";
-import { MapPin, ShoppingCart, Trash2, X, RefreshCw, Check } from "lucide-react";
-import SubscribeModal from "../../features/subscriptions/components/SubscribeModal";
-import { Link } from "react-router-dom";
+import { MapPin, ShoppingCart, Trash2, X } from "lucide-react";
 
 interface Props {
   serviceId: string;
@@ -16,8 +14,6 @@ interface Props {
   slug: string;
   availableInLocation: boolean;
 }
-
-type Tab = "book" | "subscribe";
 
 const AddToCartBlock: React.FC<Props> = ({
   serviceId,
@@ -38,9 +34,6 @@ const AddToCartBlock: React.FC<Props> = ({
   } = useRequireAuth();
 
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState<Tab>("book");
-  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
-  const [subscribeSuccess, setSubscribeSuccess] = useState(false);
 
   const isInCart = useMemo(
     () => cart.some((item) => item.serviceId === serviceId),
@@ -63,21 +56,6 @@ const AddToCartBlock: React.FC<Props> = ({
         setLoading(false);
       }
     });
-  };
-
-  const handleSubscribeClick = () => {
-    requireAuth(() => {
-      if (!selectedLocation) {
-        openLocationPicker();
-        return;
-      }
-      setShowSubscribeModal(true);
-    });
-  };
-
-  const handleSubscribeSuccess = () => {
-    setShowSubscribeModal(false);
-    setSubscribeSuccess(true);
   };
 
   return (
@@ -109,20 +87,8 @@ const AddToCartBlock: React.FC<Props> = ({
           </button>
         </div>
 
-        {/* Tab switcher */}
-        <div className="mt-4 flex rounded-lg border border-slate-200 p-0.5">
-          <TabBtn active={tab === "book"} onClick={() => setTab("book")}>
-            <ShoppingCart size={13} />
-            Book once
-          </TabBtn>
-          <TabBtn active={tab === "subscribe"} onClick={() => setTab("subscribe")}>
-            <RefreshCw size={13} />
-            Subscribe
-          </TabBtn>
-        </div>
-
         {/* Actions */}
-        <div className="mt-3 space-y-3">
+        <div className="mt-4 space-y-3">
           {!selectedLocation && (
             <button
               type="button"
@@ -139,7 +105,7 @@ const AddToCartBlock: React.FC<Props> = ({
             </div>
           )}
 
-          {selectedLocation && availableInLocation && tab === "book" && (
+          {selectedLocation && availableInLocation && (
             <>
               {!isInCart ? (
                 <button
@@ -174,58 +140,12 @@ const AddToCartBlock: React.FC<Props> = ({
               )}
             </>
           )}
-
-          {selectedLocation && availableInLocation && tab === "subscribe" && (
-            <>
-              {subscribeSuccess ? (
-                <div className="space-y-3">
-                  <div className="rounded-lg bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-700">
-                    <Check size={14} className="inline mr-1" />
-                    Subscription created!
-                  </div>
-                  <Link
-                    to="/subscriptions"
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 py-2.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-                  >
-                    <RefreshCw size={12} />
-                    Manage subscriptions
-                  </Link>
-                </div>
-              ) : (
-                <button
-                  onClick={handleSubscribeClick}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-                >
-                  <RefreshCw size={15} />
-                  Subscribe — ₹{price}/visit
-                </button>
-              )}
-              <p className="text-center text-[11px] text-slate-400">
-                Recurring visits · COD · Cancel anytime
-              </p>
-            </>
-          )}
         </div>
 
-        {/* Footer note (only on book tab) */}
-        {tab === "book" && (
-          <p className="mt-4 text-center text-[11px] text-slate-400">
-            Combine multiple services in one visit.
-          </p>
-        )}
+        <p className="mt-4 text-center text-[11px] text-slate-400">
+          Combine multiple services in one visit.
+        </p>
       </div>
-
-      {/* Subscribe Modal */}
-      {showSubscribeModal && (
-        <SubscribeModal
-          serviceId={serviceId}
-          serviceTitle={title}
-          serviceSlug={slug}
-          price={price}
-          onClose={() => setShowSubscribeModal(false)}
-          onSuccess={handleSubscribeSuccess}
-        />
-      )}
 
       {/* Login Modal */}
       {showLogin && (
@@ -246,26 +166,3 @@ const AddToCartBlock: React.FC<Props> = ({
 };
 
 export default AddToCartBlock;
-
-function TabBtn({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-2 text-xs font-medium transition ${
-        active
-          ? "bg-slate-900 text-white"
-          : "text-slate-500 hover:text-slate-700"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
