@@ -30,6 +30,7 @@ const AdminServices = lazy(() => import("./src/pages/admin/AdminServices"));
 const AdminAllServices = lazy(() => import("./src/pages/admin/AdminAllServices"));
 const AdminOrders = lazy(() => import("./src/pages/admin/AdminOrders"));
 const AdminSubscriptions = lazy(() => import("./src/pages/admin/AdminSubscriptions"));
+const AdminRoles = lazy(() => import("./src/pages/admin/AdminRoles"));
 const MySubscriptionsPage = lazy(
   () => import("./src/features/subscriptions/pages/MySubscriptionsPage")
 );
@@ -162,6 +163,15 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminSubscriptions />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/roles"
+          element={
+            <ProtectedRoute>
+              <AdminRoles />
             </ProtectedRoute>
           }
         />

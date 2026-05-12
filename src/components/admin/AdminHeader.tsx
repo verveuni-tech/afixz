@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 import { useState } from "react";
-import { LayoutDashboard, FileText, LogOut, Menu, X, List, Bell, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, FileText, LogOut, Menu, X, List, Bell, ShoppingBag, Shield } from "lucide-react";
 import logoImg from "../../assets/AfixZ logo_20260322_144619_0000.png";
 import { useOrderNotifications } from "../../hooks/useOrderNotifications";
 
@@ -57,6 +57,12 @@ const AdminHeader = () => {
               label="Content"
               icon={<FileText size={15} />}
               active={isActive("/admin/services")}
+            />
+            <NavItem
+              to="/admin/roles"
+              label="Roles"
+              icon={<Shield size={15} />}
+              active={isActive("/admin/roles")}
             />
           </nav>
         </div>
@@ -128,6 +134,13 @@ const AdminHeader = () => {
               label="Manage Content"
               icon={<FileText size={16} />}
               active={isActive("/admin/services")}
+              onClick={() => setMobileOpen(false)}
+            />
+            <MobileNavItem
+              to="/admin/roles"
+              label="Roles"
+              icon={<Shield size={16} />}
+              active={isActive("/admin/roles")}
               onClick={() => setMobileOpen(false)}
             />
           </div>
