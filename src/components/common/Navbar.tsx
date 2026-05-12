@@ -221,6 +221,14 @@ const Navbar: React.FC = () => {
                 Home
               </Link>
               <Link
+                to="/flying-mali"
+                className={`transition-colors hover:text-accent ${
+                  location.pathname === "/flying-mali" ? "text-accent" : ""
+                }`}
+              >
+                Flying Mali
+              </Link>
+              <Link
                 to="/blogs"
                 className={`transition-colors hover:text-accent ${
                   location.pathname.startsWith("/blogs") ? "text-accent" : ""
@@ -279,6 +287,17 @@ const Navbar: React.FC = () => {
               }`}
             >
               Home
+            </button>
+
+            <button
+              onClick={() => goTo("/flying-mali")}
+              className={`block w-full rounded-2xl px-4 py-3 text-left text-sm font-medium ${
+                location.pathname === "/flying-mali"
+                  ? "bg-accent/10 text-accent"
+                  : "bg-slate-50 text-slate-700"
+              }`}
+            >
+              Flying Mali
             </button>
 
             <button
