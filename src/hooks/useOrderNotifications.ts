@@ -11,7 +11,7 @@ import { db } from "../firebase";
 
 export interface OrderNotification {
   id: string;
-  type: "online_booking" | "offline_booking";
+  type: "online_booking";
   name: string;
   service: string;
   status: string;
@@ -50,7 +50,7 @@ function playNotificationSound() {
 export function useOrderNotifications() {
   const [notifications, setNotifications] = useState<OrderNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const initialLoadDone = useRef({ bookings: false, queries: false });
+  const initialLoadDone = useRef(false);
   const knownIds = useRef(new Set<string>());
 
   const markAllRead = useCallback(() => {
@@ -61,23 +61,15 @@ export function useOrderNotifications() {
   useEffect(() => {
     const fiveMinAgo = Timestamp.fromDate(new Date(Date.now() - 5 * 60 * 1000));
 
-    // Listen to recent bookings (online orders)
     const bookingsQuery = query(
       collection(db, "bookings"),
       where("createdAt", ">=", fiveMinAgo),
       orderBy("createdAt", "desc")
     );
 
-    // Listen to recent queries (offline bookings)
-    const queriesQuery = query(
-      collection(db, "queries"),
-      where("createdAt", ">=", fiveMinAgo),
-      orderBy("createdAt", "desc")
-    );
-
     const unsubBookings = onSnapshot(bookingsQuery, (snapshot) => {
-      const isInitial = !initialLoadDone.current.bookings;
-      initialLoadDone.current.bookings = true;
+      const isInitial = !initialLoadDone.current;
+      initialLoadDone.current = true;
 
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added" && !knownIds.current.has(change.doc.id)) {
@@ -104,38 +96,8 @@ export function useOrderNotifications() {
       });
     });
 
-    const unsubQueries = onSnapshot(queriesQuery, (snapshot) => {
-      const isInitial = !initialLoadDone.current.queries;
-      initialLoadDone.current.queries = true;
-
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added" && !knownIds.current.has(change.doc.id)) {
-          knownIds.current.add(change.doc.id);
-          const data = change.doc.data();
-
-          const notif: OrderNotification = {
-            id: change.doc.id,
-            type: "offline_booking",
-            name: data.name || "Customer",
-            service: data.service || "Service",
-            status: data.status || "pending",
-            createdAt: data.createdAt?.toDate?.() || new Date(),
-            seen: isInitial,
-          };
-
-          setNotifications((prev) => [notif, ...prev].slice(0, 50));
-
-          if (!isInitial) {
-            setUnreadCount((c) => c + 1);
-            playNotificationSound();
-          }
-        }
-      });
-    });
-
     return () => {
       unsubBookings();
-      unsubQueries();
     };
   }, []);
 
