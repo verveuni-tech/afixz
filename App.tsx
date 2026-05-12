@@ -7,6 +7,7 @@ import LocationPickerModal from "./src/components/common/LocationPickerModal";
 import ErrorBoundary from "./src/components/common/ErrorBoundary";
 
 import ProtectedRoute from "./src/pages/admin/ProtectedRoute";
+import ProviderProtectedRoute from "./src/pages/provider/ProviderProtectedRoute";
 import UserProtectedRoute from "./src/hooks/UserProtectedRoute";
 import { completeEmailLinkSignIn, isEmailSignInUrl } from "./src/components/auth/AuthLogin";
 
@@ -32,6 +33,8 @@ const AdminSubscriptions = lazy(() => import("./src/pages/admin/AdminSubscriptio
 const MySubscriptionsPage = lazy(
   () => import("./src/features/subscriptions/pages/MySubscriptionsPage")
 );
+const ProviderLogin = lazy(() => import("./src/pages/provider/ProviderLogin"));
+const ProviderDashboard = lazy(() => import("./src/pages/provider/ProviderDashboard"));
 
 const AppLayout = () => {
   return (
@@ -160,6 +163,17 @@ function App() {
             <ProtectedRoute>
               <AdminSubscriptions />
             </ProtectedRoute>
+          }
+        />
+
+        <Route path="/provider/login" element={<ProviderLogin />} />
+
+        <Route
+          path="/provider/dashboard"
+          element={
+            <ProviderProtectedRoute>
+              <ProviderDashboard />
+            </ProviderProtectedRoute>
           }
         />
 

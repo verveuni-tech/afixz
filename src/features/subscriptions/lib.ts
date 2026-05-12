@@ -3,6 +3,7 @@ import {
   addDoc,
   updateDoc,
   doc,
+  setDoc,
   serverTimestamp,
   query,
   where,
@@ -11,6 +12,7 @@ import {
 import { db } from "../../firebase";
 import type { Subscription, SubscriptionAddress, SubscriptionStatus } from "./types";
 import type { SubscriptionPlan } from "./plans";
+import { FLYING_MALI_PLANS } from "./plans";
 
 function addMonths(dateStr: string, months: number): string {
   const d = new Date(dateStr);
@@ -86,4 +88,64 @@ export async function getUserSubscriptions(userId: string): Promise<Subscription
 export async function getAllSubscriptions(): Promise<Subscription[]> {
   const snap = await getDocs(collection(db, "subscriptions"));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Subscription));
+}
+
+/* ================== Visit Generation ================== */
+
+/**
+ * Generate a booking from a subscription visit.
+ * Creates a pending booking and advances nextVisitDate by 15 days.
+ */
+export async function generateVisitBooking(sub: Subscription): Promise<string> {
+  const bookingRef = await addDoc(collection(db, "bookings"), {
+    userId: sub.userId,
+    serviceId: "flying-mali",
+    serviceSlug: "flying-mali",
+    serviceTitle: `Flying Mali — ${sub.planName}`,
+    price: sub.pricePerMonth,
+    totalPrice: sub.pricePerMonth,
+    locationId: sub.locationId,
+    address: sub.address,
+    scheduledDate: sub.nextVisitDate,
+    scheduledTime: sub.preferredTime,
+    paymentMode: "cod",
+    status: "pending",
+    source: "subscription",
+    subscriptionId: sub.id,
+    customerName: sub.customerName,
+    customerPhone: sub.customerPhone,
+    createdAt: serverTimestamp(),
+  });
+
+  // Advance nextVisitDate by 15 days
+  const nextDate = addDays(sub.nextVisitDate, 15);
+  await updateDoc(doc(db, "subscriptions", sub.id), {
+    nextVisitDate: nextDate,
+  });
+
+  return bookingRef.id;
+}
+
+/* ================== Plan CRUD (Firestore) ================== */
+
+export async function seedPlansToFirestore(): Promise<void> {
+  for (const plan of FLYING_MALI_PLANS) {
+    await setDoc(doc(db, "subscriptionPlans", plan.id), plan);
+  }
+}
+
+export async function getPlansFromFirestore(): Promise<SubscriptionPlan[]> {
+  const snap = await getDocs(collection(db, "subscriptionPlans"));
+  if (snap.empty) return FLYING_MALI_PLANS; // fallback to static
+  return snap.docs
+    .map((d) => d.data() as SubscriptionPlan)
+    .filter((p) => p.active)
+    .sort((a, b) => a.durationMonths - b.durationMonths);
+}
+
+export async function updatePlanInFirestore(
+  planId: string,
+  updates: Partial<SubscriptionPlan>
+): Promise<void> {
+  await updateDoc(doc(db, "subscriptionPlans", planId), updates);
 }

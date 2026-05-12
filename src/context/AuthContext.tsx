@@ -29,7 +29,7 @@ export interface UserProfile {
   displayName: string | null;
   photoURL: string | null;
   provider: string | null;
-  role: "user" | "admin";
+  role: "user" | "admin" | "provider";
   selectedLocation?: LocationId | null;
   createdAt?: any;
   updatedAt?: any;
@@ -40,6 +40,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
+  isProvider: boolean;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -61,6 +62,7 @@ export const AuthProvider = ({
   );
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isProvider, setIsProvider] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
@@ -72,6 +74,7 @@ export const AuthProvider = ({
           setUser(null);
           setProfile(null);
           setIsAdmin(false);
+          setIsProvider(false);
           setLoading(false);
           return;
         }
@@ -86,8 +89,11 @@ export const AuthProvider = ({
           );
           const adminStatus =
             token.claims.admin === true;
+          const providerStatus =
+            token.claims.provider === true;
 
           setIsAdmin(adminStatus);
+          setIsProvider(providerStatus);
 
           /* ---------- Ensure Firestore Profile Exists ---------- */
 
@@ -122,7 +128,7 @@ export const AuthProvider = ({
               photoURL:
                 firebaseUser.photoURL || null,
               provider: resolvedProvider,
-              role: adminStatus ? "admin" : "user",
+              role: adminStatus ? "admin" : providerStatus ? "provider" : "user",
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),
             };
@@ -232,6 +238,7 @@ export const AuthProvider = ({
         profile,
         loading,
         isAdmin,
+        isProvider,
         logout,
         refreshProfile,
       }}

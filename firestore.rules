@@ -9,6 +9,10 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.admin == true;
     }
 
+    function isProvider() {
+      return isSignedIn() && request.auth.token.provider == true;
+    }
+
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
@@ -181,10 +185,11 @@ service cloud.firestore {
         && data.provider is string
         && (data.provider in ["phone", "email", "google.com"])
         && data.role is string
-        && (data.role == "user" || data.role == "admin")
+        && (data.role == "user" || data.role == "admin" || data.role == "provider")
         && (
           (data.role == "user" && data.provider in ["phone", "email", "google.com"])
           || (data.role == "admin" && data.provider == "google.com")
+          || (data.role == "provider" && data.provider == "google.com")
         )
         && (!hasField(data, "selectedLocation")
           || data.selectedLocation == null
@@ -232,7 +237,8 @@ service cloud.firestore {
           "orderGroupId", "userId", "serviceId", "serviceSlug", "serviceTitle",
           "price", "totalPrice", "locationId", "address", "scheduledDate",
           "scheduledTime", "paymentMode", "status", "createdAt",
-          "customerName", "customerPhone", "subscriptionId"
+          "customerName", "customerPhone", "subscriptionId",
+          "completedBy", "completedAt", "claimedBy", "source"
         ])
         && hasRequiredKeys(data, [
           "userId", "serviceId", "serviceSlug", "serviceTitle",
@@ -261,6 +267,10 @@ service cloud.firestore {
         && optionalMapOrString(data, "address")
         && optionalString(data, "customerName")
         && optionalString(data, "customerPhone")
+        && optionalString(data, "completedBy")
+        && optionalTimestampOrNull(data, "completedAt")
+        && optionalString(data, "claimedBy")
+        && (!hasField(data, "source") || data.source == "booking" || data.source == "subscription")
         && data.createdAt is timestamp;
     }
 
@@ -328,14 +338,14 @@ service cloud.firestore {
 
     // UPDATED
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId) || isAdmin() || isProvider();
 
       // Authenticated users can create only their own user profile
-      // admins can create valid user/admin profiles
+      // admins/providers can create valid profiles
       allow create: if (
           isOwner(userId)
           && request.auth.token.firebase.sign_in_provider in ["phone", "password", "google.com"]
-          && request.resource.data.role == "user"
+          && request.resource.data.role in ["user", "provider"]
           && request.resource.data.provider in ["phone", "email", "google.com"]
           && validUserProfile(request.resource.data, userId)
         ) || (
@@ -349,7 +359,7 @@ service cloud.firestore {
       allow update: if (
           isOwner(userId)
           && request.auth.token.firebase.sign_in_provider in ["phone", "password", "google.com"]
-          && resource.data.role == "user"
+          && resource.data.role in ["user", "provider"]
           && (resource.data.provider in ["phone", "email", "google.com"] || resource.data.provider == null)
           && request.resource.data.role == resource.data.role
           && request.resource.data.provider in ["phone", "email", "google.com"]
@@ -401,9 +411,24 @@ service cloud.firestore {
         && (
           request.auth.uid == resource.data.userId
           || isAdmin()
+          || isProvider()
         );
 
-      allow update, delete: if isAdmin();
+      // Providers can update only tracking fields (status, claimedBy, completedBy, completedAt)
+      allow update: if isAdmin()
+        || (isProvider()
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.serviceId == resource.data.serviceId
+          && request.resource.data.price == resource.data.price
+          && request.resource.data.createdAt == resource.data.createdAt
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    match /subscriptionPlans/{planId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
     }
   }
 }

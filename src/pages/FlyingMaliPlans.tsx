@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Check,
@@ -19,7 +19,7 @@ import {
   FLYING_MALI_NOTES,
   type SubscriptionPlan,
 } from "../features/subscriptions/plans";
-import { createPlanSubscription } from "../features/subscriptions/lib";
+import { createPlanSubscription, getPlansFromFirestore } from "../features/subscriptions/lib";
 import { TIME_SLOTS, type SubscriptionAddress } from "../features/subscriptions/types";
 import useSeo from "../hooks/useSeo";
 
@@ -27,6 +27,14 @@ export default function FlyingMaliPlans() {
   const { user, profile } = useAuth();
   const { selectedLocation, openLocationPicker } = useLocationContext();
   const { requireAuth, showLogin, setShowLogin, handleLoginSuccess } = useRequireAuth();
+
+  const [plans, setPlans] = useState<SubscriptionPlan[]>(FLYING_MALI_PLANS);
+
+  useEffect(() => {
+    getPlansFromFirestore()
+      .then(setPlans)
+      .catch(() => setPlans(FLYING_MALI_PLANS));
+  }, []);
 
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -83,7 +91,7 @@ export default function FlyingMaliPlans() {
 
         {/* Plans */}
         <div className="mt-10 grid gap-5 sm:grid-cols-3">
-          {FLYING_MALI_PLANS.map((plan) => (
+          {plans.map((plan) => (
             <PlanCard
               key={plan.id}
               plan={plan}
@@ -98,7 +106,7 @@ export default function FlyingMaliPlans() {
             Included in every plan
           </h2>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {FLYING_MALI_PLANS[0].features.map((f) => (
+            {plans[0]?.features.map((f) => (
               <div key={f} className="flex items-center gap-2.5 py-1.5">
                 <Check size={14} className="shrink-0 text-emerald-500" />
                 <span className="text-sm text-slate-600">{f}</span>

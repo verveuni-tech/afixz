@@ -31,6 +31,10 @@ interface Order {
   scheduledTime: string;
   status: string;
   createdAt: Date;
+  source?: string;
+  completedBy?: string;
+  claimedBy?: string;
+  subscriptionId?: string;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -77,6 +81,10 @@ export default function AdminOrders() {
           scheduledTime: data.scheduledTime || "—",
           status: data.status || "pending",
           createdAt: data.createdAt?.toDate?.() || new Date(),
+          source: data.source || "booking",
+          completedBy: data.completedBy || undefined,
+          claimedBy: data.claimedBy || undefined,
+          subscriptionId: data.subscriptionId || undefined,
         };
       });
 
@@ -227,7 +235,12 @@ function OrderCard({
               {order.status}
             </span>
           </div>
-          <p className="mt-0.5 text-sm text-slate-500 truncate">{order.serviceTitle}</p>
+          <p className="mt-0.5 text-sm text-slate-500 truncate">
+            {order.serviceTitle}
+            {order.source === "subscription" && (
+              <span className="ml-1.5 text-[10px] font-semibold text-emerald-600">SUB</span>
+            )}
+          </p>
         </div>
 
         <div className="hidden shrink-0 text-right sm:block">
@@ -249,10 +262,21 @@ function OrderCard({
             <DetailRow icon={<MapPin size={14} />} label="Address" value={addr} />
             <DetailRow icon={<Clock size={14} />} label="Scheduled" value={`${order.scheduledDate} at ${order.scheduledTime}`} />
             <DetailRow icon={<Package size={14} />} label="Amount" value={`₹${order.totalPrice} (COD)`} />
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 space-y-1">
               <p className="text-xs text-slate-400">
                 Order ID: <code className="font-mono">{order.id}</code>
+                {order.source === "subscription" && (
+                  <span className="ml-2 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                    Subscription Visit
+                  </span>
+                )}
               </p>
+              {order.claimedBy && (
+                <p className="text-xs text-blue-600">Claimed by: {order.claimedBy}</p>
+              )}
+              {order.completedBy && (
+                <p className="text-xs text-emerald-600">Completed by: {order.completedBy}</p>
+              )}
             </div>
           </div>
 
