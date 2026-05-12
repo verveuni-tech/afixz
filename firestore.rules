@@ -405,7 +405,8 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      allow create: if isSignedIn() && validBooking(request.resource.data);
+      // Users create own bookings (validated). Admins can create on behalf of others (e.g. subscription visits).
+      allow create: if (isSignedIn() && validBooking(request.resource.data)) || isAdmin();
 
       allow read: if isSignedIn()
         && (
