@@ -1,269 +1,386 @@
-import { Suspense, lazy, useEffect, useState } from "react";
-import { Routes, Route, Outlet } from "react-router-dom";
+import {
+  Suspense,
+  lazy,
+  useEffect,
+  useState,
+  memo,
+} from "react";
+
+import {
+  Routes,
+  Route,
+  Outlet,
+} from "react-router-dom";
 
 import Navbar from "./src/components/common/Navbar";
-import Footer from "./src/components/common/Footer";
-import LocationPickerModal from "./src/components/common/LocationPickerModal";
 import ErrorBoundary from "./src/components/common/ErrorBoundary";
+import ScrollToTop from "./src/components/common/ScrollToTop";
 
 import ProtectedRoute from "./src/pages/admin/ProtectedRoute";
 import ProviderProtectedRoute from "./src/pages/provider/ProviderProtectedRoute";
 import UserProtectedRoute from "./src/hooks/UserProtectedRoute";
-import { completeEmailLinkSignIn, isEmailSignInUrl } from "./src/components/auth/AuthLogin";
 
-const NotFound = lazy(() => import("./src/pages/NotFound"));
+import {
+  completeEmailLinkSignIn,
+  isEmailSignInUrl,
+} from "./src/components/auth/AuthLogin";
 
-const Home = lazy(() => import("./src/pages/Home"));
-const ServiceDetail = lazy(() => import("./src/pages/ServiceDetail"));
-const CategoryServices = lazy(() => import("./src/pages/CategoryServices"));
-const Profile = lazy(() => import("./src/pages/Profile"));
-const Cart = lazy(() => import("./src/pages/Cart"));
-const Checkout = lazy(() => import("./src/pages/Checkout"));
-const BookingSuccess = lazy(() => import("./src/pages/BookingSuccess"));
-const ServicesPage = lazy(() => import("./src/pages/ServicesPage"));
-const BlogsPage = lazy(() => import("./src/pages/BlogsPage"));
-const BlogDetail = lazy(() => import("./src/pages/BlogDetail"));
-const FlyingMaliPlans = lazy(() => import("./src/pages/FlyingMaliPlans"));
-const AdminLogin = lazy(() => import("./src/pages/admin/AdminLogin"));
-const AdminDashboard = lazy(() => import("./src/pages/admin/AdminDashboard"));
-const AdminServices = lazy(() => import("./src/pages/admin/AdminServices"));
-const AdminAllServices = lazy(() => import("./src/pages/admin/AdminAllServices"));
-const AdminOrders = lazy(() => import("./src/pages/admin/AdminOrders"));
-const AdminSubscriptions = lazy(() => import("./src/pages/admin/AdminSubscriptions"));
-const AdminRoles = lazy(() => import("./src/pages/admin/AdminRoles"));
-const MySubscriptionsPage = lazy(
-  () => import("./src/features/subscriptions/pages/MySubscriptionsPage")
+/* ----------------------------- Lazy Components ----------------------------- */
+
+const Footer = lazy(
+  () => import("./src/components/common/Footer")
 );
-const ProviderLogin = lazy(() => import("./src/pages/provider/ProviderLogin"));
-const ProviderDashboard = lazy(() => import("./src/pages/provider/ProviderDashboard"));
 
-const AppLayout = () => {
+const LocationPickerModal = lazy(
+  () => import("./src/components/common/LocationPickerModal")
+);
+
+const NotFound = lazy(
+  () => import("./src/pages/NotFound")
+);
+
+const Home = lazy(
+  () => import("./src/pages/Home")
+);
+
+const ServiceDetail = lazy(
+  () => import("./src/pages/ServiceDetail")
+);
+
+const CategoryServices = lazy(
+  () => import("./src/pages/CategoryServices")
+);
+
+const Profile = lazy(
+  () => import("./src/pages/Profile")
+);
+
+const Cart = lazy(
+  () => import("./src/pages/Cart")
+);
+
+const Checkout = lazy(
+  () => import("./src/pages/Checkout")
+);
+
+const BookingSuccess = lazy(
+  () => import("./src/pages/BookingSuccess")
+);
+
+const ServicesPage = lazy(
+  () => import("./src/pages/ServicesPage")
+);
+
+const BlogsPage = lazy(
+  () => import("./src/pages/BlogsPage")
+);
+
+const BlogDetail = lazy(
+  () => import("./src/pages/BlogDetail")
+);
+
+const FlyingMaliPlans = lazy(
+  () => import("./src/pages/FlyingMaliPlans")
+);
+
+const AdminLogin = lazy(
+  () => import("./src/pages/admin/AdminLogin")
+);
+
+const AdminDashboard = lazy(
+  () => import("./src/pages/admin/AdminDashboard")
+);
+
+const AdminServices = lazy(
+  () => import("./src/pages/admin/AdminServices")
+);
+
+const AdminAllServices = lazy(
+  () => import("./src/pages/admin/AdminAllServices")
+);
+
+const AdminOrders = lazy(
+  () => import("./src/pages/admin/AdminOrders")
+);
+
+const AdminSubscriptions = lazy(
+  () => import("./src/pages/admin/AdminSubscriptions")
+);
+
+const AdminRoles = lazy(
+  () => import("./src/pages/admin/AdminRoles")
+);
+
+const MySubscriptionsPage = lazy(
+  () =>
+    import(
+      "./src/features/subscriptions/pages/MySubscriptionsPage"
+    )
+);
+
+const ProviderLogin = lazy(
+  () => import("./src/pages/provider/ProviderLogin")
+);
+
+const ProviderDashboard = lazy(
+  () => import("./src/pages/provider/ProviderDashboard")
+);
+
+/* ------------------------------- App Layout ------------------------------- */
+
+const AppLayout = memo(() => {
   return (
     <div className="min-h-screen overflow-x-hidden font-sans">
       <Navbar />
-      <main>
+
+      <main className="min-h-[60vh]">
         <Outlet />
       </main>
-      <Footer />
-      <LocationPickerModal />
+
+      <Suspense fallback={null}>
+        <Footer />
+        <LocationPickerModal />
+      </Suspense>
     </div>
   );
-};
+});
+
+AppLayout.displayName = "AppLayout";
+
+/* ---------------------------------- App ---------------------------------- */
 
 function App() {
-  const [authPending, setAuthPending] = useState(() => isEmailSignInUrl());
+  const [authPending, setAuthPending] = useState(() =>
+    isEmailSignInUrl()
+  );
 
-  // Handle email link sign-in callback
+  /* ---------------- Email Link Authentication ---------------- */
+
   useEffect(() => {
     if (!authPending) return;
 
     completeEmailLinkSignIn().finally(() => {
-      // completeEmailLinkSignIn does window.location.replace("/") on success,
-      // so this only fires on failure
       setAuthPending(false);
     });
   }, [authPending]);
 
-  // Show loader while processing email link sign-in — prevents 404 flash
+  /* --------------------------- Initial Loader --------------------------- */
+
   if (authPending) {
     return <RouteLoader />;
   }
 
   return (
     <ErrorBoundary>
-    <Suspense fallback={<RouteLoader />}>
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/blogs" element={<BlogsPage />} />
-          <Route path="/blogs/:blogId" element={<BlogDetail />} />
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/services/:slug" element={<ServiceDetail />} />
-          <Route path="/category/:categorySlug" element={<CategoryServices />} />
-          <Route path="/flying-mali" element={<FlyingMaliPlans />} />
-          <Route path="/profile" element={<Profile />} />
+      <ScrollToTop />
+
+      <Suspense fallback={<RouteLoader />}>
+        <Routes>
+          {/* ---------------- Public Routes ---------------- */}
+
+          <Route element={<AppLayout />}>
+            <Route
+              path="/"
+              element={<Home />}
+            />
+
+            <Route
+              path="/blogs"
+              element={<BlogsPage />}
+            />
+
+            <Route
+              path="/blogs/:blogId"
+              element={<BlogDetail />}
+            />
+
+            <Route
+              path="/services"
+              element={<ServicesPage />}
+            />
+
+            <Route
+              path="/services/:slug"
+              element={<ServiceDetail />}
+            />
+
+            <Route
+              path="/category/:categorySlug"
+              element={<CategoryServices />}
+            />
+
+            <Route
+              path="/flying-mali"
+              element={<FlyingMaliPlans />}
+            />
+
+            <Route
+              path="/profile"
+              element={<Profile />}
+            />
+
+            {/* ---------------- Protected User Routes ---------------- */}
+
+            <Route
+              path="/cart"
+              element={
+                <UserProtectedRoute>
+                  <Cart />
+                </UserProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/checkout"
+              element={
+                <UserProtectedRoute>
+                  <Checkout />
+                </UserProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/booking-success/:id"
+              element={
+                <UserProtectedRoute>
+                  <BookingSuccess />
+                </UserProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/subscriptions"
+              element={
+                <UserProtectedRoute>
+                  <MySubscriptionsPage />
+                </UserProtectedRoute>
+              }
+            />
+          </Route>
+
+          {/* ---------------- Admin Routes ---------------- */}
 
           <Route
-            path="/cart"
+            path="/admin/login"
+            element={<AdminLogin />}
+          />
+
+          <Route
+            path="/admin/dashboard"
             element={
-              <UserProtectedRoute>
-                <Cart />
-              </UserProtectedRoute>
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
             }
           />
 
           <Route
-            path="/checkout"
+            path="/admin/orders"
             element={
-              <UserProtectedRoute>
-                <Checkout />
-              </UserProtectedRoute>
+              <ProtectedRoute>
+                <AdminOrders />
+              </ProtectedRoute>
             }
           />
 
           <Route
-            path="/booking-success/:id"
+            path="/admin/services"
             element={
-              <UserProtectedRoute>
-                <BookingSuccess />
-              </UserProtectedRoute>
+              <ProtectedRoute>
+                <AdminServices />
+              </ProtectedRoute>
             }
           />
 
           <Route
-            path="/subscriptions"
+            path="/admin/all-services"
             element={
-              <UserProtectedRoute>
-                <MySubscriptionsPage />
-              </UserProtectedRoute>
+              <ProtectedRoute>
+                <AdminAllServices />
+              </ProtectedRoute>
             }
           />
-        </Route>
 
-        <Route path="/admin/login" element={<AdminLogin />} />
+          <Route
+            path="/admin/subscriptions"
+            element={
+              <ProtectedRoute>
+                <AdminSubscriptions />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/admin/roles"
+            element={
+              <ProtectedRoute>
+                <AdminRoles />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/admin/orders"
-          element={
-            <ProtectedRoute>
-              <AdminOrders />
-            </ProtectedRoute>
-          }
-        />
+          {/* ---------------- Provider Routes ---------------- */}
 
-        <Route
-          path="/admin/services"
-          element={
-            <ProtectedRoute>
-              <AdminServices />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/provider/login"
+            element={<ProviderLogin />}
+          />
 
-        <Route
-          path="/admin/all-services"
-          element={
-            <ProtectedRoute>
-              <AdminAllServices />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/provider"
+            element={
+              <ProviderProtectedRoute>
+                <ProviderDashboard />
+              </ProviderProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/admin/subscriptions"
-          element={
-            <ProtectedRoute>
-              <AdminSubscriptions />
-            </ProtectedRoute>
-          }
-        />
+          {/* ---------------- 404 ---------------- */}
 
-        <Route
-          path="/admin/roles"
-          element={
-            <ProtectedRoute>
-              <AdminRoles />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route path="/provider/login" element={<ProviderLogin />} />
-
-        <Route
-          path="/provider"
-          element={
-            <ProviderProtectedRoute>
-              <ProviderDashboard />
-            </ProviderProtectedRoute>
-          }
-        />
-
-        {/* 404 catch-all */}
-        <Route element={<AppLayout />}>
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-    </Suspense>
+          <Route element={<AppLayout />}>
+            <Route
+              path="*"
+              element={<NotFound />}
+            />
+          </Route>
+        </Routes>
+      </Suspense>
     </ErrorBoundary>
   );
 }
 
 export default App;
 
+/* ------------------------------- Route Loader ------------------------------ */
+
 function RouteLoader() {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-6">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.10),_transparent_35%),radial-gradient(circle_at_bottom,_rgba(14,165,233,0.08),_transparent_30%)]" />
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
+      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+        <LoaderSpinner />
 
-      <div
-        role="status"
-        aria-live="polite"
-        className="relative w-full max-w-lg rounded-[28px] border border-slate-200/80 bg-white/90 p-8 shadow-[0_20px_60px_-20px_rgba(15,23,42,0.18)] backdrop-blur"
-      >
-        <div className="flex items-center gap-4">
-          <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 shadow-lg shadow-blue-200">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-            <div className="absolute inset-0 animate-pulse rounded-2xl bg-white/10" />
-          </div>
+        <div>
+          <p className="text-sm font-semibold text-slate-900">
+            Loading page
+          </p>
 
-          <div className="flex-1 text-left">
-            <p className="text-base font-semibold tracking-tight text-slate-900">
-              Loading your page
-            </p>
-            <p className="mt-1 text-sm text-slate-500">
-              Fetching content and preparing the interface.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-8 space-y-4">
-          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-4">
-            <div className="h-4 w-1/3 animate-pulse rounded bg-slate-200" />
-            <div className="mt-4 space-y-3">
-              <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
-              <div className="h-3 w-11/12 animate-pulse rounded bg-slate-200" />
-              <div className="h-3 w-4/5 animate-pulse rounded bg-slate-200" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-              <div className="h-24 animate-pulse rounded-xl bg-slate-200" />
-            </div>
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-              <div className="h-24 animate-pulse rounded-xl bg-slate-200" />
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 flex items-center justify-between">
-          <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-200">
-            <div className="h-full w-1/2 animate-[loader_1.2s_ease-in-out_infinite] rounded-full bg-blue-500" />
-          </div>
-          <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-            Please wait
-          </span>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Preparing your experience...
+          </p>
         </div>
       </div>
+    </div>
+  );
+}
 
-      <style>
-        {`
-          @keyframes loader {
-            0% { transform: translateX(-100%); width: 40%; }
-            50% { transform: translateX(60%); width: 55%; }
-            100% { transform: translateX(180%); width: 40%; }
-          }
-        `}
-      </style>
+/* ------------------------------ Spinner ------------------------------ */
+
+function LoaderSpinner() {
+  return (
+    <div className="relative h-10 w-10">
+      <div className="absolute inset-0 rounded-full border-2 border-slate-200" />
+
+      <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-slate-900" />
     </div>
   );
 }
