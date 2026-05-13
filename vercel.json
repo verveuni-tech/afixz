@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/generate-visits",
+      "schedule": "30 0 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/:path*",
