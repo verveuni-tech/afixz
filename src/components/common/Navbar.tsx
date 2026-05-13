@@ -226,7 +226,7 @@ const Navbar: React.FC = () => {
                   location.pathname === "/flying-mali" ? "text-accent" : ""
                 }`}
               >
-                Flying Mali
+                Our Plans
               </Link>
               <Link
                 to="/blogs"
