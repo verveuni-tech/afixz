@@ -179,7 +179,7 @@ function App() {
         <Route path="/provider/login" element={<ProviderLogin />} />
 
         <Route
-          path="/provider/dashboard"
+          path="/provider"
           element={
             <ProviderProtectedRoute>
               <ProviderDashboard />

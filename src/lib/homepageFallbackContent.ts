@@ -54,7 +54,6 @@ export const homepageFallbackContent: HomepageContent = {
       "Gardening",
       "Mechanic",
       "Interior",
-      "Cleaning",
       "Fabrication",
     ],
     trustBadge: "Verified experts · Regular follow-ups · Guaranteed repairs",
@@ -63,13 +62,12 @@ export const homepageFallbackContent: HomepageContent = {
     eyebrow: "Service categories",
     title: "Choose a service category that's your priority right now.",
     description:
-      "From garden care and vehicle servicing to home interiors and deep cleaning — pick what your home needs most and book verified professionals near you.",
+      "From garden care and vehicle servicing to home interiors and fabrication — pick what your home needs most and book verified professionals near you.",
     ctaText: "Explore all services",
     featuredCategorySlugs: [
       "garden-and-landscaping",
       "mechanic",
       "interior",
-      "cleaning",
       "fabrication",
     ],
   },
@@ -77,7 +75,7 @@ export const homepageFallbackContent: HomepageContent = {
     eyebrow: "Popular services",
     title: "Most booked services by homeowners near you.",
     description:
-      "Discover top-rated home services in your area — from doorstep bike repairs to deep cleaning and garden maintenance.",
+      "Discover top-rated home services in your area — from doorstep bike repairs to garden maintenance and interior upgrades.",
     ctaText: "Browse all services",
     featuredServiceIds: [],
   },
@@ -89,7 +87,7 @@ export const homepageFallbackContent: HomepageContent = {
       description:
         "Premium plant care, kitchen garden setup, and seasonal garden maintenance at your doorstep. Avail gardening kits and materials alongside professional landscaping services from trained experts.",
       ctaText: "View gardening services",
-      categorySlug: "garden-and-landscaping",
+      categorySlug: "garden--landscaping",
     },
     mechanic: {
       eyebrow: "Doorstep mechanic",

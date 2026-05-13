@@ -35,6 +35,24 @@ export interface UserProfile {
   updatedAt?: any;
 }
 
+function createAuthProfile(
+  firebaseUser: User,
+  role: UserProfile["role"],
+  provider: string | null,
+  timestamps: { createdAt?: any; updatedAt?: any } = {}
+): UserProfile {
+  return {
+    uid: firebaseUser.uid,
+    phone: firebaseUser.phoneNumber || null,
+    email: firebaseUser.email || null,
+    displayName: firebaseUser.displayName || null,
+    photoURL: firebaseUser.photoURL || null,
+    provider,
+    role,
+    ...timestamps,
+  };
+}
+
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
@@ -91,6 +109,7 @@ export const AuthProvider = ({
             token.claims.admin === true;
           const providerStatus =
             token.claims.provider === true;
+          const role = adminStatus ? "admin" : providerStatus ? "provider" : "user";
 
           setIsAdmin(adminStatus);
           setIsProvider(providerStatus);
@@ -102,8 +121,6 @@ export const AuthProvider = ({
             "users",
             firebaseUser.uid
           );
-
-          const snap = await getDoc(userRef);
 
           // Determine provider: Firebase email-link reports as "password"
           const rawProvider =
@@ -117,21 +134,31 @@ export const AuthProvider = ({
                   ? "phone"
                   : rawProvider;
 
+          let snap;
+          try {
+            snap = await getDoc(userRef);
+          } catch (profileReadErr) {
+            console.warn(
+              "Profile read failed; continuing with auth token profile:",
+              profileReadErr
+            );
+            setProfile(
+              createAuthProfile(firebaseUser, role, resolvedProvider)
+            );
+            setLoading(false);
+            return;
+          }
+
           if (!snap.exists()) {
-            const newProfile: UserProfile = {
-              uid: firebaseUser.uid,
-              phone:
-                firebaseUser.phoneNumber || null,
-              email: firebaseUser.email || null,
-              displayName:
-                firebaseUser.displayName || null,
-              photoURL:
-                firebaseUser.photoURL || null,
-              provider: resolvedProvider,
-              role: adminStatus ? "admin" : providerStatus ? "provider" : "user",
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            };
+            const newProfile = createAuthProfile(
+              firebaseUser,
+              role,
+              resolvedProvider,
+              {
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+              }
+            );
 
             try {
               await setDoc(userRef, newProfile);

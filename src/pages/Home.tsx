@@ -21,7 +21,7 @@ function useLocalBusinessSchema() {
       "@type": "LocalBusiness",
       name: "AfixZ",
       description:
-        "Book verified home service professionals — gardening, mechanic, home interior, fabrication, and deep cleaning with guaranteed repairs.",
+        "Book verified home service professionals — gardening, mechanic, home interior, and fabrication with guaranteed repairs.",
       url: "https://afixz.com",
       areaServed: [
         { "@type": "City", name: "Delhi" },
@@ -33,7 +33,6 @@ function useLocalBusinessSchema() {
         "Bike & Cycle Mechanic",
         "Home Interior",
         "Custom Fabrication & Welding",
-        "Deep Cleaning",
       ],
       priceRange: "$$",
       hasOfferCatalog: {
@@ -44,7 +43,6 @@ function useLocalBusinessSchema() {
           { "@type": "Offer", itemOffered: { "@type": "Service", name: "Bike & Cycle Mechanic Service" } },
           { "@type": "Offer", itemOffered: { "@type": "Service", name: "Home Interior & Installation" } },
           { "@type": "Offer", itemOffered: { "@type": "Service", name: "Custom Fabrication & Welding" } },
-          { "@type": "Offer", itemOffered: { "@type": "Service", name: "Professional Deep Cleaning" } },
         ],
       },
     });
@@ -59,7 +57,7 @@ const Home = () => {
   useSeo({
     title: "AfixZ — Book Home Services Online | Verified Professionals",
     description:
-      "Book verified home service professionals with AfixZ. Doorstep gardening, mechanic, home interior, fabrication & deep cleaning with guaranteed repairs.",
+      "Book verified home service professionals with AfixZ. Doorstep gardening, mechanic, home interior, and fabrication with guaranteed repairs.",
     canonicalUrl: import.meta.env.VITE_SITE_URL || undefined,
     type: "website",
     keywords: [
@@ -67,7 +65,6 @@ const Home = () => {
       "doorstep gardening",
       "bike service at home",
       "home interior service",
-      "deep cleaning",
       "fabrication work",
       "AfixZ",
       "trusted home repairs",
@@ -112,12 +109,6 @@ const Home = () => {
         backgroundClassName="bg-[#f9fafb]"
       />
 
-      <ServiceCategorySection
-        content={content.sections.cleaning}
-        sectionKey="cleaning"
-        layout="grid"
-        backgroundClassName="bg-white"
-      />
     </div>
   );
 };

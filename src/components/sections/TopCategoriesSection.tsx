@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { ArrowRight, BrushCleaning, Scissors, Sprout, Wrench, Bike, Home, Hammer } from "lucide-react";
+import {
+  ArrowRight,
+  BrushCleaning,
+  Scissors,
+  Sprout,
+  Wrench,
+  Bike,
+  Home,
+  Hammer,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { db } from "../../firebase";
 import {
@@ -26,12 +35,34 @@ const iconMap: Record<string, typeof Wrench> = {
 };
 
 const categoryStyles = [
-  { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
-  { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
-  { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
-  { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
-  { icon: "bg-primary text-white", arrow: "text-slate-300 group-hover:text-primary" },
+  {
+    icon: "bg-primary text-white",
+    arrow: "text-slate-300 group-hover:text-primary",
+  },
+  {
+    icon: "bg-primary text-white",
+    arrow: "text-slate-300 group-hover:text-primary",
+  },
+  {
+    icon: "bg-primary text-white",
+    arrow: "text-slate-300 group-hover:text-primary",
+  },
+  {
+    icon: "bg-primary text-white",
+    arrow: "text-slate-300 group-hover:text-primary",
+  },
+  {
+    icon: "bg-primary text-white",
+    arrow: "text-slate-300 group-hover:text-primary",
+  },
 ];
+
+const hiddenCategorySlugs = new Set([
+  "cleaning",
+  "home-cleaning",
+  "cleaning-services",
+  "deep-cleaning",
+]);
 
 export default function TopCategoriesSection({ content }: Props) {
   const [categories, setCategories] = useState<CategoryEntry[]>([]);
@@ -49,10 +80,13 @@ export default function TopCategoriesSection({ content }: Props) {
         }
 
         setCategories(
-          snapshot.docs.map((entry) => normalizeCategory(entry.id, entry.data() as Record<string, any>))
+          snapshot.docs.map((entry) =>
+            normalizeCategory(entry.id, entry.data() as Record<string, any>)
+          )
         );
       } catch (error) {
         console.error("Failed to load categories:", error);
+
         if (active) {
           setCategories([]);
         }
@@ -71,17 +105,33 @@ export default function TopCategoriesSection({ content }: Props) {
   }, []);
 
   const orderedCategories = useMemo(() => {
+    const visibleCategories = categories.filter(
+      (category) => !hiddenCategorySlugs.has(category.slug)
+    );
+
     if (content.featuredCategorySlugs.length === 0) {
-      return categories.slice(0, 5);
+      return visibleCategories.slice(0, 5);
     }
 
     const prioritized = content.featuredCategorySlugs
-      .map((featuredSlug) => categories.find((category) => matchesCategory(category, featuredSlug)) || null)
-      .filter((category, index, current): category is CategoryEntry =>
-        Boolean(category) && current.findIndex((entry) => entry?.id === category.id) === index
+      .map(
+        (featuredSlug) =>
+          visibleCategories.find((category) =>
+            matchesCategory(category, featuredSlug)
+          ) || null
+      )
+      .filter(
+        (category): category is CategoryEntry => category !== null
+      )
+      .filter(
+        (category, index, current) =>
+          current.findIndex((entry) => entry.id === category.id) === index
       );
 
-    const remainder = categories.filter((category) => !prioritized.some((entry) => entry.id === category.id));
+    const remainder = visibleCategories.filter(
+      (category) =>
+        !prioritized.some((entry) => entry.id === category.id)
+    );
 
     return [...prioritized, ...remainder].slice(0, 5);
   }, [categories, content.featuredCategorySlugs]);
@@ -90,7 +140,10 @@ export default function TopCategoriesSection({ content }: Props) {
     <section className="bg-white py-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-primary">{content.title}</h2>
+          <h2 className="text-lg font-bold text-primary">
+            {content.title}
+          </h2>
+
           <Link
             to="/services"
             className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
@@ -103,7 +156,10 @@ export default function TopCategoriesSection({ content }: Props) {
         {loading ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4">
+              <div
+                key={index}
+                className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4"
+              >
                 <div className="h-12 w-12 animate-pulse rounded-xl bg-slate-200" />
                 <div className="h-4 w-16 animate-pulse rounded bg-slate-200" />
               </div>
@@ -111,14 +167,22 @@ export default function TopCategoriesSection({ content }: Props) {
           </div>
         ) : orderedCategories.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-8 text-center text-sm text-slate-500">
-            No categories are available yet. Add them from the admin panel and they will appear here.
+            No categories are available yet. Add them from the admin panel and
+            they will appear here.
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {orderedCategories.map((category, index) => {
-              const sectionKey = inferCategorySectionKey(category.slug, category.name) || "repair";
+              const sectionKey =
+                inferCategorySectionKey(
+                  category.slug,
+                  category.name
+                ) || "repair";
+
               const Icon = iconMap[sectionKey] || Wrench;
-              const style = categoryStyles[index % categoryStyles.length];
+
+              const style =
+                categoryStyles[index % categoryStyles.length];
 
               return (
                 <Link
@@ -126,13 +190,20 @@ export default function TopCategoriesSection({ content }: Props) {
                   to={`/category/${category.slug}`}
                   className="group flex items-center gap-3.5 rounded-xl border border-slate-100 bg-white px-4 py-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md hover:shadow-primary/10"
                 >
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${style.icon}`}>
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${style.icon}`}
+                  >
                     <Icon size={18} />
                   </div>
+
                   <span className="flex-1 text-sm font-semibold text-primary group-hover:text-primary">
                     {category.name}
                   </span>
-                  <ArrowRight size={14} className={`shrink-0 transition ${style.arrow}`} />
+
+                  <ArrowRight
+                    size={14}
+                    className={`shrink-0 transition ${style.arrow}`}
+                  />
                 </Link>
               );
             })}

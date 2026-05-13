@@ -79,14 +79,14 @@ service cloud.firestore {
     function validService(data) {
       return hasOnlyKeys(data, [
           "title", "slug", "price", "duration", "warranty",
-          "professionals", "overview", "included", "images",
-          "categoryId", "categorySlug", "searchKeywords", "rating",
+          "professionals", "overview", "shortDescription", "included", "images",
+          "categoryId", "categorySlug", "categoryName", "searchKeywords", "rating",
           "reviewCount", "isRecommended", "availableLocations",
           "contentByLocation", "priceByLocation", "createdAt", "updatedAt"
         ])
         && hasRequiredKeys(data, [
           "title", "slug", "price", "duration", "warranty",
-          "professionals", "overview", "included", "images",
+          "professionals", "overview", "shortDescription", "included", "images",
           "categoryId", "categorySlug", "searchKeywords", "rating",
           "reviewCount", "isRecommended", "availableLocations", "updatedAt"
         ])
@@ -97,10 +97,12 @@ service cloud.firestore {
         && data.warranty is string
         && (data.professionals is string || isNumber(data.professionals))
         && data.overview is string
+        && data.shortDescription is string
         && data.included is list
         && data.images is list
         && data.categoryId is string
         && data.categorySlug is string
+        && optionalString(data, "categoryName")
         && data.searchKeywords is list
         && isNumber(data.rating)
         && isNumber(data.reviewCount)

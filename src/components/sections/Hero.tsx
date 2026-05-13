@@ -4,7 +4,6 @@ import {
   Bike,
   Home,
   Hammer,
-  BrushCleaning,
   MapPin,
   ArrowRight,
   CheckCircle,
@@ -48,13 +47,6 @@ const HERO_SLIDES = [
     caption: "Custom-built to fit your home",
     icon: Hammer,
     gradient: "from-orange-950 via-orange-800 to-amber-600",
-  },
-  {
-    url: "",
-    alt: "Deep cleaning service",
-    caption: "A thorough reset for every corner",
-    icon: BrushCleaning,
-    gradient: "from-rose-950 via-rose-800 to-pink-600",
   },
 ];
 
