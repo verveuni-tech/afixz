@@ -882,13 +882,316 @@ function SubscriptionsShortcut() {
    Support Panel
    ============================== */
 
+function generateTicketId() {
+  const random = Math.floor(1000 + Math.random() * 9000);
+
+  return `AFXZ-${random}`;
+}
+
 function SupportPanel() {
+  const { user, profile } = useAuth();
+
+  const [form, setForm] = useState({
+    name: profile?.displayName || "",
+    email: profile?.email || "",
+    phone: profile?.phone || "",
+    issueType: "booking",
+    bookingId: "",
+    subject: "",
+    message: "",
+  });
+
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [ticketId, setTicketId] = useState("");
+
+  const supportPhone = "918929915615 "; // replace with your support number
+
+  const handleChange = (key: string, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleSubmit = async () => {
+    if (
+      !form.name.trim() ||
+      !form.email.trim() ||
+      !form.subject.trim() ||
+      !form.message.trim()
+    ) {
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const generatedTicketId = generateTicketId();
+
+      await addDoc(collection(db, "supportRequests"), {
+        ticketId: generatedTicketId,
+
+        userId: user?.uid || null,
+
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+
+        issueType: form.issueType,
+        bookingId: form.bookingId.trim() || null,
+
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+
+        status: "open",
+        priority: "normal",
+
+        source: "profile_support",
+
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      setTicketId(generatedTicketId);
+
+      setSuccess(true);
+
+      setForm({
+        name: profile?.displayName || "",
+        email: profile?.email || "",
+        phone: profile?.phone || "",
+        issueType: "booking",
+        bookingId: "",
+        subject: "",
+        message: "",
+      });
+
+      setTimeout(() => {
+        setSuccess(false);
+      }, 5000);
+    } catch (error) {
+      console.error("Support request failed:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <EmptyState
-      icon={<Phone size={24} className="text-slate-300" />}
-      title="Support coming soon"
-      description="We're working on bringing you in-app support. For now, reach out via email."
-    />
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-base font-semibold text-slate-800">
+          Support Center
+        </h2>
+
+        <p className="mt-1 text-sm text-slate-500">
+          Need help with bookings, subscriptions, payments, or technicians?
+          Reach out to our support team.
+        </p>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <a
+          href={`https://wa.me/${supportPhone}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+        >
+          <Phone size={16} />
+          Chat on WhatsApp
+        </a>
+
+        <a
+          href={`tel:+${supportPhone}`}
+          className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+        >
+          <Phone size={16} />
+          Call Support
+        </a>
+      </div>
+
+      {/* Ticket Form */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="mb-5">
+          <h3 className="text-sm font-semibold text-slate-800">
+            Raise a Support Ticket
+          </h3>
+
+          <p className="mt-1 text-xs text-slate-500">
+            Submit a structured issue request and our support team will review it shortly.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Name */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-500">
+              Full Name
+            </label>
+
+            <input
+              value={form.name}
+              onChange={(e) =>
+                handleChange("name", e.target.value)
+              }
+              placeholder="Your full name"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+            />
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-500">
+              Email Address
+            </label>
+
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) =>
+                handleChange("email", e.target.value)
+              }
+              placeholder="you@example.com"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+            />
+          </div>
+
+          {/* Phone */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-500">
+              Phone Number
+            </label>
+
+            <input
+              value={form.phone}
+              onChange={(e) =>
+                handleChange("phone", e.target.value)
+              }
+              placeholder="+91 98765 43210"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+            />
+          </div>
+
+          {/* Issue Type */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-500">
+              Issue Type
+            </label>
+
+            <select
+              value={form.issueType}
+              onChange={(e) =>
+                handleChange("issueType", e.target.value)
+              }
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+            >
+              <option value="booking">Booking Issue</option>
+              <option value="payment">Payment Problem</option>
+              <option value="subscription">Subscription</option>
+              <option value="technician">Technician Complaint</option>
+              <option value="refund">Refund Request</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          {/* Booking ID */}
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-slate-500">
+              Booking ID (Optional)
+            </label>
+
+            <input
+              value={form.bookingId}
+              onChange={(e) =>
+                handleChange("bookingId", e.target.value)
+              }
+              placeholder="AFXZ12345"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+            />
+          </div>
+
+          {/* Subject */}
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-slate-500">
+              Subject
+            </label>
+
+            <input
+              value={form.subject}
+              onChange={(e) =>
+                handleChange("subject", e.target.value)
+              }
+              placeholder="Brief summary of your issue"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+            />
+          </div>
+
+          {/* Message */}
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-slate-500">
+              Message
+            </label>
+
+            <textarea
+              rows={6}
+              value={form.message}
+              onChange={(e) =>
+                handleChange("message", e.target.value)
+              }
+              placeholder="Describe your issue in detail..."
+              className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+            />
+          </div>
+        </div>
+
+        {/* Submit */}
+        <button
+          onClick={handleSubmit}
+          disabled={
+            submitting ||
+            !form.name.trim() ||
+            !form.email.trim() ||
+            !form.subject.trim() ||
+            !form.message.trim()
+          }
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
+        >
+          {submitting ? (
+            <>
+              <Loader2 size={15} className="animate-spin" />
+              Creating Ticket...
+            </>
+          ) : (
+            <>
+              <Phone size={15} />
+              Raise Support Ticket
+            </>
+          )}
+        </button>
+
+        {/* Success */}
+        {success && (
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+            <p className="text-sm font-semibold text-emerald-800">
+              Support ticket created successfully
+            </p>
+
+            <p className="mt-1 text-sm text-emerald-700">
+              Ticket ID:{" "}
+              <span className="font-bold">
+                {ticketId}
+              </span>
+            </p>
+
+            <p className="mt-2 text-xs text-emerald-600">
+              Our team will review your issue and contact you shortly.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
