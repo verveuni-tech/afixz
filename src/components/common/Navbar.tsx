@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Search, ShoppingCart, User, Menu, X, MapPin } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logoImg from "../../assets/AfixZ logo_20260322_144619_0000.png";
+import logoImg from "../../assets/AFIXZ.png";
 import { useCart } from "../../context/CartContext";
 import {
   collection,
@@ -130,15 +130,24 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-20">
 
-          {/* Logo */}
-          <button onClick={() => goTo("/")}>
-            <img
-              src={logoImg}
-              alt="AfixZ"
-              className="h-12 w-auto"
-            />
-          </button>
-
+         {/* Logo */}
+<button
+  onClick={() => goTo("/")}
+  className="flex shrink-0 items-center"
+>
+  <img
+    src={logoImg}
+    alt="AfixZ"
+    className="
+      h-16
+      w-auto
+      object-contain
+      mix-blend-multiply
+      transition-transform duration-300
+      hover:scale-[1.02]
+    "
+  />
+</button>
           {/* SEARCH */}
           <div className="hidden md:flex flex-1 justify-center px-10 relative">
             <div className="relative w-full max-w-xl">

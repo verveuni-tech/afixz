@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
-import logoImg from "../../assets/AfixZ logo_20260322_144559_0000.png";
+import logoImg from "../../assets/AFIXZ.png";
 
 const Footer: React.FC = () => {
   return (
@@ -11,11 +11,18 @@ const Footer: React.FC = () => {
           
           <div className="col-span-1 md:col-span-2">
             <div className="mb-6">
-              <img
-                src={logoImg}
-                alt="AfixZ"
-                className="h-12 w-auto brightness-0 invert"
-              />
+             <img
+  src={logoImg}
+  alt="AfixZ"
+  className="
+    h-16
+    w-auto
+    object-contain
+    mix-blend-screen
+    contrast-125
+    brightness-110
+  "
+/>
             </div>
             <p className="text-slate-400 max-w-sm mb-6">
               Simplifying home maintenance for modern living. We connect you with the best local professionals for a seamless service experience.
