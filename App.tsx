@@ -119,10 +119,6 @@ const AdminSubscriptions = lazy(
   () => import("./src/pages/admin/AdminSubscriptions")
 );
 
-const AdminRoles = lazy(
-  () => import("./src/pages/admin/AdminRoles")
-);
-
 const AdminUsers = lazy(
   () => import("./src/pages/admin/AdminUsers")
 );
@@ -337,15 +333,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminSubscriptions />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/roles"
-            element={
-              <ProtectedRoute>
-                <AdminRoles />
               </ProtectedRoute>
             }
           />

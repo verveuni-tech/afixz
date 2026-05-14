@@ -190,8 +190,8 @@ service cloud.firestore {
         && (data.role == "user" || data.role == "admin" || data.role == "provider")
         && (
           (data.role == "user" && data.provider in ["phone", "email", "google.com"])
-          || (data.role == "admin" && data.provider == "google.com")
-          || (data.role == "provider" && data.provider == "google.com")
+          || (data.role == "admin" && data.provider in ["phone", "email", "google.com"])
+          || (data.role == "provider" && data.provider in ["phone", "email", "google.com"])
         )
         && (!hasField(data, "selectedLocation")
           || data.selectedLocation == null

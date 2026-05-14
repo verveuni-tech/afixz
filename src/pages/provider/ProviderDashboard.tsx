@@ -22,8 +22,10 @@ import {
   updateDoc,
   doc,
   serverTimestamp,
+  increment,
   query,
   orderBy,
+  where,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
@@ -109,9 +111,27 @@ export default function ProviderDashboard() {
   const load = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, "bookings"), orderBy("scheduledDate", "asc"));
-      const snap = await getDocs(q);
-      setBookings(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Booking)));
+      // Server-side: only active statuses, exclude cancelled/on-hold
+      // Completed loaded separately to avoid massive reads
+      const activeQ = query(
+        collection(db, "bookings"),
+        where("status", "in", ["pending", "confirmed"]),
+        orderBy("scheduledDate", "asc")
+      );
+      const completedQ = query(
+        collection(db, "bookings"),
+        where("status", "==", "completed"),
+        orderBy("scheduledDate", "asc")
+      );
+      const [activeSnap, completedSnap] = await Promise.all([
+        getDocs(activeQ),
+        getDocs(completedQ),
+      ]);
+      const all = [
+        ...activeSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Booking)),
+        ...completedSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Booking)),
+      ];
+      setBookings(all);
     } catch (err) {
       console.error("Failed to load bookings:", err);
     } finally {
@@ -143,6 +163,12 @@ export default function ProviderDashboard() {
       await updateDoc(doc(db, "bookings", booking.id), {
         status: "completed", completedBy: name, completedAt: serverTimestamp(),
       });
+      // Increment completedVisits on subscription if this is a subscription visit
+      if (booking.subscriptionId) {
+        await updateDoc(doc(db, "subscriptions", booking.subscriptionId), {
+          completedVisits: increment(1),
+        });
+      }
       setBookings((prev) =>
         prev.map((b) =>
           b.id === booking.id

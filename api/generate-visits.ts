@@ -53,11 +53,19 @@ export default async function handler(
     const today = todayIST();
     console.log(`[generate-visits] Running for date: ${today}`);
 
-    // Query active subscriptions where nextVisitDate <= today
+    // New subscriptions have all visits pre-created atomically at subscribe time
+    // (totalVisits > 0). This cron only handles legacy subscriptions that were
+    // created before the pre-creation approach was introduced.
+    // For new subs the dup-check below will catch and skip them anyway,
+    // but we short-circuit here to avoid unnecessary Firestore reads.
+
+    // Query only LEGACY subscriptions (totalVisits == 0 or field absent)
+    // New subscriptions have totalVisits > 0 and all visits pre-created — skip them.
     const subsSnap = await db
       .collection("subscriptions")
       .where("status", "==", "active")
       .where("nextVisitDate", "<=", today)
+      .where("totalVisits", "==", 0)
       .get();
 
     if (subsSnap.empty) {

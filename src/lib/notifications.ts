@@ -1,3 +1,5 @@
+import { auth } from "../firebase";
+
 interface NotifyOrderPayload {
   type: "online_booking";
   name: string;
@@ -13,12 +15,14 @@ interface NotifyOrderPayload {
 
 export async function sendOrderNotification(payload: NotifyOrderPayload): Promise<void> {
   try {
-    const secret = import.meta.env.VITE_NOTIFY_API_SECRET || "";
+    const currentUser = auth.currentUser;
+    const idToken = currentUser ? await currentUser.getIdToken() : null;
+
     await fetch("/api/notify-order", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-secret": secret,
+        ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
       },
       body: JSON.stringify(payload),
     });

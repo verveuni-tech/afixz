@@ -1,39 +1,19 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+
+// Initialize Firebase Admin (once)
+if (getApps().length === 0) {
+  const serviceAccount = JSON.parse(
+    process.env.FIREBASE_SERVICE_ACCOUNT_KEY || "{}"
+  );
+  initializeApp({ credential: cert(serviceAccount) });
+}
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || "admin@afixz.com";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "AfixZ <orders@afixz.com>";
 const API_SECRET = process.env.NOTIFY_API_SECRET;
-
-// ---------- Server-side rate limiting (in-memory, per-IP) ----------
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-const RATE_LIMIT_MAX = 10; // max 10 requests per IP per hour
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return false;
-  }
-
-  if (entry.count >= RATE_LIMIT_MAX) {
-    return true;
-  }
-
-  entry.count++;
-  return false;
-}
-
-// Clean stale entries every 10 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of rateLimitMap) {
-    if (now > entry.resetAt) rateLimitMap.delete(key);
-  }
-}, 10 * 60 * 1000);
 
 interface OrderPayload {
   type: "online_booking";
@@ -118,20 +98,29 @@ function escapeHtml(str: string): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  // CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  // Rate limiting by IP
-  const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || "unknown";
-  if (isRateLimited(clientIp)) {
-    return res.status(429).json({ error: "Too many requests. Try again later." });
-  }
+  // Auth: accept Firebase ID token (preferred) OR static API secret (legacy)
+  const authHeader = req.headers.authorization || "";
+  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  const legacySecret = req.headers["x-api-secret"] as string;
 
-  // API secret validation — prevents unauthenticated calls
-  const authHeader = req.headers["x-api-secret"] as string;
-  if (API_SECRET && authHeader !== API_SECRET) {
-    return res.status(401).json({ error: "Unauthorized" });
+  const isStaticSecret = API_SECRET && legacySecret === API_SECRET;
+
+  if (!isStaticSecret) {
+    if (!bearerToken) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+      await getAuth().verifyIdToken(bearerToken);
+    } catch {
+      return res.status(401).json({ error: "Invalid token" });
+    }
   }
 
   if (!RESEND_API_KEY) {
@@ -151,7 +140,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  // Sanitize all string inputs to prevent HTML/header injection
+  // Sanitize all string inputs
   data.name = escapeHtml(data.name);
   data.email = escapeHtml(data.email);
   data.phone = escapeHtml(data.phone || "");
@@ -162,20 +151,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const results = { customer: false, admin: false };
 
   try {
-    // Send customer email
     const customerEmail = buildCustomerEmail(data);
     const customerRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [data.email],
-        subject: customerEmail.subject,
-        html: customerEmail.html,
-      }),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
+      body: JSON.stringify({ from: FROM_EMAIL, to: [data.email], subject: customerEmail.subject, html: customerEmail.html }),
     });
     results.customer = customerRes.ok;
   } catch (err) {
@@ -183,20 +163,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Send admin email
     const adminEmail = buildAdminEmail(data);
     const adminRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [ADMIN_EMAIL],
-        subject: adminEmail.subject,
-        html: adminEmail.html,
-      }),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
+      body: JSON.stringify({ from: FROM_EMAIL, to: [ADMIN_EMAIL], subject: adminEmail.subject, html: adminEmail.html }),
     });
     results.admin = adminRes.ok;
   } catch (err) {
