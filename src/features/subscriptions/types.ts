@@ -30,7 +30,9 @@ export interface Subscription {
   status: SubscriptionStatus;
   startDate: string;         // YYYY-MM-DD
   endDate: string;           // YYYY-MM-DD
-  nextVisitDate: string;     // YYYY-MM-DD
+  nextVisitDate: string;     // YYYY-MM-DD (first visit date)
+  totalVisits: number;       // visitsPerMonth × durationMonths
+  completedVisits: number;   // incremented when provider marks visit done
   createdAt: any;
   customerName: string;
   customerPhone: string;

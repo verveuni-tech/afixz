@@ -282,6 +282,7 @@ service cloud.firestore {
           "price", "pricePerMonth", "durationMonths", "visitsPerMonth", "plantCoverage",
           "locationId", "address", "preferredTime",
           "status", "startDate", "endDate", "nextVisitDate",
+          "totalVisits", "completedVisits",
           "customerName", "customerPhone", "createdAt"
         ])
         && hasRequiredKeys(data, [
@@ -289,6 +290,7 @@ service cloud.firestore {
           "price", "pricePerMonth", "durationMonths", "visitsPerMonth", "plantCoverage",
           "locationId", "address", "preferredTime",
           "status", "startDate", "endDate", "nextVisitDate",
+          "totalVisits", "completedVisits",
           "customerName", "customerPhone", "createdAt"
         ])
         && data.userId is string
@@ -311,6 +313,47 @@ service cloud.firestore {
         && data.nextVisitDate is string
         && data.customerName is string
         && data.customerPhone is string
+        && isNumber(data.totalVisits)
+        && data.totalVisits > 0
+        && isNumber(data.completedVisits)
+        && data.completedVisits >= 0
+        && data.completedVisits <= data.totalVisits
+        && data.createdAt is timestamp;
+    }
+
+    /**
+     * Subscription visit bookings are pre-created at subscribe time.
+     * They bypass the regular validBooking check (which requires a service
+     * doc in /services). Instead they're validated here: userId matches,
+     * source == "subscription", subscriptionId present, status == "pending".
+     */
+    function validSubscriptionBooking(data) {
+      return data.keys().hasAll([
+          "userId", "serviceId", "serviceSlug", "serviceTitle",
+          "price", "totalPrice", "locationId", "scheduledDate",
+          "scheduledTime", "paymentMode", "status",
+          "source", "subscriptionId", "visitNumber", "totalVisits",
+          "customerName", "customerPhone", "createdAt"
+        ])
+        && data.userId is string
+        && data.userId == request.auth.uid
+        && data.serviceId == "flying-mali"
+        && data.serviceSlug == "flying-mali"
+        && data.source == "subscription"
+        && data.subscriptionId is string
+        && data.status == "pending"
+        && data.paymentMode == "cod"
+        && data.locationId is string
+        && isValidLocation(data.locationId)
+        && data.scheduledDate is string
+        && data.scheduledTime is string
+        && isNumber(data.price)
+        && isNumber(data.totalPrice)
+        && data.totalPrice == data.price
+        && isNumber(data.visitNumber)
+        && data.visitNumber >= 1
+        && isNumber(data.totalVisits)
+        && data.visitNumber <= data.totalVisits
         && data.createdAt is timestamp;
     }
 
@@ -407,8 +450,12 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      // Users create own bookings (validated). Admins can create on behalf of others (e.g. subscription visits).
-      allow create: if (isSignedIn() && validBooking(request.resource.data)) || isAdmin();
+      // Regular bookings: validated against service catalog.
+      // Subscription visits: pre-created at subscribe time, validated separately (no service doc required).
+      // Admins: unrestricted create for ops/support.
+      allow create: if (isSignedIn() && validBooking(request.resource.data))
+        || (isSignedIn() && validSubscriptionBooking(request.resource.data))
+        || isAdmin();
 
       allow read: if isSignedIn()
         && (

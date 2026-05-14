@@ -6,14 +6,13 @@ import {
   MapPin,
   Clock,
   Leaf,
-  CalendarPlus,
   Database,
+  CheckCircle2,
 } from "lucide-react";
 import AdminHeader from "../../components/admin/AdminHeader";
 import {
   getAllSubscriptions,
   updateSubscriptionStatus,
-  generateVisitBooking,
   seedPlansToFirestore,
 } from "../../features/subscriptions/lib";
 import { Subscription, SubscriptionStatus } from "../../features/subscriptions/types";
@@ -30,8 +29,6 @@ export default function AdminSubscriptions() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState("");
   const [seeding, setSeeding] = useState(false);
-
-  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     void load();
@@ -66,26 +63,6 @@ export default function AdminSubscriptions() {
     }
   };
 
-  const handleGenerateVisit = async (sub: Subscription) => {
-    setBusyId(sub.id);
-    try {
-      const bookingId = await generateVisitBooking(sub);
-      // Update local nextVisitDate (+15 days)
-      const next = new Date(sub.nextVisitDate);
-      next.setDate(next.getDate() + 15);
-      const nextStr = next.toISOString().split("T")[0];
-      setSubscriptions((prev) =>
-        prev.map((s) => (s.id === sub.id ? { ...s, nextVisitDate: nextStr } : s))
-      );
-      flash(`Visit booking created: ${bookingId.slice(0, 8)}`);
-    } catch (err: any) {
-      console.error(err);
-      alert(err?.message || "Failed to generate visit");
-    } finally {
-      setBusyId(null);
-    }
-  };
-
   const handleSeedPlans = async () => {
     setSeeding(true);
     try {
@@ -114,10 +91,6 @@ export default function AdminSubscriptions() {
     cancelled: subscriptions.filter((s) => s.status === "cancelled").length,
     expired: subscriptions.filter((s) => s.status === "expired").length,
   };
-
-  const dueVisits = subscriptions.filter(
-    (s) => s.status === "active" && s.nextVisitDate <= today
-  ).length;
 
   const FILTERS: { key: FilterStatus; label: string }[] = [
     { key: "all", label: `All (${subscriptions.length})` },
@@ -167,17 +140,6 @@ export default function AdminSubscriptions() {
           </div>
         )}
 
-        {/* Due visits alert */}
-        {dueVisits > 0 && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
-            <CalendarPlus size={16} className="mt-0.5 shrink-0 text-amber-600" />
-            <p className="text-sm text-amber-700">
-              <span className="font-semibold">{dueVisits} subscription{dueVisits > 1 ? "s" : ""}</span>{" "}
-              have visits due. Click "Generate Visit" to create bookings for providers.
-            </p>
-          </div>
-        )}
-
         {/* Filters */}
         <div className="mb-5 flex flex-wrap gap-2">
           {FILTERS.map(({ key, label }) => (
@@ -214,7 +176,7 @@ export default function AdminSubscriptions() {
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Plan</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Location</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Period</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Next Visit</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Visits</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Actions</th>
                 </tr>
@@ -222,12 +184,11 @@ export default function AdminSubscriptions() {
               <tbody className="divide-y divide-slate-100">
                 {filtered.map((sub) => {
                   const isBusy = busyId === sub.id;
-                  const visitDue = sub.status === "active" && sub.nextVisitDate <= today;
 
                   return (
                     <tr
                       key={sub.id}
-                      className={`transition hover:bg-slate-50 ${visitDue ? "bg-amber-50/40" : ""}`}
+                      className="transition hover:bg-slate-50"
                     >
                       <td className="px-4 py-3">
                         <p className="font-medium text-slate-800">{sub.customerName || "—"}</p>
@@ -259,19 +220,17 @@ export default function AdminSubscriptions() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        {sub.status === "active" ? (
-                          <span
-                            className={`text-xs font-medium ${
-                              visitDue ? "text-amber-700" : "text-slate-600"
-                            }`}
-                          >
-                            {formatDate(sub.nextVisitDate)}
-                            {visitDue && (
-                              <span className="ml-1 text-[10px] font-semibold text-amber-600">DUE</span>
-                            )}
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
+                          <span className="text-xs font-medium text-slate-700">
+                            {sub.completedVisits ?? 0}
+                            <span className="text-slate-400 font-normal">/{sub.totalVisits ?? (sub.visitsPerMonth * sub.durationMonths)}</span>
                           </span>
-                        ) : (
-                          <span className="text-xs text-slate-400">—</span>
+                        </div>
+                        {sub.status === "active" && (
+                          <p className="mt-0.5 text-[11px] text-slate-400">
+                            Next: {formatDate(sub.nextVisitDate)}
+                          </p>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -283,19 +242,6 @@ export default function AdminSubscriptions() {
                             <Loader2 size={14} className="animate-spin text-slate-400" />
                           ) : (
                             <>
-                              {sub.status === "active" && (
-                                <button
-                                  onClick={() => handleGenerateVisit(sub)}
-                                  className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                                    visitDue
-                                      ? "bg-accent text-white hover:bg-accent-hover"
-                                      : "border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-                                  }`}
-                                >
-                                  <CalendarPlus size={11} />
-                                  Generate Visit
-                                </button>
-                              )}
                               {sub.status === "active" && (
                                 <button
                                   onClick={() => handleStatusChange(sub, "paused")}
