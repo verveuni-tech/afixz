@@ -192,19 +192,27 @@ export const AuthProvider = ({
               (existingProfile.provider !== resolvedProvider &&
                 resolvedProvider !== "unknown");
 
+            // Sync role: if custom claims grant a higher role than Firestore stores
+            // e.g. admin granted "provider" claim → Firestore role still says "user"
+            const needsRoleSync = existingProfile.role !== role && role !== "user";
+
             // Sync email/displayName/photoURL from latest auth
             const needsInfoSync =
               (firebaseUser.email && existingProfile.email !== firebaseUser.email) ||
               (firebaseUser.displayName && !existingProfile.displayName) ||
               (firebaseUser.photoURL && !existingProfile.photoURL);
 
-            if (needsProviderUpdate || needsInfoSync) {
+            if (needsProviderUpdate || needsRoleSync || needsInfoSync) {
               try {
                 const updates: Record<string, any> = {
                   updatedAt: serverTimestamp(),
                 };
                 if (needsProviderUpdate) {
                   updates.provider = resolvedProvider;
+                }
+                if (needsRoleSync) {
+                  updates.role = role;
+                  existingProfile.role = role; // update local copy immediately
                 }
                 if (firebaseUser.email) {
                   updates.email = firebaseUser.email;

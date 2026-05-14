@@ -399,16 +399,27 @@ service cloud.firestore {
         );
 
       // Authenticated users can update only their own profile
-      // role/createdAt stay locked for self-updates
+      // role stays locked for self-updates UNLESS syncing with custom claims
       // admins can update any valid profile
       allow update: if (
           isOwner(userId)
           && request.auth.token.firebase.sign_in_provider in ["phone", "password", "google.com"]
           && resource.data.role in ["user", "provider"]
           && (resource.data.provider in ["phone", "email", "google.com"] || resource.data.provider == null)
-          && request.resource.data.role == resource.data.role
+          && request.resource.data.role == resource.data.role  // role stays locked normally
           && request.resource.data.provider in ["phone", "email", "google.com"]
           && request.resource.data.createdAt == resource.data.createdAt
+          && validUserProfile(request.resource.data, userId)
+        ) || (
+          // Role claim sync: allow owner to update role to match their custom claims
+          // e.g. admin grants provider claim → user can sync Firestore role to "provider"
+          isOwner(userId)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.role == (
+              request.auth.token.admin == true ? "admin"
+              : request.auth.token.provider == true ? "provider"
+              : "user"
+            )
           && validUserProfile(request.resource.data, userId)
         ) || (
           isAdmin()

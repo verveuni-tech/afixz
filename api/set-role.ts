@@ -29,10 +29,26 @@ export default async function handler(
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
-  // Verify API secret (same secret used by notify-order)
-  const authHeader = req.headers.authorization;
-  if (!API_SECRET || authHeader !== `Bearer ${API_SECRET}`) {
-    return res.status(401).json({ error: "Unauthorized" });
+  // Accept either:
+  //   a) static API secret  → "Bearer <NOTIFY_API_SECRET>"
+  //   b) admin Firebase ID token → verify token + check admin claim
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+  const isStaticSecret = API_SECRET && token === API_SECRET;
+
+  if (!isStaticSecret) {
+    // Verify as Firebase ID token and require admin claim
+    try {
+      const decoded = await getAuth().verifyIdToken(token);
+      if (!decoded.admin) {
+        return res.status(403).json({ error: "Forbidden: admin claim required" });
+      }
+    } catch {
+      return res.status(401).json({ error: "Invalid token" });
+    }
   }
 
   const { uid, email, role, action } = req.body || {};
