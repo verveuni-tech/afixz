@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
 
 // Initialize Firebase Admin (once)
 if (getApps().length === 0) {
@@ -91,6 +92,23 @@ export default async function handler(
 
     await adminAuth.setCustomUserClaims(targetUid, newClaims);
 
+    // Sync Firestore users/{uid}.role to match the new claim state
+    // grant provider → role: "provider"
+    // revoke provider → role: "user"
+    // grant admin     → role: "admin"
+    // revoke admin    → role: "user"
+    const newFirestoreRole = shouldGrant ? role : "user";
+    try {
+      await getFirestore()
+        .collection("users")
+        .doc(targetUid)
+        .update({ role: newFirestoreRole });
+    } catch (fsErr) {
+      // Non-fatal: log but don't fail the request.
+      // Firestore doc may not exist yet (first-time provider without profile).
+      console.warn("Firestore role sync failed:", fsErr);
+    }
+
     return res.status(200).json({
       success: true,
       uid: targetUid,
@@ -98,6 +116,7 @@ export default async function handler(
       displayName: user.displayName,
       action: shouldGrant ? "granted" : "revoked",
       role,
+      firestoreRole: newFirestoreRole,
       claims: newClaims,
     });
   } catch (err: any) {
