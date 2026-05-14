@@ -14,7 +14,71 @@ import {
   resolveServiceForLocation,
   ServiceEntry,
 } from "../lib/services";
+import useSeo from "../hooks/useSeo";
 import { ChevronRight, Loader2 } from "lucide-react";
+
+const SITE_URL = import.meta.env.VITE_SITE_URL || "https://afixz.com";
+
+function useServiceSchema(service: ServiceEntry | null) {
+  useEffect(() => {
+    if (!service) return;
+    const scriptId = "afixz-service-schema";
+    let tag = document.head.querySelector<HTMLScriptElement>(`script#${scriptId}`);
+    if (!tag) {
+      tag = document.createElement("script");
+      tag.type = "application/ld+json";
+      tag.id = scriptId;
+      document.head.appendChild(tag);
+    }
+    tag.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: service.title,
+      description: service.shortDescription || service.overview,
+      url: `${SITE_URL}/services/${service.slug}`,
+      provider: { "@type": "LocalBusiness", name: "AfixZ", url: SITE_URL },
+      ...(service.price && {
+        offers: {
+          "@type": "Offer",
+          price: service.price,
+          priceCurrency: "INR",
+        },
+      }),
+      ...(service.rating && {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: service.rating,
+          reviewCount: service.reviewCount || 1,
+        },
+      }),
+    });
+    return () => { tag?.remove(); };
+  }, [service]);
+}
+
+function useServiceBreadcrumbSchema(service: ServiceEntry | null) {
+  useEffect(() => {
+    if (!service) return;
+    const scriptId = "afixz-service-breadcrumb-schema";
+    let tag = document.head.querySelector<HTMLScriptElement>(`script#${scriptId}`);
+    if (!tag) {
+      tag = document.createElement("script");
+      tag.type = "application/ld+json";
+      tag.id = scriptId;
+      document.head.appendChild(tag);
+    }
+    tag.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+        { "@type": "ListItem", position: 2, name: service.categorySlug?.replace(/-/g, " "), item: `${SITE_URL}/category/${service.categorySlug}` },
+        { "@type": "ListItem", position: 3, name: service.title, item: `${SITE_URL}/services/${service.slug}` },
+      ],
+    });
+    return () => { tag?.remove(); };
+  }, [service]);
+}
 
 const ServiceDetail: React.FC = () => {
   const { slug } = useParams();
@@ -62,6 +126,19 @@ const ServiceDetail: React.FC = () => {
   const availableInLocation = resolvedService
     ? isServiceAvailableInLocation(resolvedService, selectedLocation)
     : false;
+
+  useSeo({
+    title: resolvedService
+      ? `${resolvedService.title} | AfixZ`
+      : "Home Service | AfixZ",
+    description: resolvedService?.shortDescription || resolvedService?.overview || "Book verified home service professionals with AfixZ.",
+    canonicalUrl: resolvedService ? `${SITE_URL}/services/${resolvedService.slug}` : undefined,
+    image: resolvedService?.images?.[0],
+    keywords: resolvedService?.searchKeywords || [],
+  });
+
+  useServiceSchema(resolvedService);
+  useServiceBreadcrumbSchema(resolvedService);
 
   if (loading) {
     return (

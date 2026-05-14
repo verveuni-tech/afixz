@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import useSeo from "../hooks/useSeo";
 import {
   collection,
   query,
@@ -39,7 +40,34 @@ const CategoryServices: React.FC = () => {
   const [sortOption, setSortOption] = useState("price-asc");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  const formattedCategory = categorySlug?.replace(/-/g, " ");
+  const SITE_URL = import.meta.env.VITE_SITE_URL || "https://afixz.com";
+
+  const categoryLabels: Record<string, string> = {
+    "garden-landscaping": "Garden & Landscaping",
+    "mechanic": "Mechanic",
+    "interior": "Interior",
+    "fabrication": "Fabrication",
+  };
+
+  const categoryDescriptions: Record<string, string> = {
+    "garden-landscaping": "Book verified garden & landscaping professionals at your doorstep with AfixZ. Lawn care, plant care, and full landscaping services.",
+    "mechanic": "Book trusted bike and vehicle mechanic services at home with AfixZ. Fast, reliable, and affordable doorstep mechanic.",
+    "interior": "Book interior design and installation professionals with AfixZ. Transform your home with verified interior experts.",
+    "fabrication": "Custom fabrication and welding services at your doorstep with AfixZ. Grills, gates, furniture, and more.",
+  };
+
+  const formattedCategory = categorySlug
+    ? (categoryLabels[categorySlug] || categorySlug.replace(/-/g, " "))
+    : "Services";
+
+  useSeo({
+    title: `${formattedCategory} Services | AfixZ`,
+    description: categorySlug
+      ? (categoryDescriptions[categorySlug] || `Book ${formattedCategory} professionals with AfixZ. Verified experts at your doorstep.`)
+      : "Browse all home service categories on AfixZ.",
+    canonicalUrl: categorySlug ? `${SITE_URL}/category/${categorySlug}` : undefined,
+    keywords: ["home services", formattedCategory.toLowerCase(), "doorstep service", "AfixZ", "verified professionals"],
+  });
 
   const fetchServices = async (loadMore = false) => {
     if (loadMore) {

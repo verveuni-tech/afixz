@@ -20,11 +20,19 @@ import {
   ServiceEntry,
 } from "../lib/services";
 import { ChevronRight, Loader2, MapPin, Search, ArrowRight } from "lucide-react";
+import useSeo from "../hooks/useSeo";
 
 const PAGE_SIZE = 12;
 const BATCH_SIZE = 24;
 
 const ServicesPage: React.FC = () => {
+  useSeo({
+    title: "All Home Services | Book Verified Professionals — AfixZ",
+    description: "Browse and book all home services on AfixZ — gardening, mechanic, interior, fabrication, and more. Verified professionals at your doorstep.",
+    canonicalUrl: `${import.meta.env.VITE_SITE_URL || "https://afixz.com"}/services`,
+    keywords: ["home services", "book home services", "verified professionals", "doorstep services", "AfixZ"],
+  });
+
   const [searchParams] = useSearchParams();
   const search = (searchParams.get("search") || "").trim().toLowerCase();
   const { selectedLocation } = useLocationContext();

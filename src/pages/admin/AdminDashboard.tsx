@@ -2,8 +2,6 @@ import AdminHeader from "../../components/admin/AdminHeader";
 import DashboardStats from "../../components/admin/DashboardStats";
 import RecentBlogsTable from "../../components/admin/RecentBlogsTable";
 import ServicesTable from "../../components/admin/ServicesTable";
-import { Link } from "react-router-dom";
-import { ArrowRight, RefreshCw, ShoppingBag, Shield } from "lucide-react";
 
 export default function AdminDashboard() {
   return (
@@ -12,77 +10,19 @@ export default function AdminDashboard() {
 
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-10">
 
-        {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-xl font-semibold text-slate-800 md:text-2xl">
             Dashboard
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Overview of services, categories, and blog activity.
+            Overview of services, orders, users, and blog activity.
           </p>
         </div>
 
-        {/* Stats Section */}
-        <section className="mb-8">
+        <section className="mb-10">
           <DashboardStats />
         </section>
 
-        {/* Quick Actions */}
-        <section className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Link
-            to="/admin/orders"
-            className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 transition hover:border-slate-300 hover:shadow-sm"
-          >
-            <div>
-              <h2 className="text-sm font-semibold text-slate-800">Orders</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                View and manage all online and offline bookings.
-              </p>
-            </div>
-            <ShoppingBag size={16} className="shrink-0 text-slate-400 transition group-hover:text-slate-600" />
-          </Link>
-
-          <Link
-            to="/admin/services"
-            className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 transition hover:border-slate-300 hover:shadow-sm"
-          >
-            <div>
-              <h2 className="text-sm font-semibold text-slate-800">Content Manager</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                Create services, publish blogs, and manage homepage copy.
-              </p>
-            </div>
-            <ArrowRight size={16} className="shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-600" />
-          </Link>
-
-          <Link
-            to="/admin/subscriptions"
-            className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 transition hover:border-slate-300 hover:shadow-sm"
-          >
-            <div>
-              <h2 className="text-sm font-semibold text-slate-800">Subscriptions</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                View active subscriptions, trigger bookings for due visits.
-              </p>
-            </div>
-            <RefreshCw size={16} className="shrink-0 text-slate-400 transition group-hover:rotate-180 group-hover:text-slate-600" style={{ transition: "transform 0.4s" }} />
-          </Link>
-
-          <Link
-            to="/admin/roles"
-            className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 transition hover:border-slate-300 hover:shadow-sm"
-          >
-            <div>
-              <h2 className="text-sm font-semibold text-slate-800">Roles</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                Grant admin or provider roles to users.
-              </p>
-            </div>
-            <Shield size={16} className="shrink-0 text-slate-400 transition group-hover:text-slate-600" />
-          </Link>
-        </section>
-
-        {/* Tables */}
         <section className="grid gap-6 xl:grid-cols-2">
           <ServicesTable />
           <RecentBlogsTable />

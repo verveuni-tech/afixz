@@ -2,5 +2,10 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+Disallow: /provider/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /booking-success/
+Disallow: /subscriptions
 
 Sitemap: https://afixz.com/sitemap.xml

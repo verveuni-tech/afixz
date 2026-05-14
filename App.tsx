@@ -83,6 +83,18 @@ const FlyingMaliPlans = lazy(
   () => import("./src/pages/FlyingMaliPlans")
 );
 
+const AboutUs = lazy(
+  () => import("./src/pages/AboutUs")
+);
+
+const PrivacyPolicy = lazy(
+  () => import("./src/pages/PrivacyPolicy")
+);
+
+const TermsOfService = lazy(
+  () => import("./src/pages/TermsOfService")
+);
+
 const AdminLogin = lazy(
   () => import("./src/pages/admin/AdminLogin")
 );
@@ -109,6 +121,10 @@ const AdminSubscriptions = lazy(
 
 const AdminRoles = lazy(
   () => import("./src/pages/admin/AdminRoles")
+);
+
+const AdminUsers = lazy(
+  () => import("./src/pages/admin/AdminUsers")
 );
 
 const MySubscriptionsPage = lazy(
@@ -215,6 +231,21 @@ function App() {
             />
 
             <Route
+              path="/about"
+              element={<AboutUs />}
+            />
+
+            <Route
+              path="/privacy"
+              element={<PrivacyPolicy />}
+            />
+
+            <Route
+              path="/terms"
+              element={<TermsOfService />}
+            />
+
+            <Route
               path="/profile"
               element={<Profile />}
             />
@@ -315,6 +346,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminRoles />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <AdminUsers />
               </ProtectedRoute>
             }
           />

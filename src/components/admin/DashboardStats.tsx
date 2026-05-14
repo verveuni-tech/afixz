@@ -7,7 +7,7 @@ import {
   orderBy,
   query,
 } from "firebase/firestore";
-import { Grid, Layers, Newspaper, Sparkles, ShoppingBag } from "lucide-react";
+import { Grid, Layers, Newspaper, ShoppingBag, Users } from "lucide-react";
 import { db } from "../../firebase";
 
 export default function DashboardStats() {
@@ -15,32 +15,29 @@ export default function DashboardStats() {
   const [categories, setCategories] = useState(0);
   const [blogs, setBlogs] = useState(0);
   const [orders, setOrders] = useState(0);
+  const [users, setUsers] = useState(0);
   const [latestService, setLatestService] = useState("No services yet");
-  const [latestBlog, setLatestBlog] = useState("No blogs yet");
 
   useEffect(() => {
     async function load() {
-      const [servicesCount, categoriesCount, blogsCount, bookingsCount, latestServiceSnapshot, latestBlogSnapshot] =
+      const [servicesCount, categoriesCount, blogsCount, bookingsCount, usersCount, latestServiceSnapshot] =
         await Promise.all([
           getCountFromServer(collection(db, "services")),
           getCountFromServer(collection(db, "categories")),
           getCountFromServer(collection(db, "blogs")),
           getCountFromServer(collection(db, "bookings")),
+          getCountFromServer(collection(db, "users")),
           getDocs(query(collection(db, "services"), orderBy("createdAt", "desc"), limit(1))),
-          getDocs(query(collection(db, "blogs"), orderBy("createdAt", "desc"), limit(1))),
         ]);
 
       setServices(servicesCount.data().count);
       setCategories(categoriesCount.data().count);
       setBlogs(blogsCount.data().count);
       setOrders(bookingsCount.data().count);
+      setUsers(usersCount.data().count);
 
       if (!latestServiceSnapshot.empty) {
         setLatestService(String(latestServiceSnapshot.docs[0].data().title || "Untitled"));
-      }
-
-      if (!latestBlogSnapshot.empty) {
-        setLatestBlog(String(latestBlogSnapshot.docs[0].data().title || "Untitled"));
       }
     }
 
@@ -48,7 +45,7 @@ export default function DashboardStats() {
   }, []);
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
       <StatCard
         title="Total Orders"
         value={orders}
@@ -57,16 +54,16 @@ export default function DashboardStats() {
       />
 
       <StatCard
-        title="Total Services"
-        value={services}
-        icon={<Layers size={18} />}
+        title="Total Users"
+        value={users}
+        icon={<Users size={18} />}
         color="blue"
       />
 
       <StatCard
-        title="Total Categories"
-        value={categories}
-        icon={<Grid size={18} />}
+        title="Total Services"
+        value={services}
+        icon={<Layers size={18} />}
         color="emerald"
       />
 
@@ -78,17 +75,10 @@ export default function DashboardStats() {
       />
 
       <StatCard
-        title="Latest Service"
-        value={latestService}
-        icon={<Sparkles size={18} />}
+        title="Total Categories"
+        value={categories}
+        icon={<Grid size={18} />}
         color="violet"
-      />
-
-      <StatCard
-        title="Latest Blog"
-        value={latestBlog}
-        icon={<Newspaper size={18} />}
-        color="slate"
       />
     </div>
   );

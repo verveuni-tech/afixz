@@ -17,6 +17,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 dayjs.extend(relativeTime);
 
 type StatusFilter = "all" | "pending" | "confirmed" | "completed" | "cancelled";
+type TypeTab = "one-time" | "subscription";
 
 interface Order {
   id: string;
@@ -51,6 +52,7 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [typeTab, setTypeTab] = useState<TypeTab>("one-time");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -108,14 +110,22 @@ export default function AdminOrders() {
     }
   }
 
-  const filtered = orders.filter((o) => {
+  const isSubscription = (o: Order) =>
+    o.source === "subscription" || !!o.subscriptionId;
+
+  const byType = orders.filter((o) =>
+    typeTab === "subscription" ? isSubscription(o) : !isSubscription(o)
+  );
+
+  const filtered = byType.filter((o) => {
     if (statusFilter !== "all" && o.status !== statusFilter) return false;
     return true;
   });
 
   const counts = {
-    all: orders.length,
-    pending: orders.filter((o) => o.status === "pending").length,
+    "one-time": orders.filter((o) => !isSubscription(o)).length,
+    subscription: orders.filter((o) => isSubscription(o)).length,
+    pending: byType.filter((o) => o.status === "pending").length,
   };
 
   return (
@@ -135,7 +145,7 @@ export default function AdminOrders() {
                 </span>
               )}
               {counts.pending > 0 && " · "}
-              {counts.all} total orders
+              {orders.length} total orders
             </p>
           </div>
 
@@ -147,7 +157,28 @@ export default function AdminOrders() {
           </button>
         </div>
 
-        {/* Filters */}
+        {/* Type tabs */}
+        <div className="mb-6 flex gap-1 border-b border-slate-200">
+          {(["one-time", "subscription"] as TypeTab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => { setTypeTab(t); setStatusFilter("all"); setExpandedId(null); }}
+              className={`relative px-4 py-2.5 text-sm font-medium capitalize transition-colors ${
+                typeTab === t ? "text-slate-900" : "text-slate-400 hover:text-slate-600"
+              }`}
+            >
+              {t === "one-time" ? "One-time Orders" : "Subscription Visits"}
+              <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">
+                {counts[t]}
+              </span>
+              {typeTab === t && (
+                <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-slate-900" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Status filters */}
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <Filter size={14} className="text-slate-400" />
           <span className="text-xs font-medium text-slate-500">Status:</span>

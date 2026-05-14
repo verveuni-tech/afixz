@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 import { useState } from "react";
-import { LayoutDashboard, FileText, LogOut, Menu, X, List, Bell, ShoppingBag, Shield } from "lucide-react";
+import { LayoutDashboard, FileText, LogOut, Menu, X, List, Bell, ShoppingBag, Shield, Users, RefreshCw } from "lucide-react";
 import logoImg from "../../assets/AfixZ logo_20260322_144619_0000.png";
 import { useOrderNotifications } from "../../hooks/useOrderNotifications";
 
@@ -57,6 +57,18 @@ const AdminHeader = () => {
               label="Content"
               icon={<FileText size={15} />}
               active={isActive("/admin/services")}
+            />
+            <NavItem
+              to="/admin/subscriptions"
+              label="Subscriptions"
+              icon={<RefreshCw size={15} />}
+              active={isActive("/admin/subscriptions")}
+            />
+            <NavItem
+              to="/admin/users"
+              label="Users"
+              icon={<Users size={15} />}
+              active={isActive("/admin/users")}
             />
             <NavItem
               to="/admin/roles"
@@ -134,6 +146,20 @@ const AdminHeader = () => {
               label="Manage Content"
               icon={<FileText size={16} />}
               active={isActive("/admin/services")}
+              onClick={() => setMobileOpen(false)}
+            />
+            <MobileNavItem
+              to="/admin/subscriptions"
+              label="Subscriptions"
+              icon={<RefreshCw size={16} />}
+              active={isActive("/admin/subscriptions")}
+              onClick={() => setMobileOpen(false)}
+            />
+            <MobileNavItem
+              to="/admin/users"
+              label="Users"
+              icon={<Users size={16} />}
+              active={isActive("/admin/users")}
               onClick={() => setMobileOpen(false)}
             />
             <MobileNavItem

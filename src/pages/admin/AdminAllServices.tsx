@@ -67,38 +67,34 @@ export default function AdminAllServices() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Load categories once
-  useEffect(() => {
-    async function loadCategories() {
-      const categoriesSnap = await getDocs(collection(db, "categories"));
-      const cats: Category[] = [];
-      const map = new Map<string, string>();
+  const initialized = useRef(false);
 
-      for (const d of categoriesSnap.docs) {
-        const data = d.data();
-        map.set(d.id, data.name || "Unnamed");
-        // Get count per category
-        const countSnap = await getCountFromServer(
-          query(collection(db, "services"), where("categoryId", "==", d.id))
-        );
-        cats.push({
-          id: d.id,
-          name: data.name || "Unnamed",
-          slug: data.slug || "",
-          count: countSnap.data().count,
-        });
-      }
+  // Load categories once — returns when map is ready
+  async function loadCategories() {
+    const categoriesSnap = await getDocs(collection(db, "categories"));
+    const cats: Category[] = [];
+    const map = new Map<string, string>();
 
-      catMapRef.current = map;
-      setCategories(cats.sort((a, b) => a.name.localeCompare(b.name)));
-
-      // Total services count
-      const totalSnap = await getCountFromServer(collection(db, "services"));
-      setTotalCount(totalSnap.data().count);
+    for (const d of categoriesSnap.docs) {
+      const data = d.data();
+      map.set(d.id, data.name || "Unnamed");
+      const countSnap = await getCountFromServer(
+        query(collection(db, "services"), where("categoryId", "==", d.id))
+      );
+      cats.push({
+        id: d.id,
+        name: data.name || "Unnamed",
+        slug: data.slug || "",
+        count: countSnap.data().count,
+      });
     }
 
-    loadCategories();
-  }, []);
+    catMapRef.current = map;
+    setCategories(cats.sort((a, b) => a.name.localeCompare(b.name)));
+
+    const totalSnap = await getCountFromServer(collection(db, "services"));
+    setTotalCount(totalSnap.data().count);
+  }
 
   // Load services (paginated, filtered by category)
   const loadServices = useCallback(
@@ -153,8 +149,20 @@ export default function AdminAllServices() {
     [selectedCategory]
   );
 
-  // Reload when category filter changes
+  // Initial load: categories first, then services (fixes "Uncategorized" race)
   useEffect(() => {
+    async function init() {
+      await loadCategories();
+      await loadServices(true);
+      initialized.current = true;
+    }
+    void init();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Reload services when category filter changes (skip initial mount)
+  useEffect(() => {
+    if (!initialized.current) return;
     loadServices(true);
   }, [loadServices]);
 
