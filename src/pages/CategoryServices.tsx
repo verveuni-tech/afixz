@@ -1,28 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import useSeo from "../hooks/useSeo";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  getDocs,
-  limit,
-  startAfter,
-  QueryDocumentSnapshot,
-} from "firebase/firestore";
-import { db } from "../firebase";
-import { ArrowRight, ChevronRight, Loader2, Search, SlidersHorizontal, Star, X } from "lucide-react";
+import { ArrowRight, ChevronRight, Search, SlidersHorizontal, Star, X } from "lucide-react";
 import { useLocationContext } from "../context/LocationContext";
 import {
   isServiceAvailableInLocation,
-  normalizeService,
   resolveServiceForLocation,
   ServiceEntry,
 } from "../lib/services";
+import { getAllServices } from "../lib/serviceCache";
 
-const PAGE_SIZE = 12;
-const BATCH_SIZE = 24;
 const MIN_LIMIT = 0;
 const MAX_LIMIT = 10000;
 
@@ -30,11 +17,8 @@ const CategoryServices: React.FC = () => {
   const { categorySlug } = useParams();
   const { selectedLocation } = useLocationContext();
 
-  const [services, setServices] = useState<ServiceEntry[]>([]);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
-  const [hasMore, setHasMore] = useState(true);
+  const [allServices, setAllServices] = useState<ServiceEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [minPrice, setMinPrice] = useState(MIN_LIMIT);
   const [maxPrice, setMaxPrice] = useState(MAX_LIMIT);
   const [sortOption, setSortOption] = useState("price-asc");
@@ -69,79 +53,35 @@ const CategoryServices: React.FC = () => {
     keywords: ["home services", formattedCategory.toLowerCase(), "doorstep service", "AfixZ", "verified professionals"],
   });
 
-  const fetchServices = async (loadMore = false) => {
-    if (loadMore) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
-
-    try {
-      let cursor = loadMore ? lastDoc : null;
-      const collected: ServiceEntry[] = [];
-      let keepLoading = true;
-
-      while (keepLoading && collected.length < PAGE_SIZE) {
-        const snapshot = await getDocs(
-          cursor
-            ? query(
-                collection(db, "services"),
-                where("categorySlug", "==", categorySlug),
-                orderBy("createdAt", "desc"),
-                startAfter(cursor),
-                limit(BATCH_SIZE)
-              )
-            : query(
-                collection(db, "services"),
-                where("categorySlug", "==", categorySlug),
-                orderBy("createdAt", "desc"),
-                limit(BATCH_SIZE)
-              )
-        );
-
-        const batch = snapshot.docs
-          .map((entry) => normalizeService(entry.id, entry.data() as Record<string, any>))
-          .filter((service) => isServiceAvailableInLocation(service, selectedLocation))
-          .map((service) => resolveServiceForLocation(service, selectedLocation))
-          .filter((service) => service.price >= minPrice && service.price <= maxPrice);
-
-        collected.push(...batch);
-        cursor = snapshot.docs[snapshot.docs.length - 1] || cursor;
-        keepLoading = snapshot.docs.length === BATCH_SIZE;
-      }
-
-      const sorted = [...collected]
-        .sort((left, right) =>
-          sortOption === "price-desc" ? right.price - left.price : left.price - right.price
-        )
-        .slice(0, PAGE_SIZE);
-
-      if (loadMore) {
-        setServices((prev) =>
-          [...prev, ...sorted].sort((left, right) =>
-            sortOption === "price-desc" ? right.price - left.price : left.price - right.price
-          )
-        );
-      } else {
-        setServices(sorted);
-      }
-
-      setLastDoc(cursor);
-      setHasMore(keepLoading);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
-
   useEffect(() => {
-    setServices([]);
-    setLastDoc(null);
-    setHasMore(true);
-    void fetchServices(false);
-  }, [categorySlug, minPrice, maxPrice, selectedLocation, sortOption]);
+    let active = true;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const data = await getAllServices();
+        if (active) setAllServices(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => { active = false; };
+  }, []);
+
+  const services = useMemo(() => {
+    return allServices
+      .filter((s) => s.categorySlug === categorySlug)
+      .filter((s) => isServiceAvailableInLocation(s, selectedLocation))
+      .map((s) => resolveServiceForLocation(s, selectedLocation))
+      .filter((s) => s.price >= minPrice && s.price <= maxPrice)
+      .sort((a, b) =>
+        sortOption === "price-desc" ? b.price - a.price : a.price - b.price
+      );
+  }, [allServices, categorySlug, selectedLocation, minPrice, maxPrice, sortOption]);
 
   const activeFilterCount =
     (minPrice > MIN_LIMIT ? 1 : 0) + (maxPrice < MAX_LIMIT ? 1 : 0);
@@ -253,27 +193,7 @@ const CategoryServices: React.FC = () => {
                   ))}
                 </div>
 
-                {hasMore && (
-                  <div className="mt-10 flex justify-center">
-                    <button
-                      onClick={() => void fetchServices(true)}
-                      disabled={loadingMore}
-                      className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-                    >
-                      {loadingMore ? (
-                        <>
-                          <Loader2 size={14} className="animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          Load More
-                          <ArrowRight size={14} />
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
+                {/* All services shown — no pagination needed */}
               </>
             )}
           </div>

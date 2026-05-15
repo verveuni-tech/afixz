@@ -1,23 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
 import { ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
-import { db } from "../../firebase";
 import { useLocationContext } from "../../context/LocationContext";
 import {
   CategoryEntry,
   CategorySectionKey,
   matchesCategory,
-  normalizeCategory,
   resolveCategoryMatch,
 } from "../../lib/categories";
 import { HomepageSectionContent } from "../../lib/homepageFallbackContent";
 import {
   isServiceAvailableInLocation,
-  normalizeService,
   resolveServiceForLocation,
   ServiceEntry,
 } from "../../lib/services";
+import { getAllServices, getAllCategories } from "../../lib/serviceCache";
 
 type Props = {
   content: HomepageSectionContent;
@@ -36,22 +33,6 @@ function formatPrice(price: unknown) {
   }
 
   return "—";
-}
-
-function getCreatedAtValue(value: unknown) {
-  if (value && typeof value === "object" && "toMillis" in value && typeof value.toMillis === "function") {
-    return value.toMillis();
-  }
-
-  if (value instanceof Date) {
-    return value.getTime();
-  }
-
-  if (typeof value === "number") {
-    return value;
-  }
-
-  return 0;
 }
 
 function PlaceholderImage() {
@@ -117,30 +98,21 @@ export default function ServiceCategorySection({
 
     async function loadServices() {
       try {
-        const categorySnapshot = await getDocs(collection(db, "categories"));
-        const categories = categorySnapshot.docs.map((entry) =>
-          normalizeCategory(entry.id, entry.data() as Record<string, any>)
-        );
-        const matchedCategory = resolveCategoryMatch(categories, {
+        const [allCategories, allServices] = await Promise.all([
+          getAllCategories(),
+          getAllServices(),
+        ]);
+
+        if (!active) return;
+
+        const matchedCategory = resolveCategoryMatch(allCategories, {
           preferredSlug: content.categorySlug,
           sectionKey,
           hints: [content.title, content.subtitle],
         });
 
-        const snapshot = matchedCategory
-          ? await getDocs(query(collection(db, "services"), where("categoryId", "==", matchedCategory.id)))
-          : await getDocs(collection(db, "services"));
-
-        if (!active) {
-          return;
-        }
-
-        const filtered = snapshot.docs
-          .map((entry) => ({
-            service: normalizeService(entry.id, entry.data() as Record<string, any>),
-            createdAt: getCreatedAtValue((entry.data() as Record<string, any>).createdAt),
-          }))
-          .filter(({ service }) =>
+        const filtered = allServices
+          .filter((service) =>
             matchedCategory
               ? service.categoryId === matchedCategory.id || matchesCategory(matchedCategory, service.categorySlug)
               : matchesCategory(
@@ -153,8 +125,6 @@ export default function ServiceCategorySection({
                   content.title
                 )
           )
-          .sort((left, right) => right.createdAt - left.createdAt)
-          .map(({ service }) => service)
           .filter((service) => isServiceAvailableInLocation(service, selectedLocation))
           .map((service) => resolveServiceForLocation(service, selectedLocation))
           .slice(0, 4);

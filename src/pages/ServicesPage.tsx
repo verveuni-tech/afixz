@@ -1,29 +1,15 @@
-import React, { useEffect, useState } from "react";
-import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import {
-  collection,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  startAfter,
-  where,
-} from "firebase/firestore";
-import { db } from "../firebase";
+import { ChevronRight, MapPin, Search, ArrowRight } from "lucide-react";
 import { useLocationContext } from "../context/LocationContext";
 import { getLocationLabel } from "../lib/locations";
 import {
   isServiceAvailableInLocation,
-  normalizeService,
   resolveServiceForLocation,
   ServiceEntry,
 } from "../lib/services";
-import { ChevronRight, Loader2, MapPin, Search, ArrowRight } from "lucide-react";
+import { getAllServices } from "../lib/serviceCache";
 import useSeo from "../hooks/useSeo";
-
-const PAGE_SIZE = 12;
-const BATCH_SIZE = 24;
 
 const ServicesPage: React.FC = () => {
   useSeo({
@@ -37,61 +23,51 @@ const ServicesPage: React.FC = () => {
   const search = (searchParams.get("search") || "").trim().toLowerCase();
   const { selectedLocation } = useLocationContext();
 
-  const [services, setServices] = useState<ServiceEntry[]>([]);
+  const [allServices, setAllServices] = useState<ServiceEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
-  const [lastDoc, setLastDoc] =
-    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
-    setServices([]);
-    setLastDoc(null);
-    setHasMore(false);
-    void fetchServices(false);
-  }, [search, selectedLocation]);
+    let active = true;
 
-  async function fetchServices(loadMore: boolean) {
-    try {
-      if (loadMore) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
+    async function load() {
+      setLoading(true);
+      try {
+        const services = await getAllServices();
+        if (active) {
+          setAllServices(services);
+          setError("");
+        }
+      } catch (err) {
+        console.error(err);
+        if (active) setError("We couldn't load services right now. Please try again shortly.");
+      } finally {
+        if (active) setLoading(false);
       }
-
-      const results: ServiceEntry[] = [];
-      let cursor = loadMore ? lastDoc : null;
-      let keepLoading = true;
-
-      while (keepLoading && results.length < PAGE_SIZE) {
-        const baseQuery = search
-          ? buildSearchQuery(search, cursor)
-          : buildBrowseQuery(cursor);
-
-        const snapshot = await getDocs(baseQuery);
-        const batch = snapshot.docs
-          .map((entry) => normalizeService(entry.id, entry.data() as Record<string, any>))
-          .filter((service) => isServiceAvailableInLocation(service, selectedLocation))
-          .map((service) => resolveServiceForLocation(service, selectedLocation));
-
-        results.push(...batch.slice(0, PAGE_SIZE - results.length));
-        cursor = snapshot.docs[snapshot.docs.length - 1] || cursor;
-        keepLoading = snapshot.docs.length === BATCH_SIZE;
-      }
-
-      setServices((prev) => (loadMore ? [...prev, ...results] : results));
-      setLastDoc(cursor);
-      setHasMore(keepLoading);
-      setError("");
-    } catch (fetchError) {
-      console.error(fetchError);
-      setError("We couldn't load services right now. Please try again shortly.");
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
     }
-  }
+
+    void load();
+    return () => { active = false; };
+  }, []);
+
+  // Client-side filtering: location + search
+  const services = useMemo(() => {
+    let filtered = allServices
+      .filter((s) => isServiceAvailableInLocation(s, selectedLocation))
+      .map((s) => resolveServiceForLocation(s, selectedLocation));
+
+    if (search) {
+      filtered = filtered.filter(
+        (s) =>
+          s.title.toLowerCase().includes(search) ||
+          s.slug.toLowerCase().includes(search) ||
+          s.categorySlug.toLowerCase().includes(search) ||
+          s.searchKeywords.some((k) => k.toLowerCase().includes(search))
+      );
+    }
+
+    return filtered;
+  }, [allServices, selectedLocation, search]);
 
   return (
     <section className="min-h-screen bg-white pb-20 pt-28">
@@ -170,36 +146,11 @@ const ServicesPage: React.FC = () => {
               </Link>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {services.map((service) => (
-                  <ServiceCard key={service.id} service={service} />
-                ))}
-              </div>
-
-              {hasMore && (
-                <div className="mt-10 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => void fetchServices(true)}
-                    disabled={loadingMore}
-                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    {loadingMore ? (
-                      <>
-                        <Loader2 size={14} className="animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      <>
-                        Load More
-                        <ArrowRight size={14} />
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-            </>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {services.map((service) => (
+                <ServiceCard key={service.id} service={service} />
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -257,37 +208,4 @@ const ServiceCard: React.FC<{ service: ServiceEntry }> = ({ service }) => {
       </div>
     </Link>
   );
-}
-
-/* ---- Query builders ---- */
-
-function buildBrowseQuery(lastDoc: QueryDocumentSnapshot<DocumentData> | null) {
-  return lastDoc
-    ? query(
-        collection(db, "services"),
-        orderBy("createdAt", "desc"),
-        startAfter(lastDoc),
-        limit(BATCH_SIZE)
-      )
-    : query(collection(db, "services"), orderBy("createdAt", "desc"), limit(BATCH_SIZE));
-}
-
-function buildSearchQuery(
-  searchTerm: string,
-  lastDoc: QueryDocumentSnapshot<DocumentData> | null
-) {
-  return lastDoc
-    ? query(
-        collection(db, "services"),
-        where("searchKeywords", "array-contains", searchTerm),
-        orderBy("createdAt", "desc"),
-        startAfter(lastDoc),
-        limit(BATCH_SIZE)
-      )
-    : query(
-        collection(db, "services"),
-        where("searchKeywords", "array-contains", searchTerm),
-        orderBy("createdAt", "desc"),
-        limit(BATCH_SIZE)
-      );
-}
+};
