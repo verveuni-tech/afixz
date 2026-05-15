@@ -85,3 +85,15 @@ firebase-adminsdk*.json
 # Misc
 # =========================
 coverage
+
+
+# AI tooling
+.opencode.json
+
+# internal docs
+AfixZ_Website_Content.md
+
+# env
+.env
+.env.local
+.env.production
