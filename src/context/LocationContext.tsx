@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { useAuth } from "./AuthContext";
 import { isLocationId, LocationId } from "../lib/locations";
 

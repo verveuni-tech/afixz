@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { CheckCircle } from "lucide-react";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { homepageFallbackContent } from "../../lib/homepageFallbackContent";
 import { LocationId, LOCATION_OPTIONS } from "../../lib/locations";
 

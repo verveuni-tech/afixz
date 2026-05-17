@@ -11,7 +11,7 @@ import {
   where,
 } from "firebase/firestore";
 import { ArrowRight, CalendarDays, Clock3, Loader2, Search } from "lucide-react";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import useSeo from "../hooks/useSeo";
 import {
   BlogEntry,

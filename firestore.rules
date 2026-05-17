@@ -337,8 +337,8 @@ service cloud.firestore {
         ])
         && data.userId is string
         && data.userId == request.auth.uid
-        && data.serviceId == "flying-mali"
-        && data.serviceSlug == "flying-mali"
+        && data.serviceId == "garden-care"
+        && data.serviceSlug == "garden-care"
         && data.source == "subscription"
         && data.subscriptionId is string
         && data.status == "pending"

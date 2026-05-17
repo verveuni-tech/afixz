@@ -1,5 +1,5 @@
 /**
- * Flying Mali subscription plans — static data.
+ * Garden Care subscription plans — static data.
  * Also seeded to Firestore `subscriptionPlans` collection.
  */
 
@@ -21,7 +21,7 @@ export interface SubscriptionPlan {
   active: boolean;
 }
 
-export const FLYING_MALI_FEATURES = [
+export const GARDEN_CARE_FEATURES = [
   "Deep pruning & trimming",
   "Soil aeration & care",
   "Plant health monitoring",
@@ -33,7 +33,7 @@ export const FLYING_MALI_FEATURES = [
   "Seasonal planting guidance",
 ];
 
-export const FLYING_MALI_NOTES = [
+export const GARDEN_CARE_NOTES = [
   "Extra plants beyond 30: ₹10/plant/month",
   "Pots, plants & fertilizers are NOT included",
   "7-day plant guarantee for damage/disease",
@@ -41,9 +41,9 @@ export const FLYING_MALI_NOTES = [
   "Payment: Cash on Delivery per visit",
 ];
 
-export const FLYING_MALI_PLANS: SubscriptionPlan[] = [
+export const GARDEN_CARE_PLANS: SubscriptionPlan[] = [
   {
-    id: "flying-mali-monthly",
+    id: "garden-care-monthly",
     name: "Monthly",
     billingCycle: "monthly",
     price: 499,
@@ -53,11 +53,11 @@ export const FLYING_MALI_PLANS: SubscriptionPlan[] = [
     plantCoverage: 30,
     extraPlantRate: 10,
     savings: 0,
-    features: FLYING_MALI_FEATURES,
+    features: GARDEN_CARE_FEATURES,
     active: true,
   },
   {
-    id: "flying-mali-6months",
+    id: "garden-care-6months",
     name: "6 Months",
     billingCycle: "6months",
     price: 2695,
@@ -67,12 +67,12 @@ export const FLYING_MALI_PLANS: SubscriptionPlan[] = [
     plantCoverage: 30,
     extraPlantRate: 10,
     savings: 299,
-    features: FLYING_MALI_FEATURES,
+    features: GARDEN_CARE_FEATURES,
     highlight: "Most Popular",
     active: true,
   },
   {
-    id: "flying-mali-yearly",
+    id: "garden-care-yearly",
     name: "Yearly",
     billingCycle: "yearly",
     price: 5390,
@@ -83,7 +83,7 @@ export const FLYING_MALI_PLANS: SubscriptionPlan[] = [
     extraPlantRate: 10,
     savings: 598,
     features: [
-      ...FLYING_MALI_FEATURES,
+      ...GARDEN_CARE_FEATURES,
       "1 month free equivalent",
       "Priority support",
     ],

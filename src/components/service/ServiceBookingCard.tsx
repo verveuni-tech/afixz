@@ -8,7 +8,7 @@ import {
   addDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 
 interface Props {
   serviceId: string;

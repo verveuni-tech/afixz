@@ -27,7 +27,7 @@ import {
   orderBy,
   where,
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { getLocationLabel } from "../../lib/locations";
 import type { LocationId } from "../../lib/locations";

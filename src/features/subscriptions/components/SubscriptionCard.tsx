@@ -99,7 +99,7 @@ const SubscriptionCard: React.FC<Props> = ({ subscription: sub, onUpdate }) => {
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-800">
-              Flying Mali — {sub.planName}
+              Garden Care — {sub.planName}
             </p>
             <p className="mt-0.5 text-xs text-slate-500">
               {BILLING_CYCLE_LABELS[sub.billingCycle]} · ₹{sub.price}

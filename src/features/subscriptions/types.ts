@@ -16,7 +16,7 @@ export interface SubscriptionAddress {
 export interface Subscription {
   id: string;
   userId: string;
-  planId: string;            // e.g. "flying-mali-monthly"
+  planId: string;            // e.g. "garden-care-monthly"
   planName: string;          // e.g. "Monthly"
   billingCycle: BillingCycle;
   price: number;             // total price for cycle

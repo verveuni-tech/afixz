@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { ArrowLeft, CalendarDays, Clock3, Loader2 } from "lucide-react";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import useSeo from "../hooks/useSeo";
 import {
   BlogEntry,

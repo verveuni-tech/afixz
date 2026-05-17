@@ -1,6 +1,6 @@
 import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { useLocationContext } from "../context/LocationContext";
 import { deepMerge, DeepPartial, mergeBaseWithLocationOverride } from "../lib/locationContent";
 import { HomepageContent, homepageFallbackContent } from "../lib/homepageFallbackContent";

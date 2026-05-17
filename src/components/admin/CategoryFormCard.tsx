@@ -7,7 +7,7 @@ import {
   getDocs,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 
 const slugify = (text: string) =>
   text

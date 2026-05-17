@@ -121,9 +121,9 @@ export default async function handler(
         // Create booking
         const bookingRef = await db.collection("bookings").add({
           userId: sub.userId,
-          serviceId: "flying-mali",
-          serviceSlug: "flying-mali",
-          serviceTitle: `Flying Mali — ${sub.planName}`,
+          serviceId: "garden-care",
+          serviceSlug: "garden-care",
+          serviceTitle: `Garden Care — ${sub.planName}`,
           price: sub.pricePerMonth,
           totalPrice: sub.pricePerMonth,
           locationId: sub.locationId,

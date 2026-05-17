@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signInWithPopup, signOut } from "firebase/auth";
 import { ArrowLeft, LockKeyhole, ShieldCheck } from "lucide-react";
-import { auth, googleProvider } from "../../firebase";
+import { auth, googleProvider } from "../../lib/firebase";
 import { useAuth } from "../../context/AuthContext";
 import useSeo from "../../hooks/useSeo";
 import logoImg from "../../assets/AfixZ logo_20260322_144619_0000.png";

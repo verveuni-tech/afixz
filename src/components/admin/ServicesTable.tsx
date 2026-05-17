@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import { ArrowRight, Plus } from "lucide-react";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 
 export default function ServicesTable() {
   const [services, setServices] = useState<any[]>([]);

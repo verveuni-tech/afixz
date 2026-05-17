@@ -11,7 +11,7 @@ import {
   Hammer,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import {
   CategoryEntry,
   inferCategorySectionKey,

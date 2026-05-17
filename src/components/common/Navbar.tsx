@@ -10,7 +10,7 @@ import {
   limit,
   getDocs,
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { useLocationContext } from "../../context/LocationContext";
 import { getLocationLabel } from "../../lib/locations";
 import { isServiceAvailableInLocation, normalizeService } from "../../lib/services";
@@ -230,9 +230,9 @@ const Navbar: React.FC = () => {
                 Home
               </Link>
               <Link
-                to="/flying-mali"
+                to="/garden-care"
                 className={`transition-colors hover:text-accent ${
-                  location.pathname === "/flying-mali" ? "text-accent" : ""
+                  location.pathname === "/garden-care" ? "text-accent" : ""
                 }`}
               >
                 Our Plans
@@ -299,14 +299,14 @@ const Navbar: React.FC = () => {
             </button>
 
             <button
-              onClick={() => goTo("/flying-mali")}
+              onClick={() => goTo("/garden-care")}
               className={`block w-full rounded-2xl px-4 py-3 text-left text-sm font-medium ${
-                location.pathname === "/flying-mali"
+                location.pathname === "/garden-care"
                   ? "bg-accent/10 text-accent"
                   : "bg-slate-50 text-slate-700"
               }`}
             >
-              Flying Mali
+              Garden Care
             </button>
 
             <button

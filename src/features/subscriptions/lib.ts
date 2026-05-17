@@ -9,10 +9,10 @@ import {
   getDocs,
   writeBatch,
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import type { Subscription, SubscriptionAddress, SubscriptionStatus } from "./types";
 import type { SubscriptionPlan } from "./plans";
-import { FLYING_MALI_PLANS } from "./plans";
+import { GARDEN_CARE_PLANS } from "./plans";
 
 /* ─── Date helpers ─────────────────────────────────────── */
 
@@ -105,9 +105,9 @@ export async function createPlanSubscription(params: {
     const bookingRef = doc(collection(db, "bookings"));
     batch.set(bookingRef, {
       userId,
-      serviceId: "flying-mali",
-      serviceSlug: "flying-mali",
-      serviceTitle: `Flying Mali — ${plan.name}`,
+      serviceId: "garden-care",
+      serviceSlug: "garden-care",
+      serviceTitle: `Garden Care — ${plan.name}`,
       price: plan.pricePerMonth,
       totalPrice: plan.pricePerMonth,
       locationId,
@@ -203,14 +203,14 @@ export async function getAllSubscriptions(): Promise<Subscription[]> {
 /* ─── Plan CRUD (Firestore) ─────────────────────────────── */
 
 export async function seedPlansToFirestore(): Promise<void> {
-  for (const plan of FLYING_MALI_PLANS) {
+  for (const plan of GARDEN_CARE_PLANS) {
     await setDoc(doc(db, "subscriptionPlans", plan.id), plan);
   }
 }
 
 export async function getPlansFromFirestore(): Promise<SubscriptionPlan[]> {
   const snap = await getDocs(collection(db, "subscriptionPlans"));
-  if (snap.empty) return FLYING_MALI_PLANS; // fallback to static
+  if (snap.empty) return GARDEN_CARE_PLANS; // fallback to static
   return snap.docs
     .map((d) => d.data() as SubscriptionPlan)
     .filter((p) => p.active)

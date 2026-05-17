@@ -17,7 +17,7 @@ import React, {
   useContext,
   ReactNode,
 } from "react";
-import { auth, db } from "../firebase";
+import { auth, db } from "../lib/firebase";
 import type { LocationId } from "../lib/locations";
 
 /* ---------------- Types ---------------- */

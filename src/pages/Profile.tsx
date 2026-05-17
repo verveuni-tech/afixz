@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { signOut } from "firebase/auth";
-import { auth, db } from "../firebase";
+import { auth, db } from "../lib/firebase";
 import AuthLogin from "../components/auth/AuthLogin";
 import {
   collection,

@@ -112,7 +112,7 @@ export default function AdminSubscriptions() {
               Subscriptions
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Manage Flying Mali plan subscriptions.
+              Manage Garden Care plan subscriptions.
             </p>
           </div>
           <div className="flex items-center gap-2">

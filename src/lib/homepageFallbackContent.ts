@@ -83,7 +83,7 @@ export const homepageFallbackContent: HomepageContent = {
     gardening: {
       eyebrow: "Garden & landscaping",
       title: "Doorstep Gardening & Landscaping Services",
-      subtitle: "Premium plant care by Flying Mali experts.",
+      subtitle: "Premium plant care by our gardening experts.",
       description:
         "Premium plant care, kitchen garden setup, and seasonal garden maintenance at your doorstep. Avail gardening kits and materials alongside professional landscaping services from trained experts.",
       ctaText: "View gardening services",
@@ -92,7 +92,7 @@ export const homepageFallbackContent: HomepageContent = {
     mechanic: {
       eyebrow: "Doorstep mechanic",
       title: "Bike & Cycle Service at Your Doorstep",
-      subtitle: "Flying Mechanic — skip the garage, we come to you.",
+      subtitle: "Skip the garage, we come to you.",
       description:
         "Doorstep mechanic service for your vehicle's routine care without waiting outside a garage. Two-wheeler service, washing, puncture repair, and accessories installation or replacement at your home.",
       ctaText: "View mechanic services",

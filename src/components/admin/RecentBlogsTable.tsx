@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 
 export default function RecentBlogsTable() {
   const [blogs, setBlogs] = useState<any[]>([]);

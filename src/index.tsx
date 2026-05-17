@@ -4,9 +4,9 @@ import App from './App';
 import './index.css';
 import "@fontsource-variable/inter";
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from './src/context/AuthContext';
-import { CartProvider } from './src/context/CartContext';
-import { LocationProvider } from './src/context/LocationContext';
+import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
+import { LocationProvider } from './context/LocationContext';
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 

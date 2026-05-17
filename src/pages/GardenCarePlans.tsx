@@ -17,8 +17,8 @@ import { getLocationLabel } from "../lib/locations";
 import AuthLogin from "../components/auth/AuthLogin";
 
 import {
-  FLYING_MALI_PLANS,
-  FLYING_MALI_NOTES,
+  GARDEN_CARE_PLANS,
+  GARDEN_CARE_NOTES,
   type SubscriptionPlan,
 } from "../features/subscriptions/plans";
 
@@ -34,7 +34,7 @@ import {
 
 import useSeo from "../hooks/useSeo";
 
-export default function FlyingMaliPlans() {
+export default function GardenCarePlans() {
   const { selectedLocation, openLocationPicker } =
     useLocationContext();
 
@@ -46,12 +46,12 @@ export default function FlyingMaliPlans() {
   } = useRequireAuth();
 
   const [plans, setPlans] =
-    useState<SubscriptionPlan[]>(FLYING_MALI_PLANS);
+    useState<SubscriptionPlan[]>(GARDEN_CARE_PLANS);
 
   useEffect(() => {
     getPlansFromFirestore()
       .then(setPlans)
-      .catch(() => setPlans(FLYING_MALI_PLANS));
+      .catch(() => setPlans(GARDEN_CARE_PLANS));
   }, []);
 
   const [selectedPlan, setSelectedPlan] =
@@ -214,7 +214,7 @@ export default function FlyingMaliPlans() {
           </p>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {FLYING_MALI_NOTES.map((note) => (
+            {GARDEN_CARE_NOTES.map((note) => (
               <div
                 key={note}
                 className="flex items-start gap-4 rounded-2xl border border-black/[0.05] bg-[#fafafa] p-5"

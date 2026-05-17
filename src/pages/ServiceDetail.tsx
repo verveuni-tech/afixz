@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { collection, getDocs, limit, query, where } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 
 import ServiceGalleryCard from "../components/service/ServiceGalleryCard";
 import ServiceOverviewCard from "../components/service/ServiceOverviewCard";

@@ -1,4 +1,4 @@
-import { auth } from "../firebase";
+import { auth } from "./firebase";
 
 interface NotifyOrderPayload {
   type: "online_booking";

@@ -12,130 +12,130 @@ import {
   Outlet,
 } from "react-router-dom";
 
-import Navbar from "./src/components/common/Navbar";
-import ErrorBoundary from "./src/components/common/ErrorBoundary";
-import ScrollToTop from "./src/components/common/ScrollToTop";
+import Navbar from "./components/common/Navbar";
+import ErrorBoundary from "./components/common/ErrorBoundary";
+import ScrollToTop from "./components/common/ScrollToTop";
 
-import ProtectedRoute from "./src/pages/admin/ProtectedRoute";
-import ProviderProtectedRoute from "./src/pages/provider/ProviderProtectedRoute";
-import UserProtectedRoute from "./src/hooks/UserProtectedRoute";
+import ProtectedRoute from "./pages/admin/ProtectedRoute";
+import ProviderProtectedRoute from "./pages/provider/ProviderProtectedRoute";
+import UserProtectedRoute from "./hooks/UserProtectedRoute";
 
 import {
   completeEmailLinkSignIn,
   isEmailSignInUrl,
-} from "./src/components/auth/AuthLogin";
+} from "./components/auth/AuthLogin";
 
 /* ----------------------------- Lazy Components ----------------------------- */
 
 const Footer = lazy(
-  () => import("./src/components/common/Footer")
+  () => import("./components/common/Footer")
 );
 
 const LocationPickerModal = lazy(
-  () => import("./src/components/common/LocationPickerModal")
+  () => import("./components/common/LocationPickerModal")
 );
 
 const NotFound = lazy(
-  () => import("./src/pages/NotFound")
+  () => import("./pages/NotFound")
 );
 
 const Home = lazy(
-  () => import("./src/pages/Home")
+  () => import("./pages/Home")
 );
 
 const ServiceDetail = lazy(
-  () => import("./src/pages/ServiceDetail")
+  () => import("./pages/ServiceDetail")
 );
 
 const CategoryServices = lazy(
-  () => import("./src/pages/CategoryServices")
+  () => import("./pages/CategoryServices")
 );
 
 const Profile = lazy(
-  () => import("./src/pages/Profile")
+  () => import("./pages/Profile")
 );
 
 const Cart = lazy(
-  () => import("./src/pages/Cart")
+  () => import("./pages/Cart")
 );
 
 const Checkout = lazy(
-  () => import("./src/pages/Checkout")
+  () => import("./pages/Checkout")
 );
 
 const BookingSuccess = lazy(
-  () => import("./src/pages/BookingSuccess")
+  () => import("./pages/BookingSuccess")
 );
 
 const ServicesPage = lazy(
-  () => import("./src/pages/ServicesPage")
+  () => import("./pages/ServicesPage")
 );
 
 const BlogsPage = lazy(
-  () => import("./src/pages/BlogsPage")
+  () => import("./pages/BlogsPage")
 );
 
 const BlogDetail = lazy(
-  () => import("./src/pages/BlogDetail")
+  () => import("./pages/BlogDetail")
 );
 
-const FlyingMaliPlans = lazy(
-  () => import("./src/pages/FlyingMaliPlans")
+const GardenCarePlans = lazy(
+  () => import("./pages/GardenCarePlans")
 );
 
 const AboutUs = lazy(
-  () => import("./src/pages/AboutUs")
+  () => import("./pages/AboutUs")
 );
 
 const PrivacyPolicy = lazy(
-  () => import("./src/pages/PrivacyPolicy")
+  () => import("./pages/PrivacyPolicy")
 );
 
 const TermsOfService = lazy(
-  () => import("./src/pages/TermsOfService")
+  () => import("./pages/TermsOfService")
 );
 
 const AdminLogin = lazy(
-  () => import("./src/pages/admin/AdminLogin")
+  () => import("./pages/admin/AdminLogin")
 );
 
 const AdminDashboard = lazy(
-  () => import("./src/pages/admin/AdminDashboard")
+  () => import("./pages/admin/AdminDashboard")
 );
 
 const AdminServices = lazy(
-  () => import("./src/pages/admin/AdminServices")
+  () => import("./pages/admin/AdminServices")
 );
 
 const AdminAllServices = lazy(
-  () => import("./src/pages/admin/AdminAllServices")
+  () => import("./pages/admin/AdminAllServices")
 );
 
 const AdminOrders = lazy(
-  () => import("./src/pages/admin/AdminOrders")
+  () => import("./pages/admin/AdminOrders")
 );
 
 const AdminSubscriptions = lazy(
-  () => import("./src/pages/admin/AdminSubscriptions")
+  () => import("./pages/admin/AdminSubscriptions")
 );
 
 const AdminUsers = lazy(
-  () => import("./src/pages/admin/AdminUsers")
+  () => import("./pages/admin/AdminUsers")
 );
 
 const MySubscriptionsPage = lazy(
   () =>
     import(
-      "./src/features/subscriptions/pages/MySubscriptionsPage"
+      "./features/subscriptions/pages/MySubscriptionsPage"
     )
 );
 
 const ProviderLogin = lazy(
-  () => import("./src/pages/provider/ProviderLogin")
+  () => import("./pages/provider/ProviderLogin")
 );
 
 const ProviderDashboard = lazy(
-  () => import("./src/pages/provider/ProviderDashboard")
+  () => import("./pages/provider/ProviderDashboard")
 );
 
 /* ------------------------------- App Layout ------------------------------- */
@@ -222,8 +222,8 @@ function App() {
             />
 
             <Route
-              path="/flying-mali"
-              element={<FlyingMaliPlans />}
+              path="/garden-care"
+              element={<GardenCarePlans />}
             />
 
             <Route

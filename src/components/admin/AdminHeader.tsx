@@ -2,7 +2,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { signOut } from "firebase/auth";
-import { auth } from "../../firebase";
+import { auth } from "../../lib/firebase";
 import { useState } from "react";
 import { LayoutDashboard, FileText, LogOut, Menu, X, List, Bell, ShoppingBag, Shield, Users, RefreshCw } from "lucide-react";
 import logoImg from "../../assets/AfixZ logo_20260322_144619_0000.png";

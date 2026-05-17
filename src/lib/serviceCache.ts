@@ -12,7 +12,7 @@ import {
   orderBy,
   query,
 } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "./firebase";
 import { normalizeService, type ServiceEntry } from "./services";
 import { normalizeCategory, type CategoryEntry } from "./categories";
 

@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useLocationContext } from "../context/LocationContext";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import { normalizeService, resolveServiceForLocation } from "../lib/services";
 import { getLocationLabel } from "../lib/locations";
 import { ChevronRight, Loader2, MapPin, Lock } from "lucide-react";

@@ -11,7 +11,7 @@ import {
   where,
 } from "firebase/firestore";
 import { CheckCircle, RefreshCcw } from "lucide-react";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import ImageUploader from "../ui/ImageUploader";
 import {
   generateSearchKeywords,

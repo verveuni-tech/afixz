@@ -12,7 +12,7 @@ import {
 import { ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { useLocationContext } from "../../context/LocationContext";
 import { HomepageContent } from "../../lib/homepageFallbackContent";
 import {

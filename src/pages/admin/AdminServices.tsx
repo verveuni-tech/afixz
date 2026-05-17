@@ -11,7 +11,7 @@ import BlogFormCard, {
   EditableBlog,
 } from "../../components/admin/BlogFormCard";
 import HomepageContentFormCard from "../../components/admin/HomepageContentFormCard";
-import { db } from "../../firebase";
+import { db } from "../../lib/firebase";
 import { Info } from "lucide-react";
 
 const validTabs: AdminTab[] = ["services", "categories", "blogs", "homepage"];

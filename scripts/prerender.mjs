@@ -92,10 +92,10 @@ async function run() {
     },
 
     {
-      slug: "flying-mali",
-      title: "Flying Mali Plans | AfixZ",
+      slug: "garden-care",
+      title: "Garden Care Plans | AfixZ",
       description:
-        "Discover premium plans and offerings from Flying Mali.",
+        "Recurring garden maintenance plans with professional care, pruning and plant health support.",
     },
 
     {
