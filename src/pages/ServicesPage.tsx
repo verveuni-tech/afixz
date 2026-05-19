@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { ChevronRight, MapPin, Search, ArrowRight, X, SlidersHorizontal } from "lucide-react";
+import { ChevronRight, MapPin, Search, ArrowRight, X, ChevronDown } from "lucide-react";
 import { useLocationContext } from "../context/LocationContext";
 import { getLocationLabel } from "../lib/locations";
 import {
@@ -192,15 +192,18 @@ const ServicesPage: React.FC = () => {
                 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
               />
               <input
+                type="search"
+                aria-label="Filter services"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
                 placeholder="Search services…"
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-accent outline-none"
+                className={`w-full pl-9 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-[#f36b21] focus:border-transparent outline-none transition ${localSearch ? "pr-9" : "pr-4"}`}
               />
               {localSearch && (
                 <button
                   onClick={() => setLocalSearch("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  aria-label="Clear search"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-700 transition-colors"
                 >
                   <X size={14} />
                 </button>
@@ -209,14 +212,11 @@ const ServicesPage: React.FC = () => {
 
             {/* Sort select */}
             <div className="relative">
-              <SlidersHorizontal
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-              />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="appearance-none pl-8 pr-8 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-accent outline-none cursor-pointer"
+                aria-label="Sort services"
+                className="appearance-none pl-3.5 pr-8 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-[#f36b21] focus:border-transparent outline-none cursor-pointer transition"
               >
                 {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
                   <option key={key} value={key}>
@@ -224,6 +224,10 @@ const ServicesPage: React.FC = () => {
                   </option>
                 ))}
               </select>
+              <ChevronDown
+                size={13}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              />
             </div>
           </div>
 
@@ -232,10 +236,10 @@ const ServicesPage: React.FC = () => {
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-all min-h-[36px] ${
                   selectedCategory === null
                     ? "bg-[#1f2933] text-white"
-                    : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                    : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800"
                 }`}
               >
                 All
@@ -248,7 +252,7 @@ const ServicesPage: React.FC = () => {
                       cat.slug === selectedCategory ? null : cat.slug
                     )
                   }
-                  className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                  className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-all min-h-[36px] ${
                     selectedCategory === cat.slug
                       ? "bg-[#f36b21] text-white"
                       : "border border-slate-200 bg-white text-slate-600 hover:border-[#f36b21]/50 hover:text-[#f36b21]"

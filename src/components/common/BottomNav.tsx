@@ -16,6 +16,7 @@ const BottomNav: React.FC = () => {
 
   return (
     <nav
+      aria-label="Main navigation"
       className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white border-t border-slate-100"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
@@ -29,14 +30,19 @@ const BottomNav: React.FC = () => {
             <Link
               key={href}
               to={href}
-              className={`flex flex-col items-center justify-center gap-0.5 transition-colors ${
-                isActive ? "text-[#f36b21]" : "text-slate-400"
+              aria-label={badge ? `${label}, ${badge} item${badge === 1 ? "" : "s"}` : label}
+              aria-current={isActive ? "page" : undefined}
+              className={`flex flex-col items-center justify-center gap-0.5 transition-colors duration-150 ${
+                isActive ? "text-accent" : "text-slate-400 hover:text-slate-600"
               }`}
             >
               <div className="relative">
                 <Icon size={21} strokeWidth={isActive ? 2.2 : 1.75} />
                 {badge !== null && (
-                  <span className="absolute -top-1.5 -right-2 bg-[#f36b21] text-white font-bold leading-none min-w-[15px] h-[15px] flex items-center justify-center rounded-full text-[9px] px-0.5">
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-1.5 -right-2 bg-accent text-white font-bold leading-none min-w-[15px] h-[15px] flex items-center justify-center rounded-full text-[9px] px-0.5"
+                  >
                     {badge > 9 ? "9+" : badge}
                   </span>
                 )}
