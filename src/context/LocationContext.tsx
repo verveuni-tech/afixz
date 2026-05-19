@@ -38,6 +38,8 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       setSelectedLocationState(storedValue);
     } else if (isLocationId(profileLocation)) {
       setSelectedLocationState(profileLocation);
+    } else {
+      setSelectedLocationState("noida");
     }
 
     setHydrated(true);

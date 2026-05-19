@@ -267,6 +267,16 @@ const Navbar: React.FC = () => {
               <User size={18} />
             </button>
 
+            {/* Location — mobile only, always visible */}
+            <button
+              type="button"
+              onClick={openLocationPicker}
+              className="md:hidden inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-[#f36b21]/40 hover:text-[#f36b21]"
+            >
+              <MapPin size={13} className="shrink-0" />
+              <span className="max-w-[72px] truncate">{getLocationLabel(selectedLocation)}</span>
+            </button>
+
             {/* Mobile hamburger — secondary nav only */}
             <button
               onClick={() => setIsOpen(!isOpen)}
