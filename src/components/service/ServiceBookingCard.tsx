@@ -125,7 +125,7 @@ const ServiceBookingCard: React.FC<Props> = ({
 
   if (success) {
     return (
-      <div className="bg-white rounded-3xl shadow-xl p-8 sticky top-32 text-center">
+      <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 md:sticky md:top-32 text-center">
         <h3 className="text-xl font-semibold text-green-600">
           Booking Confirmed
         </h3>
@@ -140,7 +140,7 @@ const ServiceBookingCard: React.FC<Props> = ({
 
   return (
     <>
-      <div className="bg-white rounded-3xl shadow-xl p-8 sticky top-32">
+      <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 md:sticky md:top-32">
 
         {/* Price */}
         <div className="mb-8">

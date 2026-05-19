@@ -13,6 +13,7 @@ import {
 } from "react-router-dom";
 
 import Navbar from "./components/common/Navbar";
+import BottomNav from "./components/common/BottomNav";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import ScrollToTop from "./components/common/ScrollToTop";
 
@@ -145,7 +146,7 @@ const AppLayout = memo(() => {
     <div className="min-h-screen overflow-x-hidden font-sans">
       <Navbar />
 
-      <main className="min-h-[60vh]">
+      <main className="min-h-[60vh] pt-[7rem] md:pt-20 pb-20 md:pb-0">
         <Outlet />
       </main>
 
@@ -153,6 +154,8 @@ const AppLayout = memo(() => {
         <Footer />
         <LocationPickerModal />
       </Suspense>
+
+      <BottomNav />
     </div>
   );
 });

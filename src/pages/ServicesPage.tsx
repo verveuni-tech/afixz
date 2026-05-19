@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { ChevronRight, MapPin, Search, ArrowRight } from "lucide-react";
+import { ChevronRight, MapPin, Search, ArrowRight, X, SlidersHorizontal } from "lucide-react";
 import { useLocationContext } from "../context/LocationContext";
 import { getLocationLabel } from "../lib/locations";
 import {
@@ -11,12 +11,27 @@ import {
 import { getAllServices } from "../lib/serviceCache";
 import useSeo from "../hooks/useSeo";
 
+type SortOption = "default" | "price-asc" | "price-desc";
+
+const SORT_LABELS: Record<SortOption, string> = {
+  default: "Recommended",
+  "price-asc": "Price: Low → High",
+  "price-desc": "Price: High → Low",
+};
+
 const ServicesPage: React.FC = () => {
   useSeo({
     title: "All Home Services | Book Verified Professionals — AfixZ",
-    description: "Browse and book all home services on AfixZ — gardening, mechanic, interior, fabrication, and more. Verified professionals at your doorstep.",
+    description:
+      "Browse and book all home services on AfixZ — gardening, mechanic, interior, fabrication, and more. Verified professionals at your doorstep.",
     canonicalUrl: `${import.meta.env.VITE_SITE_URL || "https://afixz.com"}/services`,
-    keywords: ["home services", "book home services", "verified professionals", "doorstep services", "AfixZ"],
+    keywords: [
+      "home services",
+      "book home services",
+      "verified professionals",
+      "doorstep services",
+      "AfixZ",
+    ],
   });
 
   const [searchParams] = useSearchParams();
@@ -26,6 +41,10 @@ const ServicesPage: React.FC = () => {
   const [allServices, setAllServices] = useState<ServiceEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>("default");
+  const [localSearch, setLocalSearch] = useState(search);
 
   useEffect(() => {
     let active = true;
@@ -40,63 +59,117 @@ const ServicesPage: React.FC = () => {
         }
       } catch (err) {
         console.error(err);
-        if (active) setError("We couldn't load services right now. Please try again shortly.");
+        if (active)
+          setError(
+            "We couldn't load services right now. Please try again shortly."
+          );
       } finally {
         if (active) setLoading(false);
       }
     }
 
     void load();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
-  // Client-side filtering: location + search
+  // Derive unique categories from available services for this location
+  const categories = useMemo(() => {
+    const locationServices = allServices.filter((s) =>
+      isServiceAvailableInLocation(s, selectedLocation)
+    );
+    const seen = new Set<string>();
+    const result: { slug: string; label: string }[] = [];
+    for (const s of locationServices) {
+      if (s.categorySlug && !seen.has(s.categorySlug)) {
+        seen.add(s.categorySlug);
+        result.push({
+          slug: s.categorySlug,
+          label: s.categorySlug
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, (c) => c.toUpperCase()),
+        });
+      }
+    }
+    return result;
+  }, [allServices, selectedLocation]);
+
+  // Reset category when location changes and it's no longer available
+  useEffect(() => {
+    if (
+      selectedCategory &&
+      !categories.some((c) => c.slug === selectedCategory)
+    ) {
+      setSelectedCategory(null);
+    }
+  }, [categories, selectedCategory]);
+
   const services = useMemo(() => {
+    const query = localSearch.trim().toLowerCase();
+
     let filtered = allServices
       .filter((s) => isServiceAvailableInLocation(s, selectedLocation))
       .map((s) => resolveServiceForLocation(s, selectedLocation));
 
-    if (search) {
+    if (selectedCategory) {
+      filtered = filtered.filter((s) => s.categorySlug === selectedCategory);
+    }
+
+    if (query) {
       filtered = filtered.filter(
         (s) =>
-          s.title.toLowerCase().includes(search) ||
-          s.slug.toLowerCase().includes(search) ||
-          s.categorySlug.toLowerCase().includes(search) ||
-          s.searchKeywords.some((k) => k.toLowerCase().includes(search))
+          s.title.toLowerCase().includes(query) ||
+          s.slug.toLowerCase().includes(query) ||
+          s.categorySlug.toLowerCase().includes(query) ||
+          s.searchKeywords.some((k) => k.toLowerCase().includes(query))
+      );
+    }
+
+    if (sortBy === "price-asc") {
+      filtered = [...filtered].sort(
+        (a, b) => (a.price as number) - (b.price as number)
+      );
+    } else if (sortBy === "price-desc") {
+      filtered = [...filtered].sort(
+        (a, b) => (b.price as number) - (a.price as number)
       );
     }
 
     return filtered;
-  }, [allServices, selectedLocation, search]);
+  }, [allServices, selectedLocation, selectedCategory, localSearch, sortBy]);
+
+  const hasActiveFilters =
+    selectedCategory !== null || sortBy !== "default" || localSearch.trim().length > 0;
+
+  const clearFilters = () => {
+    setSelectedCategory(null);
+    setSortBy("default");
+    setLocalSearch("");
+  };
 
   return (
-    <section className="min-h-screen bg-white pb-20 pt-28">
+    <section className="min-h-screen bg-white pb-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1 text-sm text-slate-400">
-          <Link to="/" className="transition hover:text-slate-600">Home</Link>
+        <nav className="flex items-center gap-1 pt-5 text-sm text-slate-400">
+          <Link to="/" className="transition hover:text-slate-600">
+            Home
+          </Link>
           <ChevronRight size={13} />
-          <span className="font-medium text-slate-700">
-            {search ? "Search Results" : "Services"}
-          </span>
+          <span className="font-medium text-slate-700">Services</span>
         </nav>
 
         {/* Header */}
-        <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              {search ? (
-                <>
-                  Results for <span className="text-slate-500">"{search}"</span>
-                </>
-              ) : (
-                "All Services"
-              )}
+              All Services
             </h1>
             {selectedLocation && (
-              <div className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
+              <div className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-500">
                 <MapPin size={13} className="text-slate-400" />
-                Showing for {getLocationLabel(selectedLocation)}
+                {getLocationLabel(selectedLocation)}
               </div>
             )}
           </div>
@@ -108,12 +181,119 @@ const ServicesPage: React.FC = () => {
           )}
         </div>
 
+        {/* ── Filter bar ── */}
+        <div className="mt-5 space-y-3">
+          {/* Search + Sort row */}
+          <div className="flex gap-2.5">
+            {/* Inline search */}
+            <div className="relative flex-1">
+              <Search
+                size={15}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              />
+              <input
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+                placeholder="Search services…"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-accent outline-none"
+              />
+              {localSearch && (
+                <button
+                  onClick={() => setLocalSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Sort select */}
+            <div className="relative">
+              <SlidersHorizontal
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="appearance-none pl-8 pr-8 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-accent outline-none cursor-pointer"
+              >
+                {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
+                  <option key={key} value={key}>
+                    {SORT_LABELS[key]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Category chips — horizontal scroll on mobile */}
+          {categories.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                  selectedCategory === null
+                    ? "bg-[#1f2933] text-white"
+                    : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                }`}
+              >
+                All
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.slug}
+                  onClick={() =>
+                    setSelectedCategory(
+                      cat.slug === selectedCategory ? null : cat.slug
+                    )
+                  }
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                    selectedCategory === cat.slug
+                      ? "bg-[#f36b21] text-white"
+                      : "border border-slate-200 bg-white text-slate-600 hover:border-[#f36b21]/50 hover:text-[#f36b21]"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Active filter summary + clear */}
+          {hasActiveFilters && !loading && (
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-slate-500">
+                {services.length} result{services.length === 1 ? "" : "s"}
+                {selectedCategory && (
+                  <>
+                    {" "}
+                    in{" "}
+                    <span className="font-semibold text-[#f36b21]">
+                      {categories.find((c) => c.slug === selectedCategory)?.label}
+                    </span>
+                  </>
+                )}
+              </p>
+              <button
+                onClick={clearFilters}
+                className="text-xs font-medium text-slate-400 underline hover:text-slate-700 transition"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Content */}
-        <div className="mt-8">
+        <div className="mt-6">
           {loading ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div
+                  key={index}
+                  className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+                >
                   <div className="aspect-[16/10] animate-pulse bg-slate-100" />
                   <div className="space-y-2.5 p-4">
                     <div className="h-4 w-3/4 animate-pulse rounded bg-slate-100" />
@@ -132,18 +312,22 @@ const ServicesPage: React.FC = () => {
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                 <Search size={22} className="text-slate-400" />
               </div>
-              <p className="mt-4 text-sm font-medium text-slate-700">No services found</p>
-              <p className="mt-1 text-sm text-slate-500">
-                {search
-                  ? "Try a different search term or change your location."
-                  : "No services are available for your current location."}
+              <p className="mt-4 text-sm font-medium text-slate-700">
+                No services found
               </p>
-              <Link
-                to="/"
-                className="mt-5 rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white transition hover:bg-primary-hover"
-              >
-                Back to Home
-              </Link>
+              <p className="mt-1 text-sm text-slate-500">
+                {localSearch || selectedCategory
+                  ? "Try different filters or clear them."
+                  : "No services available for your current location."}
+              </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-5 rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white transition hover:bg-primary-hover"
+                >
+                  Clear filters
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -163,14 +347,14 @@ export default ServicesPage;
 /* ---- Sub-components ---- */
 
 const ServiceCard: React.FC<{ service: ServiceEntry }> = ({ service }) => {
-  const hasImage = service.images && service.images.length > 0 && service.images[0];
+  const hasImage =
+    service.images && service.images.length > 0 && service.images[0];
 
   return (
     <Link
       to={`/services/${service.slug}`}
       className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50"
     >
-      {/* Image / Placeholder */}
       <div className="aspect-[16/10] overflow-hidden bg-slate-100">
         {hasImage ? (
           <img
@@ -181,12 +365,13 @@ const ServiceCard: React.FC<{ service: ServiceEntry }> = ({ service }) => {
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-            <span className="text-2xl font-bold tracking-tight text-primary/25">afixz</span>
+            <span className="text-2xl font-bold tracking-tight text-primary/25">
+              afixz
+            </span>
           </div>
         )}
       </div>
 
-      {/* Content */}
       <div className="p-4">
         <h3 className="text-sm font-semibold text-slate-800 transition group-hover:text-slate-900">
           {service.title}
@@ -199,10 +384,15 @@ const ServiceCard: React.FC<{ service: ServiceEntry }> = ({ service }) => {
         )}
 
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-base font-bold text-accent">₹{service.price}</span>
+          <span className="text-base font-bold text-accent">
+            ₹{service.price}
+          </span>
           <span className="flex items-center gap-1 text-xs font-medium text-slate-400 transition group-hover:text-slate-600">
             View
-            <ArrowRight size={12} className="transition group-hover:translate-x-0.5" />
+            <ArrowRight
+              size={12}
+              className="transition group-hover:translate-x-0.5"
+            />
           </span>
         </div>
       </div>

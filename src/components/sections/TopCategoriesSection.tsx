@@ -154,13 +154,13 @@ export default function TopCategoriesSection({ content }: Props) {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-5">
             {Array.from({ length: 5 }).map((_, index) => (
               <div
                 key={index}
-                className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4"
+                className="flex shrink-0 w-[148px] sm:w-auto items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4"
               >
-                <div className="h-12 w-12 animate-pulse rounded-xl bg-slate-200" />
+                <div className="h-10 w-10 animate-pulse rounded-xl bg-slate-200 shrink-0" />
                 <div className="h-4 w-16 animate-pulse rounded bg-slate-200" />
               </div>
             ))}
@@ -171,7 +171,7 @@ export default function TopCategoriesSection({ content }: Props) {
             they will appear here.
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible lg:grid-cols-5">
             {orderedCategories.map((category, index) => {
               const sectionKey =
                 inferCategorySectionKey(
@@ -188,20 +188,20 @@ export default function TopCategoriesSection({ content }: Props) {
                 <Link
                   key={category.id}
                   to={`/category/${category.slug}`}
-                  className="group flex items-center gap-3.5 rounded-xl border border-slate-100 bg-white px-4 py-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md hover:shadow-primary/10"
+                  className="group flex shrink-0 w-[148px] sm:w-auto items-center gap-3 rounded-xl border border-slate-100 bg-white px-3.5 py-3.5 sm:px-4 sm:py-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md hover:shadow-primary/10"
                 >
                   <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${style.icon}`}
+                    className={`flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg ${style.icon}`}
                   >
-                    <Icon size={18} />
+                    <Icon size={17} />
                   </div>
 
-                  <span className="flex-1 text-sm font-semibold text-primary group-hover:text-primary">
+                  <span className="flex-1 text-xs sm:text-sm font-semibold text-primary line-clamp-2 leading-snug">
                     {category.name}
                   </span>
 
                   <ArrowRight
-                    size={14}
+                    size={13}
                     className={`shrink-0 transition ${style.arrow}`}
                   />
                 </Link>

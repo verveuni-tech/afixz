@@ -119,6 +119,40 @@ const Navbar: React.FC = () => {
     navigate(path);
   };
 
+  const SearchDropdown = ({ mobile }: { mobile?: boolean }) =>
+    term.length >= 2 ? (
+      <div
+        ref={mobile ? undefined : dropdownRef}
+        className="absolute mt-1.5 left-0 right-0 bg-white border border-slate-200 rounded-xl shadow-xl z-50"
+      >
+        {loading ? (
+          <div className="p-4 text-sm text-slate-500">Searching...</div>
+        ) : results.length === 0 ? (
+          <div className="p-4 text-sm text-slate-500">No services found</div>
+        ) : (
+          results.map((service) => (
+            <button
+              key={service.id}
+              onClick={() => handleNavigate(service.slug)}
+              className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 text-left"
+            >
+              <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                <img
+                  src={service.images?.[0]}
+                  alt={service.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-900">{service.title}</p>
+                <p className="text-xs font-semibold text-accent">₹{service.price}</p>
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+    ) : null;
+
   return (
     <nav
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
@@ -127,94 +161,45 @@ const Navbar: React.FC = () => {
           : "bg-white"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        {/* ── Main row ── */}
+        <div className="flex items-center justify-between h-14 md:h-20">
 
-         {/* Logo */}
-<button
-  onClick={() => goTo("/")}
-  className="flex shrink-0 items-center"
->
-  <img
-    src={logoImg}
-    alt="AfixZ"
-    className="
-      h-16
-      w-auto
-      object-contain
-      mix-blend-multiply
-      transition-transform duration-300
-      hover:scale-[1.02]
-    "
-  />
-</button>
-          {/* SEARCH */}
+          {/* Logo */}
+          <button
+            onClick={() => goTo("/")}
+            className="flex shrink-0 items-center"
+          >
+            <img
+              src={logoImg}
+              alt="AfixZ"
+              className="h-12 md:h-16 w-auto object-contain mix-blend-multiply transition-transform duration-300 hover:scale-[1.02]"
+            />
+          </button>
+
+          {/* Desktop search */}
           <div className="hidden md:flex flex-1 justify-center px-10 relative">
             <div className="relative w-full max-w-xl">
               <Search
                 size={18}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
               />
-
               <input
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 placeholder="Search services..."
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-accent outline-none"
               />
-
-              {term.length >= 2 && (
-                <div
-                  ref={dropdownRef}
-                  className="absolute mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50"
-                >
-                  {loading ? (
-                    <div className="p-4 text-slate-500">
-                      Searching...
-                    </div>
-                  ) : results.length === 0 ? (
-                    <div className="p-4 text-slate-500">
-                      No services found
-                    </div>
-                  ) : (
-                    results.map((service) => (
-                      <button
-                        key={service.id}
-                        onClick={() =>
-                          handleNavigate(service.slug)
-                        }
-                        className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 text-left"
-                      >
-                        <div className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100">
-                          <img
-                            src={service.images?.[0]}
-                            alt={service.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-
-                        <div>
-                          <p className="font-medium text-slate-900">
-                            {service.title}
-                          </p>
-                          <p className="text-sm font-semibold text-accent">
-                            ₹{service.price}
-                          </p>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
+              <SearchDropdown />
             </div>
           </div>
 
-          {/* RIGHT */}
-          <div className="flex items-center gap-4">
+          {/* Right — desktop items */}
+          <div className="flex items-center gap-3 md:gap-4">
             <button
               type="button"
               onClick={openLocationPicker}
-              className="hidden items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-accent/30 hover:text-accent md:inline-flex"
+              className="hidden md:inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-accent/30 hover:text-accent"
             >
               <MapPin size={16} />
               {getLocationLabel(selectedLocation)}
@@ -247,9 +232,10 @@ const Navbar: React.FC = () => {
               </Link>
             </div>
 
+            {/* Cart — desktop only (mobile uses BottomNav) */}
             <button
               onClick={() => goTo("/cart")}
-              className="relative p-2 rounded-full hover:bg-slate-100"
+              className="relative hidden md:block p-2 rounded-full hover:bg-slate-100"
             >
               <ShoppingCart size={20} />
               {cart.length > 0 && (
@@ -266,36 +252,45 @@ const Navbar: React.FC = () => {
               <User size={18} />
             </button>
 
+            {/* Mobile hamburger — secondary nav only (primary in BottomNav) */}
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="md:hidden p-2 rounded-full hover:bg-slate-100"
+              aria-label="Menu"
             >
               {isOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
+
+        {/* ── Mobile search row ── */}
+        <div className="md:hidden pb-2.5">
+          <div className="relative">
+            <Search
+              size={15}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+            />
+            <input
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              placeholder="Search services..."
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-accent outline-none"
+            />
+            <SearchDropdown mobile />
+          </div>
+        </div>
       </div>
 
+      {/* ── Mobile secondary menu (location + secondary nav) ── */}
       {isOpen && (
-        <div className="border-t border-slate-200 bg-white px-6 py-5 md:hidden">
-          <div className="space-y-3">
+        <div className="border-t border-slate-200 bg-white px-4 py-4 md:hidden">
+          <div className="space-y-2">
             <button
               onClick={openLocationPicker}
               className="flex w-full items-center gap-2 rounded-2xl bg-accent/5 px-4 py-3 text-left text-sm font-medium text-primary"
             >
               <MapPin size={16} className="text-accent" />
               {getLocationLabel(selectedLocation)}
-            </button>
-
-            <button
-              onClick={() => goTo("/")}
-              className={`block w-full rounded-2xl px-4 py-3 text-left text-sm font-medium ${
-                location.pathname === "/"
-                  ? "bg-accent/10 text-accent"
-                  : "bg-slate-50 text-slate-700"
-              }`}
-            >
-              Home
             </button>
 
             <button
@@ -306,7 +301,7 @@ const Navbar: React.FC = () => {
                   : "bg-slate-50 text-slate-700"
               }`}
             >
-              Garden Care
+              Our Plans
             </button>
 
             <button
@@ -318,20 +313,6 @@ const Navbar: React.FC = () => {
               }`}
             >
               Blogs
-            </button>
-
-            <button
-              onClick={() => goTo("/profile")}
-              className="block w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700"
-            >
-              Profile
-            </button>
-
-            <button
-              onClick={() => goTo("/cart")}
-              className="block w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700"
-            >
-              Cart
             </button>
           </div>
         </div>
