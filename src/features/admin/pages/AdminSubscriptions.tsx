@@ -9,16 +9,16 @@ import {
   Database,
   CheckCircle2,
 } from "lucide-react";
-import AdminHeader from "../../components/admin/AdminHeader";
+import AdminHeader from "../components/AdminHeader";
 import {
   getAllSubscriptions,
   updateSubscriptionStatus,
   seedPlansToFirestore,
-} from "../../features/subscriptions/lib";
-import { Subscription, SubscriptionStatus } from "../../features/subscriptions/types";
-import { BILLING_CYCLE_LABELS } from "../../features/subscriptions/plans";
-import { getLocationLabel } from "../../lib/locations";
-import type { LocationId } from "../../lib/locations";
+} from "../../subscriptions/lib";
+import { Subscription, SubscriptionStatus } from "../../subscriptions/types";
+import { BILLING_CYCLE_LABELS } from "../../subscriptions/plans";
+import { getLocationLabel } from "../../../lib/locations";
+import type { LocationId } from "../../../lib/locations";
 
 type FilterStatus = "all" | SubscriptionStatus;
 

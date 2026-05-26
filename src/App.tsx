@@ -17,8 +17,8 @@ import BottomNav from "./components/common/BottomNav";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import ScrollToTop from "./components/common/ScrollToTop";
 
-import ProtectedRoute from "./pages/admin/ProtectedRoute";
-import ProviderProtectedRoute from "./pages/provider/ProviderProtectedRoute";
+import ProtectedRoute from "./features/admin/pages/ProtectedRoute";
+import ProviderProtectedRoute from "./features/provider/pages/ProviderProtectedRoute";
 import UserProtectedRoute from "./hooks/UserProtectedRoute";
 
 import {
@@ -97,31 +97,31 @@ const TermsOfService = lazy(
 );
 
 const AdminLogin = lazy(
-  () => import("./pages/admin/AdminLogin")
+  () => import("./features/admin/pages/AdminLogin")
 );
 
 const AdminDashboard = lazy(
-  () => import("./pages/admin/AdminDashboard")
+  () => import("./features/admin/pages/AdminDashboard")
 );
 
 const AdminServices = lazy(
-  () => import("./pages/admin/AdminServices")
+  () => import("./features/admin/pages/AdminServices")
 );
 
 const AdminAllServices = lazy(
-  () => import("./pages/admin/AdminAllServices")
+  () => import("./features/admin/pages/AdminAllServices")
 );
 
 const AdminOrders = lazy(
-  () => import("./pages/admin/AdminOrders")
+  () => import("./features/admin/pages/AdminOrders")
 );
 
 const AdminSubscriptions = lazy(
-  () => import("./pages/admin/AdminSubscriptions")
+  () => import("./features/admin/pages/AdminSubscriptions")
 );
 
 const AdminUsers = lazy(
-  () => import("./pages/admin/AdminUsers")
+  () => import("./features/admin/pages/AdminUsers")
 );
 
 const MySubscriptionsPage = lazy(
@@ -132,11 +132,11 @@ const MySubscriptionsPage = lazy(
 );
 
 const ProviderLogin = lazy(
-  () => import("./pages/provider/ProviderLogin")
+  () => import("./features/provider/pages/ProviderLogin")
 );
 
 const ProviderDashboard = lazy(
-  () => import("./pages/provider/ProviderDashboard")
+  () => import("./features/provider/pages/ProviderDashboard")
 );
 
 /* ------------------------------- App Layout ------------------------------- */

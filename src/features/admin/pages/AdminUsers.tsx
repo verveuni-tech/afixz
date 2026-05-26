@@ -10,9 +10,9 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
-import { db } from "../../lib/firebase";
-import AdminHeader from "../../components/admin/AdminHeader";
-import { UserProfile, useAuth } from "../../context/AuthContext";
+import { db } from "../../../lib/firebase";
+import AdminHeader from "../components/AdminHeader";
+import { UserProfile, useAuth } from "../../../context/AuthContext";
 import { Download, Loader2, Search, Users, ShieldCheck, ShieldOff } from "lucide-react";
 
 const PAGE_SIZE = 25;

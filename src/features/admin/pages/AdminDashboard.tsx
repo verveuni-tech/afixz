@@ -1,7 +1,7 @@
-import AdminHeader from "../../components/admin/AdminHeader";
-import DashboardStats from "../../components/admin/DashboardStats";
-import RecentBlogsTable from "../../components/admin/RecentBlogsTable";
-import ServicesTable from "../../components/admin/ServicesTable";
+import AdminHeader from "../components/AdminHeader";
+import DashboardStats from "../components/DashboardStats";
+import RecentBlogsTable from "../components/RecentBlogsTable";
+import ServicesTable from "../components/ServicesTable";
 
 export default function AdminDashboard() {
   return (

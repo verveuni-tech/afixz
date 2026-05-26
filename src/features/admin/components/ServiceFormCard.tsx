@@ -10,10 +10,10 @@ import {
   doc,
   updateDoc,
 } from "firebase/firestore";
-import { db } from "../../lib/firebase";
+import { db } from "../../../lib/firebase";
 import { Plus, Trash2, CheckCircle, RefreshCcw } from "lucide-react";
-import ImageUploader from "../ui/ImageUploader";
-import { LocationId, LOCATION_OPTIONS } from "../../lib/locations";
+import ImageUploader from "../../../components/ui/ImageUploader";
+import { LocationId, LOCATION_OPTIONS } from "../../../lib/locations";
 
 interface UploadedImage {
   url: string;

@@ -13,8 +13,8 @@ import {
 } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import { Search, X, ChevronRight, ChevronDown, ChevronsUpDown, Loader2 } from "lucide-react";
-import AdminHeader from "../../components/admin/AdminHeader";
-import { db } from "../../lib/firebase";
+import AdminHeader from "../components/AdminHeader";
+import { db } from "../../../lib/firebase";
 
 const PAGE_SIZE = 25;
 

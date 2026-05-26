@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Shield, UserPlus, Loader2, AlertCircle } from "lucide-react";
-import AdminHeader from "../../components/admin/AdminHeader";
+import AdminHeader from "../components/AdminHeader";
 
 const API_SECRET = import.meta.env.VITE_NOTIFY_API_SECRET || "";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";

@@ -97,3 +97,5 @@ AfixZ_Website_Content.md
 .env
 .env.local
 .env.production
+
+HANDOFF.md

@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { useSearchParams } from "react-router-dom";
-import AdminTabs, { AdminTab } from "../../components/admin/AdminTabs";
+import AdminTabs, { AdminTab } from "../components/AdminTabs";
 import ServiceFormCard, {
   EditableService,
-} from "../../components/admin/ServiceFormCard";
-import CategoryFormCard from "../../components/admin/CategoryFormCard";
-import AdminHeader from "../../components/admin/AdminHeader";
+} from "../components/ServiceFormCard";
+import CategoryFormCard from "../components/CategoryFormCard";
+import AdminHeader from "../components/AdminHeader";
 import BlogFormCard, {
   EditableBlog,
-} from "../../components/admin/BlogFormCard";
-import HomepageContentFormCard from "../../components/admin/HomepageContentFormCard";
-import { db } from "../../lib/firebase";
+} from "../components/BlogFormCard";
+import HomepageContentFormCard from "../components/HomepageContentFormCard";
+import { db } from "../../../lib/firebase";
 import { Info } from "lucide-react";
 
 const validTabs: AdminTab[] = ["services", "categories", "blogs", "homepage"];

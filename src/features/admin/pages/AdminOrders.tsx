@@ -8,8 +8,8 @@ import {
   updateDoc,
   limit,
 } from "firebase/firestore";
-import { db } from "../../lib/firebase";
-import AdminHeader from "../../components/admin/AdminHeader";
+import { db } from "../../../lib/firebase";
+import AdminHeader from "../components/AdminHeader";
 import {
   Package,
   Phone,

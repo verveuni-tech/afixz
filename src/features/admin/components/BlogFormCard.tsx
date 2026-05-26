@@ -11,13 +11,13 @@ import {
   where,
 } from "firebase/firestore";
 import { CheckCircle, RefreshCcw } from "lucide-react";
-import { db } from "../../lib/firebase";
-import ImageUploader from "../ui/ImageUploader";
+import { db } from "../../../lib/firebase";
+import ImageUploader from "../../../components/ui/ImageUploader";
 import {
   generateSearchKeywords,
   slugifyText,
   splitCommaSeparated,
-} from "../../lib/blogs";
+} from "../../../lib/blogs";
 
 interface UploadedImage {
   url: string;
