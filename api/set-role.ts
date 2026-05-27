@@ -40,10 +40,10 @@ export default async function handler(
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
   // Rate limit: 5 requests per minute (role changes are rare, high-privilege)
-  const allowed = await checkRateLimit(req, res, {
+  const allowed = checkRateLimit(req, res, {
     prefix: "set-role",
     limit: 5,
-    window: "1 m",
+    windowMs: 60_000,
   });
   if (!allowed) return;
 

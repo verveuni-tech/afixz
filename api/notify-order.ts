@@ -139,10 +139,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const rateLimitKey = callerUid
     ? `uid:${callerUid}`
     : getRateLimitKey(req);
-  const allowed = await checkRateLimit(req, res, {
+  const allowed = checkRateLimit(req, res, {
     prefix: "notify-order",
     limit: 10,
-    window: "1 m",
+    windowMs: 60_000,
   }, rateLimitKey);
   if (!allowed) return;
 

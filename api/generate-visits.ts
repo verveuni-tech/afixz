@@ -51,10 +51,10 @@ export default async function handler(
   }
 
   // Rate limit: 10 requests per minute (cron runs once/day, manual trigger rare)
-  const allowed = await checkRateLimit(req, res, {
+  const allowed = checkRateLimit(req, res, {
     prefix: "generate-visits",
     limit: 10,
-    window: "1 m",
+    windowMs: 60_000,
   });
   if (!allowed) return;
 

@@ -1,67 +1,53 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 /**
- * Shared rate limiter for API endpoints.
+ * In-memory sliding window rate limiter for Vercel serverless.
  *
- * Requires two Vercel env vars:
- *   UPSTASH_REDIS_REST_URL
- *   UPSTASH_REDIS_REST_TOKEN
- *
- * If not configured, rate limiting is skipped (graceful fallback).
+ * - Zero external dependencies (no Redis/Upstash needed)
+ * - Persists across warm invocations of the same serverless instance
+ * - Resets on cold start (acceptable tradeoff for free tier)
+ * - Auto-evicts stale entries to prevent memory leaks
  */
 
-const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
-const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+interface RateLimitEntry {
+  timestamps: number[];
+}
 
-const isConfigured = Boolean(UPSTASH_URL && UPSTASH_TOKEN);
+// Global store survives across warm invocations
+const store = new Map<string, RateLimitEntry>();
 
-// Lazy-init redis + limiters to avoid errors when env vars missing
-let redis: Redis | null = null;
-const limiters = new Map<string, Ratelimit>();
+// Evict stale entries every 60s to prevent memory growth
+let lastCleanup = Date.now();
+const CLEANUP_INTERVAL = 60_000;
 
-function getRedis(): Redis {
-  if (!redis) {
-    redis = new Redis({
-      url: UPSTASH_URL!,
-      token: UPSTASH_TOKEN!,
-    });
+function cleanup(windowMs: number) {
+  const now = Date.now();
+  if (now - lastCleanup < CLEANUP_INTERVAL) return;
+  lastCleanup = now;
+
+  const cutoff = now - windowMs * 2; // Keep 2x window for safety
+  for (const [key, entry] of store) {
+    const latest = entry.timestamps[entry.timestamps.length - 1] || 0;
+    if (latest < cutoff) {
+      store.delete(key);
+    }
   }
-  return redis;
 }
 
 type RateLimitConfig = {
-  /** Unique prefix for this endpoint (e.g. "set-role", "notify-order") */
+  /** Unique prefix for this endpoint */
   prefix: string;
   /** Max requests per window */
   limit: number;
-  /** Window duration string (e.g. "1 m", "10 s", "1 h") */
-  window: `${number} ${"s" | "m" | "h" | "d"}`;
+  /** Window in milliseconds */
+  windowMs: number;
 };
 
-function getLimiter(config: RateLimitConfig): Ratelimit {
-  if (!limiters.has(config.prefix)) {
-    limiters.set(
-      config.prefix,
-      new Ratelimit({
-        redis: getRedis(),
-        limiter: Ratelimit.slidingWindow(config.limit, config.window),
-        prefix: `ratelimit:${config.prefix}`,
-        analytics: true,
-      })
-    );
-  }
-  return limiters.get(config.prefix)!;
-}
-
 /**
- * Get a rate limit key from the request.
- * Uses Firebase UID if available (from decoded token), falls back to IP.
+ * Get rate limit key from request. Uses UID if available, falls back to IP.
  */
 export function getRateLimitKey(req: VercelRequest, uid?: string): string {
   if (uid) return `uid:${uid}`;
-  // Vercel provides x-forwarded-for, x-real-ip
   const ip =
     (req.headers["x-real-ip"] as string) ||
     (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
@@ -70,43 +56,51 @@ export function getRateLimitKey(req: VercelRequest, uid?: string): string {
 }
 
 /**
- * Check rate limit. Returns true if request should proceed, false if blocked.
- * Sets appropriate headers on the response.
- *
- * If Upstash is not configured, always returns true (graceful fallback).
+ * Check rate limit. Returns true if allowed, false if blocked (429 sent).
  */
-export async function checkRateLimit(
+export function checkRateLimit(
   req: VercelRequest,
   res: VercelResponse,
   config: RateLimitConfig,
   identifier?: string
-): Promise<boolean> {
-  if (!isConfigured) return true; // Graceful fallback
+): boolean {
+  const key = `${config.prefix}:${identifier || getRateLimitKey(req)}`;
+  const now = Date.now();
+  const windowStart = now - config.windowMs;
 
-  const key = identifier || getRateLimitKey(req);
+  // Lazy cleanup
+  cleanup(config.windowMs);
 
-  try {
-    const limiter = getLimiter(config);
-    const result = await limiter.limit(key);
-
-    res.setHeader("X-RateLimit-Limit", result.limit);
-    res.setHeader("X-RateLimit-Remaining", result.remaining);
-    res.setHeader("X-RateLimit-Reset", result.reset);
-
-    if (!result.success) {
-      const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
-      res.setHeader("Retry-After", retryAfter);
-      res.status(429).json({
-        error: "Too many requests",
-        retryAfter,
-      });
-      return false;
-    }
-
-    return true;
-  } catch (err) {
-    // Redis error — don't block the request, log and continue
-    console.error(`Rate limit check failed (${config.prefix}):`, err);
-    return true;
+  // Get or create entry
+  let entry = store.get(key);
+  if (!entry) {
+    entry = { timestamps: [] };
+    store.set(key, entry);
   }
+
+  // Remove timestamps outside the window
+  entry.timestamps = entry.timestamps.filter((t) => t > windowStart);
+
+  // Check limit
+  if (entry.timestamps.length >= config.limit) {
+    const oldestInWindow = entry.timestamps[0];
+    const retryAfter = Math.ceil((oldestInWindow + config.windowMs - now) / 1000);
+
+    res.setHeader("X-RateLimit-Limit", config.limit);
+    res.setHeader("X-RateLimit-Remaining", 0);
+    res.setHeader("Retry-After", Math.max(retryAfter, 1));
+    res.status(429).json({
+      error: "Too many requests",
+      retryAfter: Math.max(retryAfter, 1),
+    });
+    return false;
+  }
+
+  // Allow — record this request
+  entry.timestamps.push(now);
+
+  res.setHeader("X-RateLimit-Limit", config.limit);
+  res.setHeader("X-RateLimit-Remaining", config.limit - entry.timestamps.length);
+
+  return true;
 }
