@@ -11,7 +11,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
-import { CheckCircle, RefreshCcw } from "lucide-react";
+import { CheckCircle, RefreshCcw, Plus, Trash2 } from "lucide-react";
 import ImageUploader from "../../../components/ui/ImageUploader";
 import { LocationId, LOCATION_OPTIONS } from "../../../lib/locations";
 import type { ProductCategory } from "./ProductCategoryFormCard";
@@ -49,6 +49,8 @@ export interface EditableProduct {
   priceByLocation?: Record<string, number>;
   contentByLocation?: Record<string, Partial<LocationOverrideState>>;
   seo?: { title: string; description: string };
+  aboutThisItem?: string[];
+  specifications?: { label: string; value: string }[];
 }
 
 interface FormState {
@@ -65,6 +67,8 @@ interface FormState {
   images: UploadedImage[];
   seoTitle: string;
   seoDescription: string;
+  aboutThisItem: string[];
+  specifications: { label: string; value: string }[];
   availableLocations: LocationId[];
   locationOverrides: Record<LocationId, LocationOverrideState>;
 }
@@ -116,6 +120,8 @@ const initialForm: FormState = {
   images: [],
   seoTitle: "",
   seoDescription: "",
+  aboutThisItem: [""],
+  specifications: [{ label: "", value: "" }],
   availableLocations: [],
   locationOverrides: createLocationOverrides(),
 };
@@ -168,6 +174,14 @@ const ProductFormCard = ({ productToEdit, onSaved, onCancelEdit }: Props) => {
         : [],
       seoTitle: productToEdit.seo?.title || "",
       seoDescription: productToEdit.seo?.description || "",
+      aboutThisItem:
+        Array.isArray(productToEdit.aboutThisItem) && productToEdit.aboutThisItem.length > 0
+          ? productToEdit.aboutThisItem
+          : [""],
+      specifications:
+        Array.isArray(productToEdit.specifications) && productToEdit.specifications.length > 0
+          ? productToEdit.specifications
+          : [{ label: "", value: "" }],
       availableLocations: Array.isArray(productToEdit.availableLocations)
         ? productToEdit.availableLocations
         : [],
@@ -314,6 +328,10 @@ const ProductFormCard = ({ productToEdit, onSaved, onCancelEdit }: Props) => {
           title: form.seoTitle.trim() || form.name.trim(),
           description: form.seoDescription.trim() || form.shortDescription.trim(),
         },
+        aboutThisItem: form.aboutThisItem.map((s) => s.trim()).filter(Boolean),
+        specifications: form.specifications
+          .filter((s) => s.label.trim() && s.value.trim())
+          .map((s) => ({ label: s.label.trim(), value: s.value.trim() })),
         updatedAt: Timestamp.now(),
       };
 
@@ -472,6 +490,122 @@ const ProductFormCard = ({ productToEdit, onSaved, onCancelEdit }: Props) => {
               value={form.seoDescription}
               onChange={handleChange}
             />
+          </div>
+        </div>
+
+        {/* About This Item */}
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-slate-700">About This Item</h3>
+              <p className="mt-0.5 text-xs text-slate-400">
+                Bullet points describing key product features
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setForm((p) => ({ ...p, aboutThisItem: [...p.aboutThisItem, ""] }))
+              }
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+            >
+              <Plus size={13} />
+              Add Point
+            </button>
+          </div>
+          <div className="space-y-2">
+            {form.aboutThisItem.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500">
+                  {idx + 1}
+                </span>
+                <input
+                  value={item}
+                  onChange={(e) => {
+                    const updated = [...form.aboutThisItem];
+                    updated[idx] = e.target.value;
+                    setForm((p) => ({ ...p, aboutThisItem: updated }));
+                  }}
+                  placeholder="e.g. Name of the plant: Philodendron Oxycardium Golden"
+                  className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {form.aboutThisItem.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = form.aboutThisItem.filter((_, i) => i !== idx);
+                      setForm((p) => ({ ...p, aboutThisItem: updated }));
+                    }}
+                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Specifications */}
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-slate-700">Specifications</h3>
+              <p className="mt-0.5 text-xs text-slate-400">
+                Key-value pairs like Brand, Color, Weight, etc.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setForm((p) => ({
+                  ...p,
+                  specifications: [...p.specifications, { label: "", value: "" }],
+                }))
+              }
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+            >
+              <Plus size={13} />
+              Add Spec
+            </button>
+          </div>
+          <div className="space-y-2">
+            {form.specifications.map((spec, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <input
+                  value={spec.label}
+                  onChange={(e) => {
+                    const updated = [...form.specifications];
+                    updated[idx] = { ...updated[idx], label: e.target.value };
+                    setForm((p) => ({ ...p, specifications: updated }));
+                  }}
+                  placeholder="Label (e.g. Brand)"
+                  className="w-2/5 rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  value={spec.value}
+                  onChange={(e) => {
+                    const updated = [...form.specifications];
+                    updated[idx] = { ...updated[idx], value: e.target.value };
+                    setForm((p) => ({ ...p, specifications: updated }));
+                  }}
+                  placeholder="Value (e.g. UGAOO)"
+                  className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {form.specifications.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = form.specifications.filter((_, i) => i !== idx);
+                      setForm((p) => ({ ...p, specifications: updated }));
+                    }}
+                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
