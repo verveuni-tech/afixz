@@ -30,6 +30,7 @@
     "@vercel/node": "^5.7.16",
     "@vitejs/plugin-react": "^5.0.0",
     "firebase-admin": "^13.9.0",
+    "sharp": "^0.34.5",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

@@ -19,4 +19,23 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+
+  build: {
+    // Target modern browsers for smaller output
+    target: 'es2020',
+
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split Firebase into own chunk — loaded async, not in initial bundle
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          // React ecosystem
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+
+    // esbuild minification (built-in, fast)
+    minify: 'esbuild',
+  },
 })

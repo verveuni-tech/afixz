@@ -216,23 +216,35 @@ service cloud.firestore {
         && data.addedAt is timestamp;
     }
 
-    function validAddress(data) {
-      return hasOnlyKeys(data, [
-          "fullName", "phone", "line1", "city",
-          "state", "pincode", "createdAt"
-        ])
-        && hasRequiredKeys(data, [
-          "fullName", "phone", "line1", "city",
-          "state", "pincode", "createdAt"
-        ])
-        && data.fullName is string
-        && data.phone is string
-        && data.line1 is string
-        && data.city is string
-        && data.state is string
-        && data.pincode is string
-        && data.createdAt is timestamp;
-    }
+   function validAddress(data) {
+  return hasRequiredKeys(data, [
+      "fullName",
+      "phone",
+      "line1",
+      "city",
+      "pincode",
+      "createdAt"
+    ])
+
+    && data.fullName is string
+    && data.phone is string
+    && data.line1 is string
+    && data.city is string
+    && data.pincode is string
+
+    && optionalString(data, "state")
+    && optionalString(data, "line2")
+    && optionalString(data, "landmark")
+    && optionalString(data, "label")
+    && optionalString(data, "fullAddress")
+
+    && (
+      !hasField(data, "isDefault")
+      || data.isDefault is bool
+    )
+
+    && data.createdAt is timestamp;
+}
 
     function validBooking(data) {
       return hasOnlyKeys(data, [
@@ -551,6 +563,18 @@ service cloud.firestore {
         && optionalString(data, "image")
         && optionalString(data, "banner")
         && data.createdAt is timestamp;
+    }
+
+    // ── Store: Product Orders ─────────────────────────────
+
+    match /productOrders/{orderId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.source == "store";
+      allow read: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAdmin();
+      allow delete: if false;
     }
 
     match /productCategories/{catId} {

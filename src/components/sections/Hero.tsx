@@ -16,9 +16,9 @@ import {
 
 import { useNavigate } from "react-router-dom";
 
-import hero1 from "@/assets/images/hero1.png";
-import hero2 from "@/assets/images/hero2.png";
-import hero3 from "@/assets/images/hero3.png";
+import hero1 from "@/assets/images/hero1.webp";
+import hero2 from "@/assets/images/hero2.webp";
+import hero3 from "@/assets/images/hero3.webp";
 
 import { HomepageHeroContent } from "../../lib/homepageFallbackContent";
 import { getLocationLabel } from "../../lib/locations";
@@ -278,6 +278,8 @@ const Hero: React.FC<Props> = ({ content }) => {
                       <img
                         src={slide.image}
                         alt={slide.alt}
+                        width={1200}
+                        height={800}
                         loading={i === 0 ? "eager" : "lazy"}
                         fetchPriority={
                           i === 0 ? "high" : "auto"
