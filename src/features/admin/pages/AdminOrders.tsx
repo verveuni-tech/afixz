@@ -9,7 +9,6 @@ import {
   limit,
 } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
-import AdminHeader from "../components/AdminHeader";
 import {
   Package,
   Phone,
@@ -195,8 +194,7 @@ export default function AdminOrders() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
-      <AdminHeader />
+    <div className="min-h-screen">
 
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-10">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

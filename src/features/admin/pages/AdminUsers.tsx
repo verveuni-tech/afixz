@@ -11,7 +11,6 @@ import {
   DocumentData,
 } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
-import AdminHeader from "../components/AdminHeader";
 import { UserProfile, useAuth } from "../../../context/AuthContext";
 import { Download, Loader2, Search, Users, ShieldCheck, ShieldOff } from "lucide-react";
 
@@ -152,8 +151,7 @@ export default function AdminUsers() {
     : users;
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
-      <AdminHeader />
+    <div className="min-h-screen">
 
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-10">
 

@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { Shield, UserPlus, Loader2, AlertCircle } from "lucide-react";
-import AdminHeader from "../components/AdminHeader";
-
 const API_SECRET = import.meta.env.VITE_NOTIFY_API_SECRET || "";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -60,8 +58,7 @@ export default function AdminRoles() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
-      <AdminHeader />
+    <div className="min-h-screen">
 
       <div className="mx-auto max-w-2xl px-4 py-8 md:px-6 md:py-10">
         <div className="mb-8">

@@ -4,8 +4,8 @@ import { signInWithPopup, signOut } from "firebase/auth";
 import { ArrowLeft, LockKeyhole, ShieldCheck } from "lucide-react";
 import { auth, googleProvider } from "../../../lib/firebase";
 import { useAuth } from "../../../context/AuthContext";
-import useSeo from "../../hooks/useSeo";
-import logoImg from "../../assets/AfixZ logo_20260322_144619_0000.png";
+import useSeo from "../../../hooks/useSeo";
+import logoImg from "../../../assets/AfixZ logo_20260322_144619_0000.png";
 
 const AdminLogin = () => {
   const navigate = useNavigate();

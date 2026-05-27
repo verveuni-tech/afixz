@@ -13,7 +13,6 @@ import {
 } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import { Search, X, ChevronRight, ChevronDown, ChevronsUpDown, Loader2 } from "lucide-react";
-import AdminHeader from "../components/AdminHeader";
 import { db } from "../../../lib/firebase";
 
 const PAGE_SIZE = 25;
@@ -207,8 +206,7 @@ export default function AdminAllServices() {
       : categories.find((c) => c.id === selectedCategory)?.name || "Unknown";
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
-      <AdminHeader />
+    <div className="min-h-screen">
 
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-10">
         {/* Header */}

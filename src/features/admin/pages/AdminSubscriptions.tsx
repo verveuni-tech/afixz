@@ -9,7 +9,6 @@ import {
   Database,
   CheckCircle2,
 } from "lucide-react";
-import AdminHeader from "../components/AdminHeader";
 import {
   getAllSubscriptions,
   updateSubscriptionStatus,
@@ -101,8 +100,7 @@ export default function AdminSubscriptions() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
-      <AdminHeader />
+    <div className="min-h-screen">
 
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-10">
         {/* Title */}

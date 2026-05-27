@@ -491,5 +491,70 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
+
+    // ── Store: Products ──────────────────────────────────────
+
+    function validProduct(data) {
+      return hasRequiredKeys(data, [
+          "name", "slug", "categoryId", "categorySlug",
+          "shortDescription", "description", "images",
+          "price", "compareAtPrice", "stock", "inStock",
+          "featured", "bestseller", "rating", "reviewCount",
+          "searchKeywords", "availableLocations",
+          "priceByLocation", "contentByLocation",
+          "seo", "updatedAt"
+        ])
+        && data.name is string
+        && data.slug is string
+        && data.categoryId is string
+        && data.categorySlug is string
+        && data.shortDescription is string
+        && data.description is string
+        && data.images is list
+        && isNumber(data.price)
+        && isNumber(data.compareAtPrice)
+        && isNumber(data.stock)
+        && data.inStock is bool
+        && data.featured is bool
+        && data.bestseller is bool
+        && isNumber(data.rating)
+        && isNumber(data.reviewCount)
+        && data.searchKeywords is list
+        && data.availableLocations is list
+        && data.priceByLocation is map
+        && data.contentByLocation is map
+        && data.seo is map
+        && data.updatedAt is timestamp
+        && optionalTimestampOrNull(data, "createdAt");
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && validProduct(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // ── Store: Product Categories ────────────────────────────
+
+    function validProductCategory(data) {
+      return hasRequiredKeys(data, [
+          "name", "slug", "productCount", "featured", "sortOrder", "createdAt"
+        ])
+        && data.name is string
+        && data.slug is string
+        && isNumber(data.productCount)
+        && data.featured is bool
+        && isNumber(data.sortOrder)
+        && optionalString(data, "description")
+        && optionalString(data, "image")
+        && optionalString(data, "banner")
+        && data.createdAt is timestamp;
+    }
+
+    match /productCategories/{catId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && validProductCategory(request.resource.data);
+      allow delete: if isAdmin();
+    }
   }
 }

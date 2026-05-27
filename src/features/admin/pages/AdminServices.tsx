@@ -6,7 +6,6 @@ import ServiceFormCard, {
   EditableService,
 } from "../components/ServiceFormCard";
 import CategoryFormCard from "../components/CategoryFormCard";
-import AdminHeader from "../components/AdminHeader";
 import BlogFormCard, {
   EditableBlog,
 } from "../components/BlogFormCard";
@@ -106,8 +105,7 @@ const AdminServices = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
-      <AdminHeader />
+    <div className="min-h-screen">
 
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-6 md:py-10">
         <div className="mb-6">

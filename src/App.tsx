@@ -96,6 +96,10 @@ const TermsOfService = lazy(
   () => import("./pages/TermsOfService")
 );
 
+const AdminLayout = lazy(
+  () => import("./features/admin/components/AdminLayout")
+);
+
 const AdminLogin = lazy(
   () => import("./features/admin/pages/AdminLogin")
 );
@@ -122,6 +126,18 @@ const AdminSubscriptions = lazy(
 
 const AdminUsers = lazy(
   () => import("./features/admin/pages/AdminUsers")
+);
+
+const AdminStore = lazy(
+  () => import("./features/admin/pages/AdminStore")
+);
+
+const StoreDashboard = lazy(
+  () => import("./features/admin/pages/StoreDashboard")
+);
+
+const AdminRoles = lazy(
+  () => import("./features/admin/pages/AdminRoles")
 );
 
 const MySubscriptionsPage = lazy(
@@ -296,58 +312,23 @@ function App() {
           />
 
           <Route
-            path="/admin/dashboard"
+            path="/admin"
             element={
               <ProtectedRoute>
-                <AdminDashboard />
+                <AdminLayout />
               </ProtectedRoute>
             }
-          />
-
-          <Route
-            path="/admin/orders"
-            element={
-              <ProtectedRoute>
-                <AdminOrders />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/services"
-            element={
-              <ProtectedRoute>
-                <AdminServices />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/all-services"
-            element={
-              <ProtectedRoute>
-                <AdminAllServices />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/subscriptions"
-            element={
-              <ProtectedRoute>
-                <AdminSubscriptions />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/users"
-            element={
-              <ProtectedRoute>
-                <AdminUsers />
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="services" element={<AdminServices />} />
+            <Route path="all-services" element={<AdminAllServices />} />
+            <Route path="subscriptions" element={<AdminSubscriptions />} />
+            <Route path="store" element={<AdminStore />} />
+            <Route path="store-dashboard" element={<StoreDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="roles" element={<AdminRoles />} />
+          </Route>
 
           {/* ---------------- Provider Routes ---------------- */}
 
