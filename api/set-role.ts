@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { checkRateLimit, getRateLimitKey } from "./_ratelimit";
 
 // Initialize Firebase Admin (once)
 if (getApps().length === 0) {
@@ -37,6 +38,14 @@ export default async function handler(
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+
+  // Rate limit: 5 requests per minute (role changes are rare, high-privilege)
+  const allowed = await checkRateLimit(req, res, {
+    prefix: "set-role",
+    limit: 5,
+    window: "1 m",
+  });
+  if (!allowed) return;
 
   // Accept either:
   //   a) static API secret  → "Bearer <NOTIFY_API_SECRET>"

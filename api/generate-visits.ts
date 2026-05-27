@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { checkRateLimit } from "./_ratelimit";
 
 // Initialize Firebase Admin (once)
 if (getApps().length === 0) {
@@ -48,6 +49,14 @@ export default async function handler(
   if (!isVercelCron && !isApiAuth) {
     return res.status(401).json({ error: "Unauthorized" });
   }
+
+  // Rate limit: 10 requests per minute (cron runs once/day, manual trigger rare)
+  const allowed = await checkRateLimit(req, res, {
+    prefix: "generate-visits",
+    limit: 10,
+    window: "1 m",
+  });
+  if (!allowed) return;
 
   try {
     const today = todayIST();

@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
+import { checkRateLimit, getRateLimitKey } from "./_ratelimit";
 
 // Initialize Firebase Admin (once)
 if (getApps().length === 0) {
@@ -133,6 +134,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ error: "Invalid token" });
     }
   }
+
+  // Rate limit: 10 requests per minute per user (prevents email spam)
+  const rateLimitKey = callerUid
+    ? `uid:${callerUid}`
+    : getRateLimitKey(req);
+  const allowed = await checkRateLimit(req, res, {
+    prefix: "notify-order",
+    limit: 10,
+    window: "1 m",
+  }, rateLimitKey);
+  if (!allowed) return;
 
   if (!RESEND_API_KEY) {
     console.error("RESEND_API_KEY not configured");
