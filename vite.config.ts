@@ -38,4 +38,10 @@ export default defineConfig({
     // esbuild minification (built-in, fast)
     minify: 'esbuild',
   },
+
+  // Strip console.log/warn in production (keep console.error for debugging)
+  esbuild: {
+    drop: process.env.NODE_ENV === 'production' ? ['debugger'] : [],
+    pure: process.env.NODE_ENV === 'production' ? ['console.log', 'console.warn'] : [],
+  },
 })

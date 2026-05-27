@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Shield, UserPlus, Loader2, AlertCircle } from "lucide-react";
-const API_SECRET = import.meta.env.VITE_NOTIFY_API_SECRET || "";
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+import { auth } from "../../../lib/firebase";
 
 type Role = "admin" | "provider";
 
@@ -32,11 +31,17 @@ export default function AdminRoles() {
     setResult(null);
 
     try {
-      const res = await fetch(`${API_BASE}/api/set-role`, {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        setError("Not authenticated — sign in again");
+        return;
+      }
+
+      const res = await fetch("/api/set-role", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${API_SECRET}`,
+          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({ email: email.trim(), role, action }),
       });
@@ -197,10 +202,8 @@ export default function AdminRoles() {
             <p>This page calls <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono">/api/set-role</code> on Vercel. Ensure these env vars are set:</p>
             <ul className="list-inside list-disc space-y-1 pl-2">
               <li><code className="font-mono">FIREBASE_SERVICE_ACCOUNT_KEY</code> — Firebase Admin SDK service account JSON</li>
-              <li><code className="font-mono">NOTIFY_API_SECRET</code> — same secret used by notify-order</li>
-              <li><code className="font-mono">VITE_NOTIFY_API_SECRET</code> — same value, for frontend</li>
-              <li><code className="font-mono">VITE_API_BASE_URL</code> — your Vercel URL (e.g. https://afixz.vercel.app)</li>
             </ul>
+            <p className="mt-2">Auth uses your Firebase admin ID token — no API secret needed on frontend.</p>
           </div>
         </div>
       </div>

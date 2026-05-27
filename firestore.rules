@@ -494,6 +494,10 @@ service cloud.firestore {
           && request.resource.data.serviceId == resource.data.serviceId
           && request.resource.data.price == resource.data.price
           && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.status in ["pending", "confirmed", "in_progress", "completed", "cancelled"]
+          && optionalString(request.resource.data, "claimedBy")
+          && optionalString(request.resource.data, "completedBy")
+          && optionalTimestampOrNull(request.resource.data, "completedAt")
         );
 
       allow delete: if isAdmin();
@@ -567,10 +571,31 @@ service cloud.firestore {
 
     // ── Store: Product Orders ─────────────────────────────
 
+    function validProductOrder(data) {
+      return hasRequiredKeys(data, [
+          "userId", "source", "items", "totalAmount",
+          "status", "address", "createdAt"
+        ])
+        && data.userId is string
+        && data.userId == request.auth.uid
+        && data.source == "store"
+        && data.items is list
+        && data.items.size() > 0
+        && isNumber(data.totalAmount)
+        && data.totalAmount > 0
+        && data.status is string
+        && data.status == "pending"
+        && data.address is map
+        && data.createdAt is timestamp
+        && optionalString(data, "paymentMode")
+        && optionalString(data, "customerName")
+        && optionalString(data, "customerPhone")
+        && optionalString(data, "customerEmail")
+        && optionalString(data, "notes");
+    }
+
     match /productOrders/{orderId} {
-      allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.source == "store";
+      allow create: if isSignedIn() && validProductOrder(request.resource.data);
       allow read: if isSignedIn()
         && (resource.data.userId == request.auth.uid || isAdmin());
       allow update: if isAdmin();

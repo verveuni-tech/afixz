@@ -22,8 +22,16 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // CORS — restrict to own domains
+  const allowedOrigins = [
+    "https://afixz.vercel.app",
+    "https://afixz.com",
+    "https://www.afixz.com",
+  ];
+  const origin = req.headers.origin || "";
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 

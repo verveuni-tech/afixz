@@ -98,8 +98,16 @@ function escapeHtml(str: string): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // CORS — restrict to own domains
+  const allowedOrigins = [
+    "https://afixz.vercel.app",
+    "https://afixz.com",
+    "https://www.afixz.com",
+  ];
+  const origin = req.headers.origin || "";
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
@@ -112,12 +120,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const isStaticSecret = API_SECRET && legacySecret === API_SECRET;
 
+  let callerUid: string | null = null;
+
   if (!isStaticSecret) {
     if (!bearerToken) {
       return res.status(401).json({ error: "Unauthorized" });
     }
     try {
-      await getAuth().verifyIdToken(bearerToken);
+      const decoded = await getAuth().verifyIdToken(bearerToken);
+      callerUid = decoded.uid;
     } catch {
       return res.status(401).json({ error: "Invalid token" });
     }
@@ -138,6 +149,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!data.name || !data.email || !data.service) {
     return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  // Prevent using as arbitrary email relay — verify caller owns the email
+  if (callerUid) {
+    try {
+      const callerRecord = await getAuth().getUser(callerUid);
+      if (callerRecord.email && callerRecord.email !== data.email) {
+        // Admin override check
+        const token = await getAuth().verifyIdToken(
+          (req.headers.authorization || "").slice(7)
+        );
+        if (!token.admin) {
+          return res.status(403).json({ error: "Email mismatch" });
+        }
+      }
+    } catch {
+      // Non-fatal — allow if lookup fails
+    }
   }
 
   // Sanitize all string inputs

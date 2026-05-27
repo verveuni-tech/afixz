@@ -17,8 +17,11 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import hero1 from "@/assets/images/hero1.webp";
+import hero1Mobile from "@/assets/images/hero1-mobile.webp";
 import hero2 from "@/assets/images/hero2.webp";
+import hero2Mobile from "@/assets/images/hero2-mobile.webp";
 import hero3 from "@/assets/images/hero3.webp";
+import hero3Mobile from "@/assets/images/hero3-mobile.webp";
 
 import { HomepageHeroContent } from "../../lib/homepageFallbackContent";
 import { getLocationLabel } from "../../lib/locations";
@@ -31,16 +34,19 @@ type Props = {
 const HERO_SLIDES = [
   {
     image: hero1,
+    mobile: hero1Mobile,
     alt: "Luxury modern landscaped residence",
     caption: "Refined outdoor spaces for modern homes",
   },
   {
     image: hero2,
+    mobile: hero2Mobile,
     alt: "Minimal premium interior workspace",
     caption: "Elevated interiors crafted with precision",
   },
   {
     image: hero3,
+    mobile: hero3Mobile,
     alt: "Premium architectural garden lighting",
     caption:
       "Intentional landscaping with timeless aesthetics",
@@ -263,43 +269,53 @@ const Hero: React.FC<Props> = ({ content }) => {
                 return (
                   <div
                     key={slide.alt}
-                    className="absolute inset-0 will-change-transform transition-all duration-700 ease-out"
+                    className="absolute inset-0 transition-opacity duration-700 ease-out"
                     style={{
                       opacity: isActive ? 1 : 0,
-                      transform: `scale(${
-                        isActive ? 1 : 1.04
-                      })`,
                       zIndex: isActive ? 2 : 1,
                     }}
                     aria-hidden={!isActive}
                   >
-                    {/* IMAGE */}
+                    {/* IMAGE — responsive: mobile gets smaller file */}
                     <div className="relative h-full w-full">
-                      <img
-                        src={slide.image}
-                        alt={slide.alt}
-                        width={1200}
-                        height={800}
-                        loading={i === 0 ? "eager" : "lazy"}
-                        fetchPriority={
-                          i === 0 ? "high" : "auto"
-                        }
-                        decoding="async"
-                        draggable={false}
-                        className="h-full w-full object-cover select-none"
+                      <picture>
+                        <source
+                          media="(max-width: 768px)"
+                          srcSet={slide.mobile}
+                          type="image/webp"
+                        />
+                        <source
+                          srcSet={slide.image}
+                          type="image/webp"
+                        />
+                        <img
+                          src={slide.image}
+                          alt={slide.alt}
+                          width={1200}
+                          height={800}
+                          loading={i === 0 ? "eager" : "lazy"}
+                          fetchPriority={
+                            i === 0 ? "high" : "auto"
+                          }
+                          decoding={i === 0 ? "sync" : "async"}
+                          draggable={false}
+                          className="h-full w-full object-cover select-none"
+                        />
+                      </picture>
+
+                      {/* single combined overlay instead of 3 separate (reduces paint) */}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            "linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.2) 100%), linear-gradient(to right, rgba(0,0,0,0.1), transparent 35%)",
+                        }}
                       />
-
-                      {/* cinematic overlays */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/25" />
-
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_42%,rgba(0,0,0,0.34))]" />
-
-                      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.12),transparent_35%)]" />
                     </div>
 
-                    {/* floating stats */}
+                    {/* floating stats — desktop only */}
                     <div className="absolute left-5 top-5 z-30 hidden items-center gap-3 lg:flex">
-                      <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 backdrop-blur-lg">
+                      <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
                         <p className="text-lg font-bold text-white">
                           24/7
                         </p>
@@ -309,7 +325,7 @@ const Hero: React.FC<Props> = ({ content }) => {
                         </p>
                       </div>
 
-                      <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 backdrop-blur-lg">
+                      <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
                         <p className="text-lg font-bold text-white">
                           Same Day
                         </p>
@@ -321,7 +337,7 @@ const Hero: React.FC<Props> = ({ content }) => {
                     </div>
 
                     {/* slide counter */}
-                    <div className="absolute right-4 top-4 z-30 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-xs font-semibold tracking-wide text-white/75 backdrop-blur-lg">
+                    <div className="absolute right-4 top-4 z-30 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-xs font-semibold tracking-wide text-white/75">
                       {String(active + 1).padStart(2, "0")}
 
                       <span className="px-1 text-white/30">
@@ -338,9 +354,8 @@ const Hero: React.FC<Props> = ({ content }) => {
                           max-w-full
                           rounded-[1.5rem]
                           border border-white/10
-                          bg-black/30
+                          bg-black/40
                           p-4
-                          backdrop-blur-lg
                           sm:max-w-[340px]
                           sm:p-5
                         "
@@ -391,18 +406,18 @@ const Hero: React.FC<Props> = ({ content }) => {
                 <div className="flex items-center gap-2 sm:gap-3">
                   <button
                     type="button"
-                    aria-label="Previous"
+                    aria-label="Previous slide"
                     onClick={() => handleAdvance(-1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/20 text-white backdrop-blur-lg transition-colors duration-200 hover:bg-black/35 sm:h-10 sm:w-10"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/30 text-white transition-colors duration-200 hover:bg-black/45 sm:h-10 sm:w-10"
                   >
                     <ChevronLeft size={18} />
                   </button>
 
                   <button
                     type="button"
-                    aria-label="Next"
+                    aria-label="Next slide"
                     onClick={() => handleAdvance(1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/20 text-white backdrop-blur-lg transition-colors duration-200 hover:bg-black/35 sm:h-10 sm:w-10"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/30 text-white transition-colors duration-200 hover:bg-black/45 sm:h-10 sm:w-10"
                   >
                     <ChevronRight size={18} />
                   </button>
