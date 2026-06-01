@@ -49,11 +49,13 @@ const AdminServices = () => {
         setEditingBlog(null);
         return;
       }
+const data = snapshot.data() as EditableBlog;
 
       setActiveTab("blogs");
       setEditingBlog({
+          ...data,
         id: snapshot.id,
-        ...(snapshot.data() as EditableBlog),
+        
       });
     }
 
@@ -68,11 +70,13 @@ const AdminServices = () => {
         setEditingService(null);
         return;
       }
+const data = snapshot.data() as EditableService;
 
       setActiveTab("services");
       setEditingService({
+          ...data,
         id: snapshot.id,
-        ...(snapshot.data() as EditableService),
+        
       });
     }
 
