@@ -139,7 +139,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const rateLimitKey = callerUid
     ? `uid:${callerUid}`
     : getRateLimitKey(req);
-  const allowed = checkRateLimit(req, res, {
+  const allowed = await checkRateLimit(req, res, {
     prefix: "notify-order",
     limit: 10,
     windowMs: 60_000,
@@ -163,21 +163,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  // Prevent using as arbitrary email relay — verify caller owns the email
+  // Prevent using as arbitrary email relay — verify caller owns the email.
+  // FAIL CLOSED: if lookup throws, deny (don't allow spam relay on transient errors).
   if (callerUid) {
     try {
       const callerRecord = await getAuth().getUser(callerUid);
-      if (callerRecord.email && callerRecord.email !== data.email) {
-        // Admin override check
-        const token = await getAuth().verifyIdToken(
-          (req.headers.authorization || "").slice(7)
-        );
+      const callerEmail = callerRecord.email;
+      if (callerEmail && callerEmail !== data.email) {
+        const token = await getAuth().verifyIdToken(bearerToken);
         if (!token.admin) {
           return res.status(403).json({ error: "Email mismatch" });
         }
       }
-    } catch {
-      // Non-fatal — allow if lookup fails
+      // Force outbound recipient to verified caller email (block spoofing).
+      if (callerEmail) {
+        data.email = callerEmail;
+      }
+    } catch (err) {
+      console.error("Caller verification failed:", err);
+      return res.status(403).json({ error: "Verification failed" });
     }
   }
 

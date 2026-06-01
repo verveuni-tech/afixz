@@ -79,13 +79,18 @@ export default async function handler(
       });
     }
 
-    const allowed = checkRateLimit(req, res, {
+    const allowed = await checkRateLimit(req, res, {
       prefix: "set-role",
       limit: 5,
       windowMs: 60_000,
     });
 
     if (!allowed) return;
+
+    // Reject oversized payloads
+    if (req.body && JSON.stringify(req.body).length > 2000) {
+      return res.status(413).json({ error: "Payload too large" });
+    }
 
     const authHeader = req.headers.authorization || "";
 

@@ -1,22 +1,33 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { Redis } from "@upstash/redis";
 
 /**
- * In-memory sliding window rate limiter for Vercel serverless.
+ * Sliding window rate limiter — distributed (Upstash Redis) when env vars set,
+ * falls back to in-memory per-instance counter otherwise.
  *
- * - Zero external dependencies (no Redis/Upstash needed)
- * - Persists across warm invocations of the same serverless instance
- * - Resets on cold start (acceptable tradeoff for free tier)
- * - Auto-evicts stale entries to prevent memory leaks
+ * In-memory mode is BYPASSABLE across cold/parallel serverless instances —
+ * always configure Upstash for production:
+ *   UPSTASH_REDIS_REST_URL
+ *   UPSTASH_REDIS_REST_TOKEN
  */
 
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+let redis: Redis | null = null;
+if (UPSTASH_URL && UPSTASH_TOKEN) {
+  try {
+    redis = new Redis({ url: UPSTASH_URL, token: UPSTASH_TOKEN });
+  } catch (err) {
+    console.error("Upstash init failed:", err);
+  }
+}
+
+// ── In-memory fallback ───────────────────────────────────────────────────
 interface RateLimitEntry {
   timestamps: number[];
 }
-
-// Global store survives across warm invocations
 const store = new Map<string, RateLimitEntry>();
-
-// Evict stale entries every 60s to prevent memory growth
 let lastCleanup = Date.now();
 const CLEANUP_INTERVAL = 60_000;
 
@@ -24,28 +35,19 @@ function cleanup(windowMs: number) {
   const now = Date.now();
   if (now - lastCleanup < CLEANUP_INTERVAL) return;
   lastCleanup = now;
-
-  const cutoff = now - windowMs * 2; // Keep 2x window for safety
+  const cutoff = now - windowMs * 2;
   for (const [key, entry] of store) {
     const latest = entry.timestamps[entry.timestamps.length - 1] || 0;
-    if (latest < cutoff) {
-      store.delete(key);
-    }
+    if (latest < cutoff) store.delete(key);
   }
 }
 
 type RateLimitConfig = {
-  /** Unique prefix for this endpoint */
   prefix: string;
-  /** Max requests per window */
   limit: number;
-  /** Window in milliseconds */
   windowMs: number;
 };
 
-/**
- * Get rate limit key from request. Uses UID if available, falls back to IP.
- */
 export function getRateLimitKey(req: VercelRequest, uid?: string): string {
   if (uid) return `uid:${uid}`;
   const ip =
@@ -57,50 +59,67 @@ export function getRateLimitKey(req: VercelRequest, uid?: string): string {
 
 /**
  * Check rate limit. Returns true if allowed, false if blocked (429 sent).
+ * NOTE: async now — must await.
  */
-export function checkRateLimit(
+export async function checkRateLimit(
   req: VercelRequest,
   res: VercelResponse,
   config: RateLimitConfig,
   identifier?: string
-): boolean {
-  const key = `${config.prefix}:${identifier || getRateLimitKey(req)}`;
+): Promise<boolean> {
+  const key = `rl:${config.prefix}:${identifier || getRateLimitKey(req)}`;
   const now = Date.now();
-  const windowStart = now - config.windowMs;
+  const windowSec = Math.ceil(config.windowMs / 1000);
 
-  // Lazy cleanup
+  // ── Distributed path (Upstash) ───────────────────────────────────
+  if (redis) {
+    try {
+      // INCR + EXPIRE in pipeline. First hit sets TTL; subsequent hits keep it.
+      const pipe = redis.pipeline();
+      pipe.incr(key);
+      pipe.expire(key, windowSec);
+      const [count] = (await pipe.exec()) as [number, number];
+
+      const remaining = Math.max(0, config.limit - count);
+      res.setHeader("X-RateLimit-Limit", config.limit);
+      res.setHeader("X-RateLimit-Remaining", remaining);
+
+      if (count > config.limit) {
+        const ttl = await redis.ttl(key);
+        res.setHeader("Retry-After", Math.max(ttl, 1));
+        res.status(429).json({ error: "Too many requests", retryAfter: ttl });
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error("Upstash rate limit failed, falling back:", err);
+      // fall through to in-memory
+    }
+  }
+
+  // ── In-memory fallback ───────────────────────────────────────────
+  const windowStart = now - config.windowMs;
   cleanup(config.windowMs);
 
-  // Get or create entry
   let entry = store.get(key);
   if (!entry) {
     entry = { timestamps: [] };
     store.set(key, entry);
   }
-
-  // Remove timestamps outside the window
   entry.timestamps = entry.timestamps.filter((t) => t > windowStart);
 
-  // Check limit
   if (entry.timestamps.length >= config.limit) {
-    const oldestInWindow = entry.timestamps[0];
-    const retryAfter = Math.ceil((oldestInWindow + config.windowMs - now) / 1000);
-
+    const oldest = entry.timestamps[0];
+    const retryAfter = Math.ceil((oldest + config.windowMs - now) / 1000);
     res.setHeader("X-RateLimit-Limit", config.limit);
     res.setHeader("X-RateLimit-Remaining", 0);
     res.setHeader("Retry-After", Math.max(retryAfter, 1));
-    res.status(429).json({
-      error: "Too many requests",
-      retryAfter: Math.max(retryAfter, 1),
-    });
+    res.status(429).json({ error: "Too many requests", retryAfter: Math.max(retryAfter, 1) });
     return false;
   }
 
-  // Allow — record this request
   entry.timestamps.push(now);
-
   res.setHeader("X-RateLimit-Limit", config.limit);
   res.setHeader("X-RateLimit-Remaining", config.limit - entry.timestamps.length);
-
   return true;
 }

@@ -37,21 +37,27 @@ export default async function handler(
     return res.status(405).json({ error: "GET or POST only" });
   }
 
-  // Auth: Vercel Cron sends this header automatically
-  // For manual triggers, check API secret
-  const cronSecret = req.headers["authorization"];
-  const vercelCron = req.headers["x-vercel-cron"];
+  // Auth: Vercel Cron sends Authorization: Bearer <CRON_SECRET> when CRON_SECRET env is set.
+  // x-vercel-cron header alone is NOT a security boundary — clients can spoof it.
+  // Manual triggers use NOTIFY_API_SECRET.
+  const authHeader = req.headers["authorization"] || "";
+  const CRON_SECRET = process.env.CRON_SECRET;
   const API_SECRET = process.env.NOTIFY_API_SECRET;
 
-  const isVercelCron = vercelCron === "true" || vercelCron === "1";
-  const isApiAuth = API_SECRET && cronSecret === `Bearer ${API_SECRET}`;
+  const isVercelCron = !!CRON_SECRET && authHeader === `Bearer ${CRON_SECRET}`;
+  const isApiAuth = !!API_SECRET && authHeader === `Bearer ${API_SECRET}`;
 
   if (!isVercelCron && !isApiAuth) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
+  // Reject oversized payloads
+  if (req.body && JSON.stringify(req.body).length > 2000) {
+    return res.status(413).json({ error: "Payload too large" });
+  }
+
   // Rate limit: 10 requests per minute (cron runs once/day, manual trigger rare)
-  const allowed = checkRateLimit(req, res, {
+  const allowed = await checkRateLimit(req, res, {
     prefix: "generate-visits",
     limit: 10,
     windowMs: 60_000,
