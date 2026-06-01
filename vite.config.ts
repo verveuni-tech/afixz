@@ -24,18 +24,29 @@ export default defineConfig({
     // Target modern browsers for smaller output
     target: 'es2020',
 
+    // Skip modulepreload for heavy firebase chunks — let browser fetch on-demand,
+    // not block initial paint. Saves ~480KB on landing.
+    modulePreload: {
+      resolveDependencies: (_filename, deps) =>
+        deps.filter(
+          (dep) =>
+            !dep.includes('firebase-firestore') &&
+            !dep.includes('firebase-auth')
+        ),
+    },
+
     rollupOptions: {
       output: {
         manualChunks: {
-          // Split Firebase into own chunk — loaded async, not in initial bundle
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          // React ecosystem
+          // Split firebase by surface — auth small, firestore huge.
+          'firebase-core': ['firebase/app'],
+          'firebase-auth': ['firebase/auth'],
+          'firebase-firestore': ['firebase/firestore'],
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
         },
       },
     },
 
-    // esbuild minification (built-in, fast)
     minify: 'esbuild',
   },
 

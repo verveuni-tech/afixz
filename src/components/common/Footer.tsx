@@ -14,6 +14,10 @@ const Footer: React.FC = () => {
               <img
                 src={logoImg}
                 alt="AfixZ"
+                width={120}
+                height={64}
+                loading="lazy"
+                decoding="async"
                 className="
     h-16
     w-auto

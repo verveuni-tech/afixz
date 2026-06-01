@@ -167,8 +167,11 @@ export default function ServiceCategorySection({
           <img
             src={service.images[0]}
             alt={service.title}
+            width={400}
+            height={300}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <PlaceholderImage />
@@ -216,8 +219,11 @@ export default function ServiceCategorySection({
           <img
             src={service.images[0]}
             alt={service.title}
+            width={144}
+            height={144}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <PlaceholderImage />

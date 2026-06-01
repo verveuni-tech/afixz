@@ -149,6 +149,10 @@ const Navbar: React.FC = () => {
               <img
                 src={service.images?.[0]}
                 alt={service.title}
+                width={40}
+                height={40}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             </div>
