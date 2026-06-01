@@ -1,6 +1,3 @@
-console.log("SET ROLE FILE LOADED");
-
-
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
@@ -146,8 +143,17 @@ export default async function handler(
     let targetUid = uid;
 
     if (!targetUid && email) {
-      const user = await auth.getUserByEmail(email);
-      targetUid = user.uid;
+      try {
+        const user = await auth.getUserByEmail(email);
+        targetUid = user.uid;
+      } catch (err: any) {
+        if (err?.errorInfo?.code === "auth/user-not-found") {
+          return res.status(404).json({
+            error: `No account found for ${email}. User must sign up first.`,
+          });
+        }
+        throw err;
+      }
     }
 
     if (!targetUid) {
@@ -156,7 +162,17 @@ export default async function handler(
       });
     }
 
-    const targetUser = await auth.getUser(targetUid);
+    let targetUser;
+    try {
+      targetUser = await auth.getUser(targetUid);
+    } catch (err: any) {
+      if (err?.errorInfo?.code === "auth/user-not-found") {
+        return res.status(404).json({
+          error: "User not found.",
+        });
+      }
+      throw err;
+    }
 
     const currentClaims = targetUser.customClaims || {};
 
