@@ -1,3 +1,6 @@
+console.log("SET ROLE FILE LOADED");
+
+
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
