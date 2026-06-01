@@ -5,7 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
-import { checkRateLimit } from "./_ratelimit";
+import { checkRateLimit } from "./_ratelimit.js";
 
 type Role = "admin" | "provider";
 

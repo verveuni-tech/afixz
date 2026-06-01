@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { checkRateLimit } from "./_ratelimit";
+import { checkRateLimit } from "./_ratelimit.js";
 
 // Initialize Firebase Admin (once)
 if (getApps().length === 0) {

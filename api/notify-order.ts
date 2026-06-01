@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { checkRateLimit, getRateLimitKey } from "./_ratelimit";
+import { checkRateLimit, getRateLimitKey } from "./_ratelimit.js";
 
 // Initialize Firebase Admin (once)
 if (getApps().length === 0) {
