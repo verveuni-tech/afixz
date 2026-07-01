@@ -52,7 +52,7 @@ export default function RecentProductsTable() {
 
         <div className="flex items-center gap-2">
           <Link
-            to="/admin/store?tab=products"
+            to="/admin/store/products"
             className="group inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
           >
             View All

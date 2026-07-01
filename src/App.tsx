@@ -116,6 +116,10 @@ const AdminAllServices = lazy(
   () => import("./features/admin/pages/AdminAllServices")
 );
 
+const AdminAllProducts = lazy(
+  () => import("./features/admin/pages/AdminAllProducts")
+);
+
 const AdminOrders = lazy(
   () => import("./features/admin/pages/AdminOrders")
 );
@@ -323,6 +327,7 @@ function App() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="services" element={<AdminServices />} />
             <Route path="all-services" element={<AdminAllServices />} />
+            <Route path="store/products" element={<AdminAllProducts />} />
             <Route path="subscriptions" element={<AdminSubscriptions />} />
             <Route path="store" element={<AdminStore />} />
             <Route path="store-dashboard" element={<StoreDashboard />} />

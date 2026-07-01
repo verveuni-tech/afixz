@@ -72,7 +72,7 @@ function useNavSections(): NavSection[] {
       icon: <Store size={18} />,
       children: [
         { to: "/admin/store-dashboard", label: "Dashboard", icon: <LayoutDashboard size={16} /> },
-        { to: "/admin/store?tab=products", label: "Products", icon: <Package size={16} /> },
+        { to: "/admin/store/products", label: "Products", icon: <Package size={16} /> },
         { to: "/admin/store?tab=categories", label: "Categories", icon: <Tags size={16} /> },
       ],
     },
